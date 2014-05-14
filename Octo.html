@@ -330,7 +330,7 @@
 			}
 
 			this.isRegister = function(name) {
-				if (!name) { name = this.tokens[0]; }
+				if (!name && (name != 0)) { name = this.tokens[0]; }
 				if (typeof name != "string") { return false; }
 				name = name.toUpperCase();
 				if (name.length != 2) { return false; }
@@ -353,7 +353,7 @@
 			}
 
 			this.value = function(thing) {
-				if (!thing && !(thing === 0)) { thing = this.next(); }
+				if (!thing && (thing != 0)) { thing = this.next(); }
 				if (thing in this.vars) { return this.vars[thing]; }
 				if (thing in this.dict) { return this.dict[thing]; }
 				if (typeof thing == "number") { return thing; }
