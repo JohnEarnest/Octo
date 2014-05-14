@@ -50,6 +50,13 @@
 			<button type="button" onClick="run()">Run</button>
 			<button type="button" onClick="load()">Load Binary</button>
 			<button type="button" onClick="save()">Save Binary</button>
+			<select id="framerate" onchange="framerate()">
+			  <option>7 Cycles/Frame</option>
+			  <option>15 Cycles/Frame</option>
+			  <option>20 Cycles/Frame</option>  
+			  <option>100 Cycles/Frame</option>
+			  <option>200 Cycles/Frame</option>
+			</select>
 			<button type="button" onClick="window.open('https://github.com/JohnEarnest/Octo/blob/master/OctoManual.md', '_blank');">
 				Manual
 			</button>
@@ -565,6 +572,10 @@
 			}
 			var dataUri = "data:application/octet-stream;base64," + btoa(binaryString);
 			window.open(dataUri);
+		}
+
+		function framerate() {
+			TICKS_PER_FRAME = parseInt(document.getElementById("framerate").value.split(' ')[0], 10);
 		}
 
 		function render() {
