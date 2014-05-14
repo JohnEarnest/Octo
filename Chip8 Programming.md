@@ -58,6 +58,48 @@ Since we know the delay timer counts down at 60hz, we can use it to precisely ti
 
 Consider making use of a routine like 'sync' in your own programs to ensure a consistent gameplay experience on different interpreters.
 
+Keeping Score
+-------------
+Whether it's counting down the number of missiles stored in your gigantic mech or telling you how many human skulls you've crushed beneath the treads of your tank, video games frequently involve displaying numbers on screen. Fortunately, Chip8 provides some instructions specially for this purpose.
+
+To display a single digit from a register, we can make use of the 'hex' operation to load the address of a (built-in) hexadecimal character into i. Then it's just a matter of using 'sprite' to display it:
+
+	: main
+		v0 := 7        # some one-digit number
+		i  := hex v0   # load the address of a character
+		sprite v0 v0 5 # built in characters are 5 pixels tall
+		loop again
+
+There are two caveats here: the number displayed is in hexadecimal and we can only display a single digit. How do we display larger numbers? That's where 'bcd' comes in. It'll take a number in a register, split it into hundreds, tens and ones and then store those into sequential addresses in memory. Then we use 'load' to scoop those values into the bottom three registers and use 'hex' like before to display them.
+
+	# temporary storage for hundreds, tens and ones:
+	:data digits 0 0 0
+
+	: main
+		v0 := 137      # some number 0-255
+		i  := digits   # the destination for bcd
+		bcd v0         # unpack digits in v0
+
+		va := 10       # x position of first digit
+		vb := 20       # y position of first digit
+		i := digits
+		load v2        # load digits into v0-v2
+	
+		i := hex v0    # hundreds digit
+		sprite va vb 5
+		va += 5
+	
+		i := hex v1    # tens digit
+		sprite va vb 5
+		va += 5
+
+		i := hex v2    # ones digit
+		sprite va vb 5
+
+		loop again
+
+You can also use 'bcd' as a way of dividing numbers by 10 or 100, but it's a little fiddly for this purpose.
+
 Tiles and Indirection
 ---------------------
 Consider the following problem: you want to make a game that draws a series of 'tiles' to fill the screen as in an RPG overworld. We can start by declaring the tile data the rest of our experiments will use.
