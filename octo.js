@@ -507,6 +507,51 @@ function save() {
 	window.open(dataUri);
 }
 
+function share() {
+	// cribbed from increpare/Puzzlescript/js/toolbar.js
+	var xhr = new XMLHttpRequest();
+	xhr.open('POST', 'https://api.github.com/gists');
+	xhr.onreadystatechange = function() {
+		if(xhr.readyState !== 4)
+			return;
+		var result = JSON.parse(xhr.responseText);
+		if (xhr.status === 403) {
+			alert(result.message);
+		} else if (xhr.status !== 200 && xhr.status !== 201) {
+			alert("HTTP Error "+ xhr.status + ' - ' + xhr.statusText);
+		} else {
+			window.location.href = window.location.href.replace(/(index.html|\?gist=.*)*$/, 'index.html?gist=' + result.id);
+		}
+	}
+	var prog = document.getElementById("input").value;
+	xhr.send(JSON.stringify({
+		"description" : "Octo Chip8 Program",
+		"public" : true,
+		"files": {
+			"readme.txt" : {
+				"content": "Play this game by pasting the program into http://johnearnest.github.io/Octo/"
+			},
+			"prog.ch8" : {"content": prog}
+		}
+	}));
+}
+
+function runGist() {
+	var xhr = new XMLHttpRequest();
+	var gistId = location.search.match(/gist=(\w+)/);
+	if (!gistId)
+		return;
+	xhr.open('GET', 'https://api.github.com/gists/' + gistId[1]);
+	xhr.onreadystatechange = function() {
+		if (xhr.readyState == 4 && (xhr.status == 200 || xhr.status !== 201)) {
+			var result = JSON.parse(xhr.responseText);
+			document.getElementById("input").value = result.files["prog.ch8"].content;
+			run();
+		}
+	}
+	xhr.send();
+}
+
 function framerate() {
 	TICKS_PER_FRAME = parseInt(document.getElementById("framerate").value.split(' ')[0], 10);
 }

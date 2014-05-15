@@ -48,6 +48,7 @@
 			<div id="status"></div>
 			<button type="button" onClick="compile()">Compile</button>
 			<button type="button" onClick="run()">Run</button>
+			<button type="button" onClick="share()">Share</button>
 			<button type="button" onClick="load()">Load Binary</button>
 			<button type="button" onClick="save()">Save Binary</button>
 			<select id="framerate" onchange="framerate()">
@@ -68,5 +69,6 @@
 	</div>
 
 	<script src="octo.js"></script>
+	<script>window.onload = runGist();</script>
 </body>
 </html>
