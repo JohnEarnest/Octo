@@ -6,18 +6,11 @@
 	<center>
 		Click to toggle pixels:<br/>
 		<canvas id="draw" width="200" height="375"></canvas><br/>
-		<textarea id="output" rows="1" cols="75"></textarea>
+		<textarea id="output" rows="1" cols="75" onchange="edit();" onkeyup="edit();"></textarea>
 	</center>
 	<script>
 
-		function click(event) {
-			// toggle pixel
-			var rect = canvas.getBoundingClientRect();
-			var mx   = event.clientX - rect.left;
-			var my   = event.clientY - rect.top;
-			pixel[Math.floor(my/25)] ^= (128 >> Math.floor(mx/25));
-
-			// redraw the display
+		function draw() {
 			render.fillStyle = "#996600";
 			render.fillRect(0, 0, 200, 375);
 			render.fillStyle = "#FFCC00";
@@ -28,6 +21,14 @@
 					}
 				}
 			}
+		}
+
+		function click(event) {
+			// toggle pixel
+			var rect = canvas.getBoundingClientRect();
+			var mx   = event.clientX - rect.left;
+			var my   = event.clientY - rect.top;
+			pixel[Math.floor(my/25)] ^= (128 >> Math.floor(mx/25));
 
 			// convert the pixels into hex and display
 			var hex = "";
@@ -36,6 +37,25 @@
 				hex += "0x" + (digits.length == 1 ? "0"+digits : digits) + " ";
 			}
 			output.value = hex;
+
+			draw();
+		}
+
+		function edit() {
+			// convert the hex into pixels
+			var bytes = output.value.split(" ");
+			for(var z = 0; z < 16; z++) {
+				if (z < bytes.length) {
+					var p = parseInt(bytes[z].slice(2), 16);
+					if (isNaN(p)) { p = 0; }
+					pixel[z] = p;
+				}
+				else {
+					pixel[z] = 0;
+				}
+			}
+
+			draw();
 		}
 
 		var pixel = [];
