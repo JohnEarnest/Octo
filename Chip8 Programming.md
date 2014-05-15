@@ -9,7 +9,7 @@ This article is meant to address some of the practical implications of the Chip8
 
 Framerate
 ---------
-The Chip8 specification doesn't say how fast programs should run. Experimentally, you may find that various games seem intended to run at different speed. Pong.ch8, for example, is pretty playable when the game runs at about 7 chip8 cycles per frame and a framerate of 60fps. Many interpreters make it possible to adjust their speed for each game. This is less than ideal, however, as it requires players to experiment. Let's consider a very simple program which moves a sprite on the screen at a fixed rate:
+The Chip8 specification doesn't say how fast programs should run. Experimentally, you may find that various games seem intended to run at different speeds. Pong.ch8, for example, is pretty playable when the game runs at about 7 chip8 cycles per frame and a framerate of 60fps. Many interpreters make it possible to adjust their speed for each game. This is less than ideal, however, as it requires players to experiment. Let's consider a very simple program which moves a sprite on the screen at a fixed rate:
 
 	:data box
 		0b11110000

@@ -5,7 +5,16 @@ title: Octo Manual
 Octo
 ====
 
-Octo is a simple high-level assembler for the Chip8 virtual machine. Its syntax is in some ways inspired by Forth- a series of whitespace-delimited tokens. Subroutines are defined with `:` followed by a name, and simply using the name will perform a call. `;` terminates subroutines with a return. `#` indicates a single-line comment. Numbers can use `0x` or `0b` prefixes to indicate hexadecimal or binary encodings, respectively. Whenever numbers are encountered outside a statement they will be compiled as literal bytes. Names must always be defined before they can be used- programs are written in "reading" order. An entrypoint named `main` must be defined.
+Octo is a simple high-level assembler for the Chip8 virtual machine, complete with an environment for testing programs. While a program is running, you can press escape to return to the editor. The chip8 keypad is represented on your keyboard as follows:
+
+	Chip8 Key   Keyboard
+	---------   ---------
+	 1 2 3 C     1 2 3 4
+	 4 5 6 D     q w e r
+	 7 8 9 E     a s d f
+	 A 0 B F     z x c v
+
+Octo syntax is in some ways inspired by Forth- a series of whitespace-delimited tokens. Subroutines are defined with `:` followed by a name, and simply using the name will perform a call. `;` terminates subroutines with a return. `#` indicates a single-line comment. Numbers can use `0x` or `0b` prefixes to indicate hexadecimal or binary encodings, respectively. Whenever numbers are encountered outside a statement they will be compiled as literal bytes. Names must always be defined before they can be used- programs are written in "reading" order. An entrypoint named `main` must be defined.
 
 In the following descriptions, `vx` and `vy` refer to some register name (v0-vF), `l` refers to a (forth-style) identifier and `n` refers to some number.
 
