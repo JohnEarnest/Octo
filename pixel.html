@@ -32,7 +32,7 @@
 
 			// convert the pixels into hex and display
 			var hex = "";
-			for(var z = 0; z < 16; z++) {
+			for(var z = 0; z < 15; z++) {
 				var digits = pixel[z].toString(16).toUpperCase();
 				hex += "0x" + (digits.length == 1 ? "0"+digits : digits) + " ";
 			}
@@ -44,7 +44,7 @@
 		function edit() {
 			// convert the hex into pixels
 			var bytes = output.value.split(" ");
-			for(var z = 0; z < 16; z++) {
+			for(var z = 0; z < 15; z++) {
 				if (z < bytes.length) {
 					var p = parseInt(bytes[z].slice(2), 16);
 					if (isNaN(p)) { p = 0; }
