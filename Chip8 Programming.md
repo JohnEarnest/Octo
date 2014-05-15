@@ -1,3 +1,7 @@
+---
+title: Chip8 Programming Techniques
+---
+
 Chip8 Programming Techniques
 ============================
 
@@ -84,11 +88,11 @@ There are two caveats here: the number displayed is in hexadecimal and we can on
 		vb := 20       # y position of first digit
 		i := digits
 		load v2        # load digits into v0-v2
-	
+
 		i := hex v0    # hundreds digit
 		sprite va vb 5
 		va += 5
-	
+
 		i := hex v1    # tens digit
 		sprite va vb 5
 		va += 5
@@ -143,7 +147,7 @@ Say you want to make a turn-based game where a player moves an 8x8 tile at a tim
 			# assuming a default keyboard layout,
 			# these numbers will map to ASWD:
 
-			if v1 == 7 then v0 -= v2 # move left 
+			if v1 == 7 then v0 -= v2 # move left
 			if v1 == 9 then v0 += v2 # move right
 			if v1 == 5 then v0 -= v3 # move up
 			if v1 == 8 then v0 += v3 # move down
@@ -213,7 +217,7 @@ Say you want to make a game that draws a series of 'tiles' to fill the screen as
 
 First, let's try writing some simple loops that cover the entire display with tree tiles. Since the Chip8 display is 64x32 and our tiles are 8x8 we'll draw four rows of 8 tiles:
 
-	: main	
+	: main
 		v0 := 0 # x position
 		v1 := 0 # y position
 		i  := tree
@@ -237,7 +241,7 @@ Now we want to extend this program to randomly scatter tiles. Let's generate a t
 		i  += v2             # add the tile in
 	;
 
-	: main	
+	: main
 		v0 := 0 # x position
 		v1 := 0 # y position
 		loop
@@ -273,7 +277,7 @@ What if instead of picking tiles randomly we had static data defining a level? T
 		i += v0
 	;
 
-	: main	
+	: main
 		va := 0 # x position
 		vb := 0 # y position
 		vc := 0 # tile index

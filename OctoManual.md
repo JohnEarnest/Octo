@@ -1,3 +1,7 @@
+---
+title: Octo Manual
+---
+
 Octo
 ====
 

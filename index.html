@@ -53,11 +53,11 @@
 			<select id="framerate" onchange="framerate()">
 			  <option>7 Cycles/Frame</option>
 			  <option>15 Cycles/Frame</option>
-			  <option>20 Cycles/Frame</option>  
+			  <option>20 Cycles/Frame</option>
 			  <option>100 Cycles/Frame</option>
 			  <option>200 Cycles/Frame</option>
 			</select>
-			<button type="button" onClick="window.open('https://github.com/JohnEarnest/Octo/blob/master/OctoManual.md', '_blank');">
+			<button type="button" onClick="window.open('OctoManual.html', '_blank');">
 				Manual
 			</button>
 		</center>
@@ -71,9 +71,9 @@
 		"use strict";
 
 		////////////////////////////////////
-		// 
+		//
 		//   Configuration options:
-		// 
+		//
 		////////////////////////////////////
 
 		var TICKS_PER_FRAME = 7;
@@ -103,9 +103,9 @@
 		];
 
 		////////////////////////////////////
-		// 
+		//
 		//   The Chip8 Interpreter:
-		// 
+		//
 		////////////////////////////////////
 
 		var font = [
@@ -246,9 +246,9 @@
 		}
 
 		////////////////////////////////////
-		// 
+		//
 		//   Tokenization:
-		// 
+		//
 		////////////////////////////////////
 
 		function parse(token) {
@@ -283,9 +283,9 @@
 		}
 
 		////////////////////////////////////
-		// 
+		//
 		//   Prettyprinting:
-		// 
+		//
 		////////////////////////////////////
 
 		function display(rom) {
@@ -297,9 +297,9 @@
 		}
 
 		////////////////////////////////////
-		// 
+		//
 		//   The Octo Compiler:
-		// 
+		//
 		////////////////////////////////////
 
 		function Compiler(source) {
@@ -490,9 +490,9 @@
 		}
 
 		////////////////////////////////////
-		// 
+		//
 		//   UI Glue:
-		// 
+		//
 		////////////////////////////////////
 
 		function compile() {
