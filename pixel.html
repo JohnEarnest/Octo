@@ -1,0 +1,53 @@
+<html>
+<head>
+	<title>Octo Pixel Editor</title>
+</head>
+<body>
+	<center>
+		Click to toggle pixels:<br/>
+		<canvas id="draw" width="200" height="375"></canvas><br/>
+		<textarea id="output" rows="1" cols="75"></textarea>
+	</center>
+	<script>
+
+		function click(event) {
+			// toggle pixel
+			var rect = canvas.getBoundingClientRect();
+			var mx   = event.clientX - rect.left;
+			var my   = event.clientY - rect.top;
+			pixel[Math.floor(my/25)] ^= (128 >> Math.floor(mx/25));
+
+			// redraw the display
+			render.fillStyle = "#996600";
+			render.fillRect(0, 0, 200, 375);
+			render.fillStyle = "#FFCC00";
+			for(var row = 0; row < 16; row++) {
+				for(var col = 0; col < 8; col++) {
+					if (pixel[row] & (1 << (7-col))) {
+						render.fillRect(col * 25, row * 25, 25, 25);
+					}
+				}
+			}
+
+			// convert the pixels into hex and display
+			var hex = "";
+			for(var z = 0; z < 16; z++) {
+				var digits = pixel[z].toString(16).toUpperCase();
+				hex += "0x" + (digits.length == 1 ? "0"+digits : digits) + " ";
+			}
+			output.value = hex;
+		}
+
+		var pixel = [];
+		var canvas = document.getElementById("draw");
+		var render = canvas.getContext("2d");
+		var output = document.getElementById("output");
+
+		for(var z = 0; z < 16; z++) { pixel[z] = 0; }
+		canvas.addEventListener("mousedown", click, false);
+		render.fillStyle = "#996600";
+		render.fillRect(0, 0, 200, 375);
+
+	</script>
+</body>
+</html>
