@@ -104,6 +104,44 @@ There are two caveats here: the number displayed is in hexadecimal and we can on
 
 You can also use 'bcd' as a way of dividing numbers by 10 or 100, but it's a little fiddly for this purpose.
 
+Moving Slowly
+-------------
+It's easy to make objects move in whole numbers of pixels per second- just store a speed in a register and add that speed to the object's position every time you update the display. What may be less obvious is how you move objects slower than 1 pixel per frame.
+
+One technique for accomplishing this is to use fixed-point and the carry (vF) register. You'll store a fractional position in one register, accumulating your speed into it and incrementing the real position whenever the result sets the carry register- that is, whenever the result wraps around.
+
+	:data ball
+		0b0110000
+		0b1001000
+		0b1001000
+		0b0110000
+
+	: main
+		i := ball
+		va :=  1 # x position of ball 1 (pixels)
+		vb :=  1 # x position of ball 2 (pixels)
+		v0 :=  0 # x position of ball 1 (fractional)
+		v1 :=  0 # x position of ball 2 (fractional)
+		v2 := 10 # x velocity of ball 1
+		v3 :=  5 # x velocity of ball 2
+
+		loop
+			vc := 4
+			sprite va vc 4
+			vc := 12
+			sprite vb vc 4
+		
+			v0 += v2
+			va += vf
+
+			v1 += v3
+			vb += vf
+
+			clear
+		again
+
+Note that immediate adds (adding a constant) do not set vF on overflow; we must store the velocity of the balls in registers, at least temporarily.
+
 Tile-based Movement
 -------------------
 Say you want to make a turn-based game where a player moves an 8x8 tile at a time. We can use 'key' to wait for key input and then move the player based on the value we get. In this example I will represent the player's horizontal and vertical position using a single "tile" coordinate system which numbers each 8x8 region on the screen left to right, top to bottom. Later on, this system would make it easy to add obstacles and tiles which do special things when a player walks on them.
