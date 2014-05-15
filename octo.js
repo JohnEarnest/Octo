@@ -242,7 +242,7 @@ function Compiler(source) {
 	this.tokens = tokenize(source);
 	this.next = function()    { var ret = this.tokens[0]; this.tokens.splice(0, 1); return ret; }
 	this.here = function()    { return this.rom.length + 0x200; }
-	this.inst = function(a,b) { this.rom.push(a); this.rom.push(b); }
+	this.inst = function(a,b) { this.rom.push(a & 0xFF); this.rom.push(b & 0xFF); }
 
 	this.wordLabel = function(name) {
 		if (!(name in this.dict)) { throw "No word '" + name + "' declared."; }
@@ -254,7 +254,7 @@ function Compiler(source) {
 	}
 
 	this.fourop = function(op, x, y, n) {
-		this.inst((op << 4) | x, (y << 4) | n);
+		this.inst((op << 4) | x, (y << 4) | (n & 0xF));
 	}
 
 	this.jump = function(addr, dest) {
