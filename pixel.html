@@ -65,6 +65,7 @@
 
 		for(var z = 0; z < 16; z++) { pixel[z] = 0; }
 		canvas.addEventListener("mousedown", click, false);
+		canvas.oncontextmenu = (function() { return false; });
 		render.fillStyle = "#996600";
 		render.fillRect(0, 0, 200, 375);
 
