@@ -1,0 +1,74 @@
+<html>
+<head>
+	<title>Octo</title>
+	<style>
+		textarea {
+		  border:1px solid #999999;
+		  font-family: monospace;
+		}
+		div.canv {
+			position: absolute;
+			left: 50%;
+			top: 50%;
+			margin:-160px 0 0 -320px;
+		}
+	</style>
+</head>
+
+<body>
+	<div id="editor">
+		<center>
+<textarea id="input"  rows="40" cols="80">
+:data smile
+	0b00100100
+	0b00100100
+	0b00000000
+	0b10000001
+	0b01000010
+	0b00111100
+
+: body
+	v2 := 0
+	loop
+		v0 := random 0b00111111
+		v1 := random 0b00011111
+		sprite v0 v1 6
+		v2 += 1
+		while v2 != 32
+	again
+	clear
+;
+
+: main
+	i := smile
+	loop body again
+;
+</textarea><br/>
+			<textarea id="output" style="display:none" rows="6" cols="80"></textarea><br/>
+			<div id="status"></div>
+			<button type="button" onClick="compile()">Compile</button>
+			<button type="button" onClick="run()">Run</button>
+			<button type="button" onClick="share()">Share</button>
+			<button type="button" onClick="load()">Load Binary</button>
+			<button type="button" onClick="save()">Save Binary</button>
+			<select id="framerate" onchange="framerate()">
+			  <option>7 Cycles/Frame</option>
+			  <option>15 Cycles/Frame</option>
+			  <option>20 Cycles/Frame</option>
+			  <option>100 Cycles/Frame</option>
+			  <option>200 Cycles/Frame</option>
+			</select>
+			<button type="button" onClick="window.open('Readme.html', '_blank');">
+				Manual
+			</button>
+		</center>
+	</div>
+
+	<div class="canv">
+		<canvas id="target" style="display:none" width="640" height="320"/>
+	</div>
+
+	<script src="octo.js"></script>
+	<script>window.onload = runGist();</script>
+</body>
+</html>
