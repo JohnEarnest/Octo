@@ -4,13 +4,13 @@
 </head>
 <body>
 	<center>
-		Click to toggle pixels:<br/>
+		Click and drag to draw. Right click and drag to erase:<br/>
 		<canvas id="draw" width="200" height="375"></canvas><br/>
-		<textarea id="output" rows="1" cols="75" onchange="edit();" onkeyup="edit();"></textarea>
+		<textarea id="output" rows="1" cols="75" onchange="editHex();" onkeyup="editHex();"></textarea>
 	</center>
 	<script>
 
-		function draw() {
+		function showPixels() {
 			render.fillStyle = "#996600";
 			render.fillRect(0, 0, 200, 375);
 			render.fillStyle = "#FFCC00";
@@ -23,26 +23,18 @@
 			}
 		}
 
-		function click(event) {
-			// toggle pixel
-			var rect = canvas.getBoundingClientRect();
-			var mx   = event.clientX - rect.left;
-			var my   = event.clientY - rect.top;
-			pixel[Math.floor(my/25)] ^= (128 >> Math.floor(mx/25));
-
-			// convert the pixels into hex and display
+		function showHex() {
+			var output = document.getElementById("output");
 			var hex = "";
 			for(var z = 0; z < 15; z++) {
 				var digits = pixel[z].toString(16).toUpperCase();
 				hex += "0x" + (digits.length == 1 ? "0"+digits : digits) + " ";
 			}
 			output.value = hex;
-
-			draw();
 		}
 
-		function edit() {
-			// convert the hex into pixels
+		function editHex() {
+			var output = document.getElementById("output");
 			var bytes = output.value.split(" ");
 			for(var z = 0; z < 15; z++) {
 				if (z < bytes.length) {
@@ -54,18 +46,40 @@
 					pixel[z] = 0;
 				}
 			}
-
-			draw();
+			showPixels();
 		}
 
-		var pixel = [];
-		var canvas = document.getElementById("draw");
-		var render = canvas.getContext("2d");
-		var output = document.getElementById("output");
+		function drag(event) {
+			if (mode == 0) { return; }
+			var rect = canvas.getBoundingClientRect();
+			var mx   = event.clientX - rect.left;
+			var my   = event.clientY - rect.top;
+			if (mode == 1) {
+				// draw
+				pixel[Math.floor(my/25)] |= (128 >> Math.floor(mx/25));
+			}
+			else {
+				// erase
+				pixel[Math.floor(my/25)] &= ~(128 >> Math.floor(mx/25));
+			}
+			showHex();
+			showPixels();
+		}
+	
+		function release(event)    { mode = 0; drag(event); }
+		function pressDraw(event)  { mode = 1; drag(event); }
 
-		for(var z = 0; z < 16; z++) { pixel[z] = 0; }
-		canvas.addEventListener("mousedown", click, false);
-		canvas.oncontextmenu = (function() { return false; });
+		var mode = 0;
+		var pixel = [];
+		for(var z = 0; z < 15; z++) { pixel[z] = 0; }
+
+		var canvas = document.getElementById("draw");
+		canvas.addEventListener("mousemove", drag, false);
+		canvas.addEventListener("mousedown", pressDraw, false);
+		canvas.addEventListener("mouseup"  , release, false);
+		canvas.oncontextmenu = function(event) { mode = 2; drag(event); return false; };
+		
+		var render = canvas.getContext("2d");
 		render.fillStyle = "#996600";
 		render.fillRect(0, 0, 200, 375);
 
