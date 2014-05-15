@@ -100,9 +100,60 @@ There are two caveats here: the number displayed is in hexadecimal and we can on
 
 You can also use 'bcd' as a way of dividing numbers by 10 or 100, but it's a little fiddly for this purpose.
 
+Tile-based Movement
+-------------------
+Say you want to make a turn-based game where a player moves an 8x8 tile at a time. We can use 'key' to wait for key input and then move the player based on the value we get. In this example I will represent the player's horizontal and vertical position using a single "tile" coordinate system which numbers each 8x8 region on the screen left to right, top to bottom. Later on, this system would make it easy to add obstacles and tiles which do special things when a player walks on them.
+
+	:data darwinian
+		0b00000000
+		0b00010000
+		0b00010000
+		0b01111100
+		0b00010000
+		0b00111000
+		0b00101000
+		0b00101000
+
+	: draw-player
+		va := v0
+		vc := 0b00111 # low 3 bits of v0 are the x coordinate
+		va &= vc      # mask them off
+		va <<= va     # multiply by 8 to get pixels
+		va <<= va
+		va <<= va
+
+		vb := v0
+		vc := 0b11000 # high 2 bits of v0 are the y coordinate
+		vb &= vc      # mask them off
+					  # and they're already in pixels!
+
+		i := darwinian
+		sprite va vb 8
+	;
+
+	: main
+		v0 := 12 # the player's position in tiles
+		loop
+			draw-player
+			v1 := key     # wait for a keypress
+			v2 := 1       # horizontal stride
+			v3 := 8       # vertical stride
+			draw-player
+
+			# assuming a default keyboard layout,
+			# these numbers will map to ASWD:
+
+			if v1 == 7 then v0 -= v2 # move left 
+			if v1 == 9 then v0 += v2 # move right
+			if v1 == 5 then v0 -= v3 # move up
+			if v1 == 8 then v0 += v3 # move down
+		again
+
+Note that since we do no boundary checking the player can wrap around the edges of the screen. You could add additional logic to prevent this, or you could take advantage of it as a game mechanic.
+
 Tiles and Indirection
 ---------------------
-Consider the following problem: you want to make a game that draws a series of 'tiles' to fill the screen as in an RPG overworld. We can start by declaring the tile data the rest of our experiments will use.
+Say you want to make a game that draws a series of 'tiles' to fill the screen as in an RPG overworld. We can start by declaring the tile data the rest of our experiments will use.
 
 	# 8x8 tiles for a simple RPG-like overworld
 	:data ground  0b11101111 0b10111101 0b11110111 0b11011110
