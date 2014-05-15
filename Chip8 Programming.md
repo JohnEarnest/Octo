@@ -335,4 +335,57 @@ What if instead of picking tiles randomly we had static data defining a level? T
 
 Naturally we could simplify our 'get-tile' routine a bit if we stored tiles in multiples of 8 to begin with. Perhaps we could use the lower-order bits to store other information and mask them off with a simple AND before using them to index into the tile sheet. This approach can support up to 32 8x8 tiles before v0 will wrap around while computing an offset for i. If we wanted more tiles, we would need to add to i in multiple smaller steps.
 
-( to be continued. )
+Multiple Indirection
+--------------------
+In everyday programming, it is not unusual to want to dereference more than one pointer in sequence- imagine indexing a "jagged" 2d array or traversing a linked list. Unfortunately, it is difficult to do something like this in the Chip8 instruction set.
+
+We can only load data from memory through the 12-bit i register, and and we can only load into an 8 bit ordinary register. i can be initialized to a constant or we can add an 8 bit value to it. How can we load an arbitrary value in normal registers into i?
+
+One approach would be to use repeated addition into i:
+
+	v0 :=   2 # high 4 bits of desired i
+	v1 :=  37 # low 8 bits of desired i
+	v2 := 128 # constant
+
+	i := 0
+	i += v1
+	loop
+		while v0 != 0
+		i += v2   # we can't add 256 at once,
+		i += v2   # so we do it in two steps.
+		v0 += 255 # equivalent to subtracting 1
+	again
+
+Another approach would be to use self-modifying code to place an "i := NNN" instruction in memory before executing it. This looks like "0xANNN" in memory, so we can OR our high nybble with 0xA0.
+
+	: trampoline
+		0 0 # destination for i := NNN
+	;
+
+	: code
+		v0 :=    2 # high 4 bits of desired i
+		v1 :=   37 # low 8 bits of desired i
+		v2 := 0xA0 # constant
+
+		v0 |= v2        # now v0-v1 contain our instruction
+		i := trampoline # select destination for instruction
+		save v1         # write the instruction
+		trampoline      # execute our instruction, setting i.
+
+And another approach could be to use a jump table. This doesn't allow us to store completely arbitrary values into i, but it does allow us to select an i based on the contents of a register. Since the jump table entries are 4 bytes each and are indexed by v0, we can have at most 64 such entries in a table.
+
+	: table
+		i := 0x123 ;
+		i := 0x456 ;
+		i := 0x789 ;
+		i := 0xABC ;
+		i := 0xDEF ;
+
+	: get-i
+		# assume get-i is called as a subroutine,
+		# and v0 contains the table index.
+
+		v0 <<= v0 # multiply by 4, the table entry size
+		v0 <<= v0
+		jump0 table
+
