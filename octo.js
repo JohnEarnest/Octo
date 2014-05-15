@@ -531,7 +531,8 @@ function share() {
 			"readme.txt" : {
 				"content": "Play this game by pasting the program into http://johnearnest.github.io/Octo/"
 			},
-			"prog.ch8" : {"content": prog}
+			"prog.ch8" : {"content": prog},
+			"framerate.txt": {"content": TICKS_PER_FRAME.toString()}
 		}
 	}));
 }
@@ -546,6 +547,17 @@ function runGist() {
 		if (xhr.readyState == 4 && (xhr.status == 200 || xhr.status !== 201)) {
 			var result = JSON.parse(xhr.responseText);
 			document.getElementById("input").value = result.files["prog.ch8"].content;
+			var framerateNum = parseInt(result.files["framerate.txt"].content);
+			var framerateEl = document.getElementById("framerate");
+			for (var i = 0; i < framerateEl.options.length; i++) {
+				if (framerateEl.options[i].text == framerateNum + ' Cycles/Frame') {
+					framerateEl.selectedIndex = i;
+					framerate();
+					break;
+				}
+			}
+			if (i == framerateEl.options.length)
+				TICKS_PER_FRAME = framerateNum;
 			run();
 		}
 	}
