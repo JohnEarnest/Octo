@@ -138,7 +138,7 @@ Say you want to make a turn-based game where a player moves an 8x8 tile at a tim
 			v1 := key     # wait for a keypress
 			v2 := 1       # horizontal stride
 			v3 := 8       # vertical stride
-			draw-player
+			draw-player   # erase the player before moving
 
 			# assuming a default keyboard layout,
 			# these numbers will map to ASWD:
@@ -150,6 +150,52 @@ Say you want to make a turn-based game where a player moves an 8x8 tile at a tim
 		again
 
 Note that since we do no boundary checking the player can wrap around the edges of the screen. You could add additional logic to prevent this, or you could take advantage of it as a game mechanic.
+
+On the other hand, perhaps the tile coordinate system is unnecessary overhead for your game. Here's a similar program which uses discrete x and y position registers. A jump table based on jump0 (which jumps to an address + the contents of v0) is used to decode keypresses. The 'launch' routine is a subroutine so that after the jump0 and second jump into the body of each handler we can 'return' to the caller of 'launch'.
+
+Movement is constrained to avoid having the player wrap around the edges of the screen. Finally, we avoid using subtraction instructions when moving the player by using immediate adds which will wrap around to the desired value.
+
+	:data darwinian
+		0b00000000
+		0b00010000
+		0b00010000
+		0b01111100
+		0b00010000
+		0b00111000
+		0b00101000
+		0b00101000
+
+	: no ; # a no-op stub for unused entries
+	: lf  if va !=  0 then va += 248 ;
+	: rt  if va != 56 then va +=   8 ;
+	: up  if vb !=  0 then vb += 248 ;
+	: dn  if vb != 24 then vb +=   8 ;
+
+	: code  jump no jump no jump no jump no
+	        jump no jump up jump no jump lf
+	        jump dn jump rt jump no jump no
+	        jump no jump no jump no jump no
+
+	: launch
+		# launch is a sub so that jump
+		# entries can return to the caller.
+		# jump table entries are
+		# 2 bytes, so double the key code:
+		v0 <<= v0
+		jump0 code
+
+	: main
+		va := 16 # x position
+		vb :=  8 # y position
+		i := darwinian
+		loop
+			sprite va vb 8 # draw sprite
+			v0 := key      # wait for key
+			sprite va vb 8 # erase sprite
+			launch
+		again
+
+The jump0 instruction can be very useful for eliminating complex nests of branches and conditionals. Remember that if your jump table entries are 2 bytes long you can only have 128 in a table (such as if they are jumps) and if they are 4 bytes long you can only have 64 (such as if they are a sub call followed by a return).
 
 Tiles and Indirection
 ---------------------
