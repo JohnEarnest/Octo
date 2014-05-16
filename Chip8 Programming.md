@@ -429,7 +429,7 @@ Let's begin with a byte-wise scroll upwards of an 8 pixel tall sprite:
 			sprite v0 v0 8
 		again
 
-Scrolling horizontally requires bitshifts but is generally easier because we only need to keep a single row in registers at a time. Both shift instructions leav vF with the bit that was shifted out. Rotating a byte left is easy, since we can simply OR vF into the result of the shift:
+Scrolling horizontally requires bitshifts but is generally easier because we only need to keep a single row in registers at a time. Both shift instructions leave vF with the bit that was shifted out. Rotating a byte left is easy, since we can simply OR vF into the result of the shift:
 
 	v0 <<= v0 # shift most significant bit out left
 	v0 |= vF  # OR it back in as the new least significant bit

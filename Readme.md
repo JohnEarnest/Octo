@@ -16,6 +16,8 @@ Octo is a simple high-level assembler for the Chip8 virtual machine, complete wi
 
 Octo syntax is in some ways inspired by Forth- a series of whitespace-delimited tokens. Labels are defined with `:` followed by a name, and simply using a name by itself will perform a call. `;` terminates subroutines with a return. `#` indicates a single-line comment. Numbers can use `0x` or `0b` prefixes to indicate hexadecimal or binary encodings, respectively. Whenever numbers are encountered outside a statement they will be compiled as literal bytes. Names must always be defined before they can be used- programs are written in "reading" order. An entrypoint named `main` must be defined.
 
+Chip8 has 16 general-purpose 8-bit registers named `v0` to `vF`. `vF` is the "flag" register", and some operations will modify it as a side effect. `i` is the memory index register and is used when reading and writing memory via `load`, `save` and `bcd`, and also provides the address of the graphics data drawn by `sprite`. Sprites are drawn by xoring their pixels with the contents of the screen. Drawing a sprite sets `vF` to 0, or to 1 if drawing the sprite toggles any pixels which were previously on.
+
 In the following descriptions, `vx` and `vy` refer to some register name (v0-vF), `l` refers to a (forth-style) identifier and `n` refers to some number.
 
 Statements
@@ -46,13 +48,13 @@ The various chip8 copy/fetch/arithmetic opcodes have been abstracted to mostly f
 - `vx := delay`    set register to delay timer.
 - `vx := key`      block for a keypress and then store code in register.
 - `vx += n`        add constant to register.
-- `vx += vy`       add register to register.
-- `vx -= vy`       subtract register from register.
-- `vx |= vy`       bitwise OR register with register.
+- `vx += vy`       add register to register. (set vF to 1 if result overflows, else 0)
+- `vx -= vy`       subtract register from register. (set vF to 1 if result underflows, else 0)
+- `vx |= vy`       bitwise OR register with register. 
 - `vx &= vy`       bitwise AND register with register.
 - `vx ^= vy`       bitwise XOR register with register.
-- `vx >>= vy`      shift vy right by 1 and store result in vx.
-- `vx <<= vy`      shift vy left by 1 and store result in vx.
+- `vx >>= vy`      shift vy right by 1 and store result in vx. (set vF to LSB of vy)
+- `vx <<= vy`      shift vy left by 1 and store result in vx. (set vF to MSB of vy)
 
 Control Flow
 ------------
