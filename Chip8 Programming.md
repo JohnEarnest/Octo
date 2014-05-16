@@ -429,7 +429,27 @@ Let's begin with a byte-wise scroll upwards of an 8 pixel tall sprite:
 			sprite v0 v0 8
 		again
 
-Scrolling horizontally requires bitshifts but is generally easier because we only need to keep a single row in registers at a time. Both shift instructions leave vF with the bit that was shifted out. Rotating a byte left is easy, since we can simply OR vF into the result of the shift:
+On the other hand, we might save ourselves quite a bit of grief by repeating our sprite data twice and indexing into it based on a rolling offset, essentially producing a "sliding window" into the underlying sprite data. This approach can be used for other kinds of animation, too:
+
+	: letter
+		0x18 0x18 0x34 0x24 0x7C 0x62 0xC2 0xE7
+		0x18 0x18 0x34 0x24 0x7C 0x62 0xC2 0xE7
+
+	: main
+		v1 := 0 # window offset
+		loop
+			v0 := 10
+			i := letter
+			i += v1
+			clear
+			sprite v0 v0 8
+			
+			v1 += 1 # increment v1 modulo 8
+			v0 := 0b111 
+			v1 &= v0
+		again
+
+Scrolling horizontally requires bitshifts. Both shift instructions leave vF with the bit that was shifted out. Rotating a byte left is easy, since we can simply OR vF into the result of the shift:
 
 	v0 <<= v0 # shift most significant bit out left
 	v0 |= vF  # OR it back in as the new least significant bit
