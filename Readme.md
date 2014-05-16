@@ -14,16 +14,14 @@ Octo is a simple high-level assembler for the Chip8 virtual machine, complete wi
 	 7 8 9 E     a s d f
 	 A 0 B F     z x c v
 
-Octo syntax is in some ways inspired by Forth- a series of whitespace-delimited tokens. Subroutines are defined with `:` followed by a name, and simply using the name will perform a call. `;` terminates subroutines with a return. `#` indicates a single-line comment. Numbers can use `0x` or `0b` prefixes to indicate hexadecimal or binary encodings, respectively. Whenever numbers are encountered outside a statement they will be compiled as literal bytes. Names must always be defined before they can be used- programs are written in "reading" order. An entrypoint named `main` must be defined.
+Octo syntax is in some ways inspired by Forth- a series of whitespace-delimited tokens. Labels are defined with `:` followed by a name, and simply using a name by itself will perform a call. `;` terminates subroutines with a return. `#` indicates a single-line comment. Numbers can use `0x` or `0b` prefixes to indicate hexadecimal or binary encodings, respectively. Whenever numbers are encountered outside a statement they will be compiled as literal bytes. Names must always be defined before they can be used- programs are written in "reading" order. An entrypoint named `main` must be defined.
 
 In the following descriptions, `vx` and `vy` refer to some register name (v0-vF), `l` refers to a (forth-style) identifier and `n` refers to some number.
 
 Statements
 ----------
 
-- `:const l n`      declare a constant with some numeric value.
-- `:data l`         declare a label- can be used like a constant.
-- `return`          return from the current subroutine.
+- `return`          return from the current subroutine. (alias for ;)
 - `clear`           clear the screen.
 - `bcd vx`          decode vx into BCD at I, I+1, I+2.
 - `save vx`         save registers v0-vx to I.
@@ -58,7 +56,7 @@ The various chip8 copy/fetch/arithmetic opcodes have been abstracted to mostly f
 
 Control Flow
 ------------
-The Chip8 conditional opcodes are all conditional skips, so Octo control structures have been designed to map cleanly to this approach. `if` conditionally executes a single statement (which could be a subroutine call or jump0), and `loop...again` is an infinite loop which can be exited by one of any contained `while` conditional breaks. Loops can be nested as desired. `if` and `while` should each be followed by a conditional expression. Conditional expressions can have one of the following six forms:
+The Chip8 conditional opcodes are all conditional skips, so Octo control structures have been designed to map cleanly to this approach. The following conditional expressions can be used with `if...then` or `while`:
 
 - `vx == n`
 - `vx != n`
@@ -67,51 +65,24 @@ The Chip8 conditional opcodes are all conditional skips, so Octo control structu
 - `vx key` (true if the key indicated by vx is pressed)
 - `vy -key` (true if the key indicated by vy is not pressed)
 
-Control flow examples:
+`if...then` conditionally executes a single statement. For example,
 
-	if v3 != 3 then exit
+	if v0 != 5 then v1 += 2
+
+`loop...again` is an unconditional infinite loop. `loop` marks the address of the start of the loop and produces no code, while `again` compiles a jump instruction based on the address provided by `loop`. Since `again` is itself a statement, we can use an `if...then` at the end of a loop to skip over the backwards jump and efficiently break out of the loop. The following loop will execute 5 times:
+
+	v0 := 0
 	loop
-		v1 += 1
-		while v1 != 10
-		v1 += 2
-		while v1 != 10
+		# do something...
+		v0 += 1
+		if v0 != 5 then
 	again
 
-Basic sprite drawing:
+The other way to break out of a loop is `while`. `while` creates a conditional skip around a forward jump. These forward jumps are resolved by `again` to point to the address immediately outside their loop. `while` will thus exit the current loop if its condition is not true. You can have as many `while` statements in a loop as you want. Here is an example of `while` which is similar to the previous except for when the condition is checked.
 
-	:data square
-		0b11110000
-		0b11110000
-		0b11110000
-		0b11110000
-
-	: main
-		v0 := 20
-		v1 := 10
-		i  := square
-
-		sprite v0 v1 4
-		v0 += 2
-		v1 += 2
-		sprite v0 v1 4
-
-		v2 := vf
-		v0 += 10
-		i  := hex v2
-		sprite v0 v1 5
-
-		loop again
-	;
-
-Key input and hex display:
-
-	: main
-		v0 := 20
-		v1 := 10
-		loop
-			v2 := key
-			clear
-			i  := hex v2
-			sprite v0 v1 5
-		again
-	;
+	v0 := 0
+	loop
+		v0 += 1
+		while v0 != 5
+		# do something...
+	again

@@ -11,7 +11,7 @@ Framerate
 ---------
 The Chip8 specification doesn't say how fast programs should run. Experimentally, you may find that various games seem intended to run at different speeds. Pong.ch8, for example, is pretty playable when the game runs at about 7 chip8 cycles per frame and a framerate of 60fps. Many interpreters make it possible to adjust their speed for each game. This is less than ideal, however, as it requires players to experiment. Let's consider a very simple program which moves a sprite on the screen at a fixed rate:
 
-	:data box
+	: box
 		0b11110000
 		0b10010000
 		0b10010000
@@ -29,7 +29,7 @@ The Chip8 specification doesn't say how fast programs should run. Experimentally
 
 Since we know the delay timer counts down at 60hz, we can use it to precisely time an interframe delay. Take a look at this modified program and note that animation will run at a consistent speed even if your interpreter is cranked up really fast:
 
-	:data box
+	: box
 		0b11110000
 		0b10010000
 		0b10010000
@@ -77,7 +77,7 @@ To display a single digit from a register, we can make use of the 'hex' operatio
 There are two caveats here: the number displayed is in hexadecimal and we can only display a single digit. How do we display larger numbers? That's where 'bcd' comes in. It'll take a number in a register, split it into hundreds, tens and ones and then store those into sequential addresses in memory. Then we use 'load' to scoop those values into the bottom three registers and use 'hex' like before to display them.
 
 	# temporary storage for hundreds, tens and ones:
-	:data digits 0 0 0
+	: digits 0 0 0
 
 	: main
 		v0 := 137      # some number 0-255
@@ -110,7 +110,7 @@ It's easy to make objects move in whole numbers of pixels per second- just store
 
 One technique for accomplishing this is to use fixed-point and the carry (vF) register. You'll store a fractional position in one register, accumulating your speed into it and incrementing the real position whenever the result sets the carry register- that is, whenever the result wraps around.
 
-	:data ball
+	: ball
 		0b0110000
 		0b1001000
 		0b1001000
@@ -146,7 +146,7 @@ Tile-based Movement
 -------------------
 Say you want to make a turn-based game where a player moves an 8x8 tile at a time. We can use 'key' to wait for key input and then move the player based on the value we get. In this example I will represent the player's horizontal and vertical position using a single "tile" coordinate system which numbers each 8x8 region on the screen left to right, top to bottom. Later on, this system would make it easy to add obstacles and tiles which do special things when a player walks on them.
 
-	:data darwinian
+	: darwinian
 		0b00000000
 		0b00010000
 		0b00010000
@@ -197,7 +197,7 @@ On the other hand, perhaps the tile coordinate system is unnecessary overhead fo
 
 Movement is constrained to avoid having the player wrap around the edges of the screen. Finally, we avoid using subtraction instructions when moving the player by using immediate adds which will wrap around to the desired value.
 
-	:data darwinian
+	: darwinian
 		0b00000000
 		0b00010000
 		0b00010000
@@ -244,14 +244,14 @@ Tiles and Indirection
 Say you want to make a game that draws a series of 'tiles' to fill the screen as in an RPG overworld. We can start by declaring the tile data the rest of our experiments will use.
 
 	# 8x8 tiles for a simple RPG-like overworld
-	:data ground  0b11101111 0b10111101 0b11110111 0b11011110
-				  0b11110111 0b10111101 0b11101111 0b01111011
-	:data water   0b00000000 0b00000000 0b11001100 0b00110000
-				  0b00000000 0b10000110 0b00011000 0b00000000
-	:data tree    0b11000011 0b10101001 0b01010101 0b00101010
-				  0b01010100 0b10000001 0b11100111 0b11000011
-	:data house   0b11111111 0b11100111 0b10011001 0b01111110
-				  0b00000000 0b10111101 0b10100101 0b10100101
+	: ground  0b11101111 0b10111101 0b11110111 0b11011110
+	          0b11110111 0b10111101 0b11101111 0b01111011
+	: water   0b00000000 0b00000000 0b11001100 0b00110000
+	          0b00000000 0b10000110 0b00011000 0b00000000
+	: tree    0b11000011 0b10101001 0b01010101 0b00101010
+	          0b01010100 0b10000001 0b11100111 0b11000011
+	: house   0b11111111 0b11100111 0b10011001 0b01111110
+	          0b00000000 0b10111101 0b10100101 0b10100101
 
 First, let's try writing some simple loops that cover the entire display with tree tiles. Since the Chip8 display is 64x32 and our tiles are 8x8 we'll draw four rows of 8 tiles:
 
@@ -297,7 +297,7 @@ Now we want to extend this program to randomly scatter tiles. Let's generate a t
 
 What if instead of picking tiles randomly we had static data defining a level? There are many ways we might store the level data with varying degrees of compactness. For simplicity and ease of editing, let's represent each tile in the map with a byte, 0-3. Data will be stored a row at a time to correspond to the way we draw the level. I've rearranged our registers a bit because we need low registers free to be able to use 'load'.
 
-	:data map
+	: map
 		1 1 1 1 1 2 2 2
 		1 1 1 1 0 0 0 2
 		2 0 0 0 0 0 2 2

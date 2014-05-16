@@ -3,7 +3,7 @@
 # the contents of the vF register.
 # (Should say '1')
 
-:data square
+: square
 	0b11110000
 	0b11110000
 	0b11110000

@@ -3,7 +3,7 @@
 # around the screen in response
 # to keypresses.
 
-:data dot
+: dot
 	0b10000000
 
 : main

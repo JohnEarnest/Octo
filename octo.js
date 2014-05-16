@@ -237,7 +237,6 @@ function Compiler(source) {
 	this.loops  = []; // stack<int>
 	this.whiles = []; // stack<int>
 	this.dict   = {}; // map<name, addr>
-	this.vars   = {}; // map<name, addr>
 
 	this.tokens = tokenize(source);
 	this.next = function()    { var ret = this.tokens[0]; this.tokens.splice(0, 1); return ret; }
@@ -287,7 +286,6 @@ function Compiler(source) {
 
 	this.value = function(thing) {
 		if (!thing && (thing != 0)) { thing = this.next(); }
-		if (thing in this.vars) { return this.vars[thing]; }
 		if (thing in this.dict) { return this.dict[thing]; }
 		if (typeof thing == "number") { return thing; }
 		throw "Undefined name '"+thing+"'.";
@@ -360,9 +358,7 @@ function Compiler(source) {
 	}
 
 	this.instruction = function(token) {
-		if      (token == ":data")   { this.vars[this.next()] = this.here(); }
-		else if (token == ":const")  { this.vars[this.next()] = this.value(this.next()); }
-		else if (token == ":")       { this.dict[this.next()] = this.here(); }
+		if      (token == ":")       { this.dict[this.next()] = this.here(); }
 		else if (token in this.dict) { this.immediate(0x20, this.wordLabel(token)); }
 		else if (token == ";")       { this.inst(0x00, 0xEE); }
 		else if (token == "return")  { this.inst(0x00, 0xEE); }
@@ -407,9 +403,6 @@ function Compiler(source) {
 		while(this.tokens.length > 0) {
 			if (typeof this.tokens[0] == "number") {
 				this.rom.push(this.next());
-			}
-			else if (this.tokens[0] in this.vars) {
-				this.rom.push(this.vars[this.next()]);
 			}
 			else {
 				this.instruction(this.next());

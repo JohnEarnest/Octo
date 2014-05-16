@@ -19,7 +19,10 @@
 	<div id="editor">
 		<center>
 <textarea id="input"  rows="40" cols="80">
-:data smile
+# A very simple example program which draws smiley faces
+# on the screen randomly and periodically clears the display.
+
+: smile
 	0b00100100
 	0b00100100
 	0b00000000
@@ -34,7 +37,7 @@
 		v1 := random 0b00011111
 		sprite v0 v1 6
 		v2 += 1
-		while v2 != 32
+		if v2 != 32 then
 	again
 	clear
 ;
@@ -42,7 +45,6 @@
 : main
 	i := smile
 	loop body again
-;
 </textarea><br/>
 			<textarea id="output" style="display:none" rows="6" cols="80"></textarea><br/>
 			<div id="status"></div>
