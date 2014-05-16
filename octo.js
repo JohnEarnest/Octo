@@ -555,15 +555,11 @@ function runGist() {
 			var options = JSON.parse(result.files["options.json"].content);
 			var framerateNum = options["tickrate"]|0;
 			var framerateEl = document.getElementById("framerate");
-			for (var i = 0; i < framerateEl.options.length; i++) {
-				if (framerateEl.options[i].text == framerateNum + ' Cycles/Frame') {
-					framerateEl.selectedIndex = i;
-					framerate();
-					break;
-				}
-			}
-			if (i == framerateEl.options.length)
+			if (framerateEl.value == 0) {
 				TICKS_PER_FRAME = framerateNum;
+			} else {
+				TICKS_PER_FRAME = framerateEl.value;
+			}
 			run();
 		}
 	}
@@ -571,7 +567,7 @@ function runGist() {
 }
 
 function framerate() {
-	TICKS_PER_FRAME = parseInt(document.getElementById("framerate").value.split(' ')[0], 10);
+	TICKS_PER_FRAME = document.getElementById("framerate").value;
 }
 
 function render() {
