@@ -1,0 +1,20 @@
+# Key input test program.
+# allows the user to move a dot
+# around the screen in response
+# to keypresses.
+
+:data dot
+	0b10000000
+
+: main
+	v0 := 10
+	v1 := 10
+	i := dot
+	
+	loop
+		sprite v0 v1 1
+		v2 := 7 if v2 key then v0 += -1 # left
+		v2 := 9 if v2 key then v0 +=  1 # right
+		v2 := 5 if v2 key then v1 += -1 # up
+		v2 := 8 if v2 key then v1 +=  1 # down
+	again
