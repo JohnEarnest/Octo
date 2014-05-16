@@ -389,3 +389,89 @@ And another approach could be to use a jump table. This doesn't allow us to stor
 		v0 <<= v0
 		jump0 table
 
+Scrolling
+---------
+Basic Chip8 doesn't have any instructions for scrolling the screen, but since sprites occupy small regions of memory it's fairly easy to scroll their images directly. We must remain aware that the 'load' and 'save' opcodes both increment i to the address immediately after the region of memory they operate upon, which unfortunately is not very useful most of the time.
+
+Let's begin with a byte-wise scroll upwards of an 8 pixel tall sprite:
+
+	: letter  0x18 0x18 0x34 0x24 0x7C 0x62 0xC2 0xE7
+
+	: main
+		loop
+			v1 := 7 # memory offset
+			i := letter
+			load v0
+			v2 := v0 # prime v2 with the first row for wraparound
+
+			loop
+				i := letter
+				i += v1
+				load v0     # fetch the current row
+
+				v3 := v0    # stash current row in v3
+
+				v0 := v2
+				i := letter
+				i += v1
+				save v0     # write the previous row to the current
+
+				v2 := v3    # current becomes previous
+
+				v1 += -1
+				if v1 != -1 then
+			again
+
+
+			clear
+			v0 := 10
+			i := letter
+			sprite v0 v0 8
+		again
+
+Scrolling horizontally requires bitshifts but is generally easier because we only need to keep a single row in registers at a time. Both shift instructions leav vF with the bit that was shifted out. Rotating a byte left is easy, since we can simply OR vF into the result of the shift:
+
+	v0 <<= v0 # shift most significant bit out left
+	v0 |= vF  # OR it back in as the new least significant bit
+
+Rotating right is slightly more complicated because we need to mask vF's 1 or 0 value into the most significant bit of the result.
+
+	v0 >>= v0 # shift the least significant bit out right
+	if vF == 1 then vF := 128
+	v0 |= vF  # OR it back in as the new most significant bit
+
+If we use an unrolled loop, we can employ both operations for an interesting effect:
+
+	: letter  0x18 0x18 0x34 0x24 0x7C 0x62 0xC2 0xE7
+
+	: main
+		loop
+			v2 := 0 # memory offset
+			loop
+				i := letter
+				i += v2
+				load v1    # read in two bytes
+
+				v0 <<= v0 
+				v0 |= vF   # rotate left
+
+				v1 >>= v1
+				if vF == 1 then vF := 128
+				v1 |= vF   # rotate right
+
+				i := letter
+				i += v2
+				save v1    # write back two bytes
+
+				v2 += 2
+				if v2 != 8 then
+			again
+
+			clear
+			v0 := 10
+			i := letter
+			sprite v0 v0 8
+		again
+
+
+As demonstrated here, if you have enough registers to spare you can very conveniently operate on chunks of memory at once. An entire sprite can often fit in the Chip8 register file, but you may need to spill and restore your working registers. While it may seem unintuitive coming from other architectures, consider copying sprite data from place to place for animation as an alternative to using frame offsets.
