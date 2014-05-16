@@ -422,12 +422,32 @@ Let's begin with a byte-wise scroll upwards of an 8 pixel tall sprite:
 				if v1 != -1 then
 			again
 
-
-			clear
 			v0 := 10
 			i := letter
+			clear
 			sprite v0 v0 8
 		again
+
+This is pretty slow. Since our sprite is small and registers are not at a premium, we might try shuffling data around in larger chunks:
+
+	: letter  0x18 0x18 0x34 0x24 0x7C 0x62 0xC2 0xE7
+
+	: main
+		loop
+			i := letter
+			load v0
+			v7 := v0 # fetch the top row and move it to v7
+			load v6  # fetch the remainder of the sprite into v0-v6
+			i := letter
+			save v7  # write them all back
+
+			v0 := 10
+			i := letter
+			clear
+			sprite v0 v0 8
+		again
+
+Nice! Unfortunately, this technique uses 8 registers for temporary storage, so you are likely to need to spill some data before employing it.
 
 On the other hand, we might save ourselves quite a bit of grief by repeating our sprite data twice and indexing into it based on a rolling offset, essentially producing a "sliding window" into the underlying sprite data. This approach can be used for other kinds of animation, too:
 
@@ -492,6 +512,5 @@ If we use an unrolled loop, we can employ both operations for an interesting eff
 			i := letter
 			sprite v0 v0 8
 		again
-
 
 As demonstrated here, if you have enough registers to spare you can very conveniently operate on chunks of memory at once. An entire sprite can often fit in the Chip8 register file, but you may need to spill and restore your working registers. While it may seem unintuitive coming from other architectures, consider copying sprite data from place to place for animation as an alternative to using frame offsets.
