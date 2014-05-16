@@ -1,0 +1,27 @@
+# Collision detection test program.
+# Draws two overlapping sprites and displays
+# the contents of the vF register.
+# (Should say '1')
+
+:data square
+	0b11110000
+	0b11110000
+	0b11110000
+	0b11110000
+
+: main
+	v0 := 20
+	v1 := 10
+	i  := square
+
+	sprite v0 v1 4
+	v0 += 2
+	v1 += 2
+	sprite v0 v1 4
+
+	v2 := vf
+	v0 += 10
+	i  := hex v2
+	sprite v0 v1 5
+
+	loop again

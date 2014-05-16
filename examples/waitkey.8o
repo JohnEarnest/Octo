@@ -1,0 +1,13 @@
+# Key input test program.
+# Prompt for a keypress, display its
+# hex digit onscreen.
+
+: main
+	v0 := 20
+	v1 := 10
+	loop
+		v2 := key
+		clear
+		i  := hex v2
+		sprite v0 v1 5
+	again
