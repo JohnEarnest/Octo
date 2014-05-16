@@ -237,6 +237,7 @@ function Compiler(source) {
 	this.loops  = []; // stack<int>
 	this.whiles = []; // stack<int>
 	this.dict   = {}; // map<name, addr>
+	this.hasmain = true;
 
 	this.tokens = tokenize(source);
 	this.next = function()    { var ret = this.tokens[0]; this.tokens.splice(0, 1); return ret; }
@@ -358,7 +359,14 @@ function Compiler(source) {
 	}
 
 	this.instruction = function(token) {
-		if      (token == ":")       { this.dict[this.next()] = this.here(); }
+		if (token == ":") {
+			var label = this.next();
+			if ((this.here() == 0x202) && (label == "main")) {
+				this.hasmain = false;
+				this.rom = [];
+			}
+			this.dict[label] = this.here();
+		}
 		else if (token in this.dict) { this.immediate(0x20, this.wordLabel(token)); }
 		else if (token == ";")       { this.inst(0x00, 0xEE); }
 		else if (token == "return")  { this.inst(0x00, 0xEE); }
@@ -408,7 +416,10 @@ function Compiler(source) {
 				this.instruction(this.next());
 			}
 		}
-		this.jump(0x200, this.wordLabel("main")); // resolve the main branch
+		if (this.hasmain == true) {
+			// resolve the main branch
+			this.jump(0x200, this.wordLabel("main"));
+		}
 	}
 }
 
