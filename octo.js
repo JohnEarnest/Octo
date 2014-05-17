@@ -384,6 +384,7 @@ function Compiler(source) {
 		else if ("&="  == token) { this.fourop(0x8, reg, this.register(), 0x2); }
 		else if ("^="  == token) { this.fourop(0x8, reg, this.register(), 0x3); }
 		else if ("-="  == token) { this.fourop(0x8, reg, this.register(), 0x5); }
+		else if ("=-"  == token) { this.fourop(0x8, reg, this.register(), 0x7); }
 		else if (">>=" == token) { this.fourop(0x8, reg, this.register(), 0x6); }
 		else if ("<<=" == token) { this.fourop(0x8, reg, this.register(), 0xE); }
 		else {

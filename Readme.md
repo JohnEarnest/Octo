@@ -49,7 +49,8 @@ The various chip8 copy/fetch/arithmetic opcodes have been abstracted to mostly f
 - `vx := key`      block for a keypress and then store code in register.
 - `vx += n`        add constant to register.
 - `vx += vy`       add register to register. (set vF to 1 if result overflows, else 0)
-- `vx -= vy`       subtract register from register. (set vF to 1 if result underflows, else 0)
+- `vx -= vy`       subtract y from x, store in x (set vF to 1 if result underflows, else 0)
+- `vx =- vy`       subtract x from y, store in x (set vF to 1 if result underflows, else 0)
 - `vx |= vy`       bitwise OR register with register. 
 - `vx &= vy`       bitwise AND register with register.
 - `vx ^= vy`       bitwise XOR register with register.
@@ -65,7 +66,7 @@ The Chip8 conditional opcodes are all conditional skips, so Octo control structu
 - `vx == vy`
 - `vx != vy`
 - `vx key` (true if the key indicated by vx is pressed)
-- `vy -key` (true if the key indicated by vy is not pressed)
+- `vx -key` (true if the key indicated by vx is not pressed)
 
 `if...then` conditionally executes a single statement. For example,
 
