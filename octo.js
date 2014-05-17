@@ -555,7 +555,8 @@ function runGist() {
 			var options = JSON.parse(result.files["options.json"].content);
 			var framerateNum = options["tickrate"]|0;
 			var framerateEl = document.getElementById("framerate");
-			if (framerateEl.value == 0) {
+			framerateEl.value = framerateNum;
+			if (framerateEl.value == "") {
 				TICKS_PER_FRAME = framerateNum;
 			} else {
 				TICKS_PER_FRAME = framerateEl.value;
