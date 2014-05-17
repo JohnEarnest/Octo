@@ -92,9 +92,9 @@ function math(x, y, op) {
 		case 0x2: v[x] &= v[y]; break;
 		case 0x3: v[x] ^= v[y]; break;
 		case 0x4: var t = v[x]+v[y]; v[0xF] = (t > 0xFF)    ?1:0 ; v[x] = (t & 0xFF); break;
-		case 0x5: var t = v[x]-v[y]; v[0xF] = (v[x] > v[y]) ?1:0 ; v[x] = (t & 0xFF); break;
+		case 0x5: var t = v[x]-v[y]; v[0xF] = (v[x] < v[y]) ?1:0 ; v[x] = (t & 0xFF); break;
 		case 0x6: var t = v[y] >> 1; v[0xF] = (v[y] & 0x1)       ; v[x] = (t & 0xFF); break;
-		case 0x7: var t = v[y]-v[x]; v[0xF] = (v[y] > v[x]) ?1:0 ; v[x] = (t & 0xFF); break;
+		case 0x7: var t = v[y]-v[x]; v[0xF] = (v[y] < v[x]) ?1:0 ; v[x] = (t & 0xFF); break;
 		case 0xE: var t = v[y] << 1; v[0xF] = ((v[y] >> 7) & 0x1); v[x] = (t & 0xFF); break;
 		default: throw "unknown math op: " + op;
 	}
