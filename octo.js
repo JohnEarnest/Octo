@@ -310,8 +310,8 @@ function Compiler(source) {
 		}
 		// silently trim negative numbers, but warn
 		// about positive numbers which are too large:
-		if ((typeof nn != "number") || (nn > 255)) {
-			throw "Value '"+nn+"' cannot fit in a single byte!";
+		if ((typeof nn != "number") || (nn < -128) || (nn > 255)) {
+			throw "Argument '"+nn+"' does not fit in a byte- must be [-128, 255].";
 		}
 		return (nn & 0xFF);
 	}
@@ -322,7 +322,7 @@ function Compiler(source) {
 		if ((typeof n != "number") || (n < 0) || (n > 15)) {
 			throw "Invalid sprite size '"+n+"'; must be [0,15].";
 		}
-		return n;
+		return (n & 0xF);
 	}
 
 	this.conditional = function(negated) {
@@ -456,7 +456,11 @@ function Compiler(source) {
 		this.inst(0, 0); // reserve a jump slot
 		while(this.tokens.length > 0) {
 			if (typeof this.tokens[0] == "number") {
-				this.rom.push(this.next());
+				var nn = this.next();
+				if (nn < -128 || nn > 255) {
+					throw "Literal value '"+nn+"' does not fit in a byte- must be [-128, 255].";
+				}
+				this.rom.push(nn & 0xFF);
 			}
 			else {
 				this.instruction(this.next());
