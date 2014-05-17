@@ -286,8 +286,13 @@ function Compiler(source) {
 		// call, jump, jump0, i:=
 		if (!nnn & (nnn != 0)) { nnn = this.next(); }
 		if (typeof nnn != "number") {
-			// TODO: forward references.
-			if (nnn in this.dict) { nnn = this.dict[nnn]; }
+			if (nnn in this.protos) {
+				this.protos[nnn].push(this.here());
+				nnn = 0;
+			}
+			else if (nnn in this.dict) {
+				nnn = this.dict[nnn];
+			}
 			else { throw "Undefined name '"+nnn+"'."; }
 		}
 		if ((typeof nnn != "number") || (nnn < 0) || (nnn > 0xFFF)) {
@@ -394,7 +399,19 @@ function Compiler(source) {
 				this.rom = [];
 			}
 			this.dict[label] = this.here();
+
+			if (label in this.protos) {
+				for(var z = 0; z < this.protos[label].length; z++) {
+					var addr  = this.protos[label][z];
+					var patch = this.here();
+					this.rom[addr - 0x200] = (this.rom[addr - 0x200] & 0xF0) | ((patch >> 8)&0xF);
+					this.rom[addr - 0x1FF] = (patch & 0xFF);
+				}
+				delete this.protos[label];
+			}
 		}
+		else if (token == ":proto")  { this.protos[this.next()] = []; }
+		else if (token in this.protos) { this.immediate(0x20, this.wideValue(token)); }
 		else if (token in this.dict) { this.immediate(0x20, this.wideValue(token)); }
 		else if (token == ";")       { this.inst(0x00, 0xEE); }
 		else if (token == "return")  { this.inst(0x00, 0xEE); }
@@ -447,6 +464,11 @@ function Compiler(source) {
 		if (this.hasmain == true) {
 			// resolve the main branch
 			this.jump(0x200, this.wideValue("main"));
+		}
+		var keys = [];
+		for (var k in this.protos) { keys.push(k); }
+		if (keys.length > 0) {
+			throw "Unresolved prototypes: " + keys;
 		}
 	}
 }

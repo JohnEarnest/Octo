@@ -1,0 +1,16 @@
+# Compiler test program.
+# demonstrates the use of :proto
+# for defining forward references.
+
+:proto unused
+: unused
+
+: main
+	v0 := 4
+	:proto ignore
+	jump ignore
+	v0 := 9
+: ignore
+	i := hex v0
+	sprite v0 v0 5
+	loop again
