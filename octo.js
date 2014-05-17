@@ -237,17 +237,13 @@ function Compiler(source) {
 	this.loops  = []; // stack<int>
 	this.whiles = []; // stack<int>
 	this.dict   = {}; // map<name, addr>
+	this.protos = {}; // map<name, list<addr>>
 	this.hasmain = true;
 
 	this.tokens = tokenize(source);
 	this.next = function()    { var ret = this.tokens[0]; this.tokens.splice(0, 1); return ret; }
 	this.here = function()    { return this.rom.length + 0x200; }
 	this.inst = function(a,b) { this.rom.push(a & 0xFF); this.rom.push(b & 0xFF); }
-
-	this.wordLabel = function(name) {
-		if (!(name in this.dict)) { throw "No word '" + name + "' declared."; }
-		return this.dict[name];
-	}
 
 	this.immediate = function(op, nnn) {
 		this.inst(op | ((nnn >> 8) & 0xF), (nnn & 0xFF));
@@ -285,11 +281,43 @@ function Compiler(source) {
 		if (thing != token) { throw "Expected '" + token + "', got '" + thing + "'!"; }
 	}
 
-	this.value = function(thing) {
-		if (!thing && (thing != 0)) { thing = this.next(); }
-		if (thing in this.dict) { return this.dict[thing]; }
-		if (typeof thing == "number") { return thing; }
-		throw "Undefined name '"+thing+"'.";
+	this.wideValue = function(nnn) {
+		// can be forward references.
+		// call, jump, jump0, i:=
+		if (!nnn & (nnn != 0)) { nnn = this.next(); }
+		if (typeof nnn != "number") {
+			// TODO: forward references.
+			if (nnn in this.dict) { nnn = this.dict[nnn]; }
+			else { throw "Undefined name '"+nnn+"'."; }
+		}
+		if ((typeof nnn != "number") || (nnn < 0) || (nnn > 0xFFF)) {
+			throw "Value '"+nnn+"' cannot fit in 12 bits!";
+		}
+		return (nnn & 0xFFF);
+	}
+
+	this.shortValue = function(nn) {
+		// vx:=, vx+=, vx==, v!=, random
+		if (!nn && (nn != 0)) { nn = this.next(); }
+		if (typeof nn != "number") {
+			if (nn in this.dict) { nn = this.dict[nn]; }
+			else { throw "Undefined name '"+nn+"'."; }
+		}
+		// silently trim negative numbers, but warn
+		// about positive numbers which are too large:
+		if ((typeof nn != "number") || (nn > 255)) {
+			throw "Value '"+nn+"' cannot fit in a single byte!";
+		}
+		return (nn & 0xFF);
+	}
+
+	this.tinyValue = function() {
+		// sprite length
+		var n = this.next();
+		if ((typeof n != "number") || (n < 0) || (n > 15)) {
+			throw "Invalid sprite size '"+n+"'; must be [0,15].";
+		}
+		return n;
 	}
 
 	this.conditional = function(negated) {
@@ -303,11 +331,11 @@ function Compiler(source) {
 		}
 		if (token == "==") {
 			if (this.isRegister()) { this.inst(0x90 | reg, this.register() << 4); }
-			else                   { this.inst(0x40 | reg, this.value()); }
+			else                   { this.inst(0x40 | reg, this.shortValue()); }
 		}
 		else if (token == "!=") {
 			if (this.isRegister()) { this.inst(0x50 | reg, this.register() << 4); }
-			else                   { this.inst(0x30 | reg, this.value()); }
+			else                   { this.inst(0x30 | reg, this.shortValue()); }
 		}
 		else if (token == "key") {
 			this.inst(0xE0 | reg, 0xA1);
@@ -324,7 +352,7 @@ function Compiler(source) {
 		if (token == ":=") {
 			var o = this.next();
 			if (o == "hex") { this.inst(0xF0 | this.register(), 0x29); }
-			else            { this.immediate(0xA0, this.value(o)); }
+			else            { this.immediate(0xA0, this.wideValue(o)); }
 		}
 		else if (token == "+=") {
 			this.inst(0xF0 | this.register(), 0x1E);
@@ -338,14 +366,14 @@ function Compiler(source) {
 		if (token == ":=") {
 			var o = this.next();
 			if (this.isRegister(o)) { this.fourop(0x8, reg, this.register(o), 0x0); }
-			else if (o == "random") { this.inst(0xC0 | reg, this.value()); }
+			else if (o == "random") { this.inst(0xC0 | reg, this.shortValue()); }
 			else if (o == "key")    { this.inst(0xF0 | reg, 0x0A); }
 			else if (o == "delay")  { this.inst(0xF0 | reg, 0x07); }
-			else                    { this.inst(0x60 | reg, this.value(o)); }
+			else                    { this.inst(0x60 | reg, this.shortValue(o)); }
 		}
 		else if ("+=" == token) {
 			if (this.isRegister()) { this.fourop(0x8, reg, this.register(), 0x4); }
-			else                   { this.inst(0x70 | reg, this.value()); }
+			else                   { this.inst(0x70 | reg, this.shortValue()); }
 		}
 		else if ("|="  == token) { this.fourop(0x8, reg, this.register(), 0x1); }
 		else if ("&="  == token) { this.fourop(0x8, reg, this.register(), 0x2); }
@@ -367,7 +395,7 @@ function Compiler(source) {
 			}
 			this.dict[label] = this.here();
 		}
-		else if (token in this.dict) { this.immediate(0x20, this.wordLabel(token)); }
+		else if (token in this.dict) { this.immediate(0x20, this.wideValue(token)); }
 		else if (token == ";")       { this.inst(0x00, 0xEE); }
 		else if (token == "return")  { this.inst(0x00, 0xEE); }
 		else if (token == "clear")   { this.inst(0x00, 0xE0); }
@@ -377,9 +405,9 @@ function Compiler(source) {
 		else if (token == "delay")   { this.expect(":="); this.inst(0xF0 | this.register(), 0x15); }
 		else if (token == "buzzer")  { this.expect(":="); this.inst(0xF0 | this.register(), 0x18); }
 		else if (token == "if")      { this.conditional(false); this.expect("then"); }
-		else if (token == "jump0")   { this.immediate(0xB0, this.value()); }
-		else if (token == "jump")    { this.immediate(0x10, this.value()); }
-		else if (token == "sprite")  { this.inst(0xD0 | this.register(), (this.register() << 4) | this.value()); }
+		else if (token == "jump0")   { this.immediate(0xB0, this.wideValue()); }
+		else if (token == "jump")    { this.immediate(0x10, this.wideValue()); }
+		else if (token == "sprite")  { this.inst(0xD0 | this.register(), (this.register() << 4) | this.tinyValue()); }
 		else if (token == "loop") {
 			this.loops.push(this.here());
 			this.whiles.push(null);
@@ -418,7 +446,7 @@ function Compiler(source) {
 		}
 		if (this.hasmain == true) {
 			// resolve the main branch
-			this.jump(0x200, this.wordLabel("main"));
+			this.jump(0x200, this.wideValue("main"));
 		}
 	}
 }
