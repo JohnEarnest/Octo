@@ -1,0 +1,307 @@
+###########################################
+#
+#  Chipenstein 3D
+#
+#  A work-in-progress experiment
+#  in creating a raycast 2.5d shooter
+#
+###########################################
+
+# The largest a map for this approach could be is 16x16.
+# Technically we don't have to surround all sides with
+# walls due to wraparound, but if there is a ray path
+# around the map without hitting a wall our raycast
+# routine will get stuck in an infinite loop:
+
+: map-data
+	0xFF 0x01 0xFF 0x01 0xFF 0x01 0xFF 0x01 0xFF 0x01
+	0x01 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0xFF
+	0xFF 0xFF 0x01 0xFF 0x00 0x00 0x00 0x00 0x00 0x01
+	0x01 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0xFF
+	0xFF 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x01
+	0x01 0x00 0xFF 0x01 0x00 0x00 0x00 0xFF 0x00 0xFF
+	0xFF 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x01
+	0x01 0xFF 0x01 0xFF 0x01 0xFF 0x01 0xFF 0x01 0xFF
+
+: collision-test
+	# take whole x/y in vc/vd, return map color in v0
+	i := map-data
+	vF := 0b111
+	vc &= vF
+	i += vc   # + (x % 8)
+	vd &= vF
+	v0 <<= vd
+	v0 <<= v0
+	v0 <<= v0
+	i += v0   # + (y % 8)*8
+	load v0   # the current map color
+;
+
+: player-position
+	0 0 0 0 # scratchpad
+
+: save-position
+	v0 := va
+	v1 := vb
+	v2 := vc
+	v3 := vd
+	i := player-position
+	save v3
+;
+
+: restore-position
+	i := player-position
+	load v3
+	va := v0
+	vb := v1
+	vc := v2
+	vd := v3
+;
+
+###########################################
+#
+#  Raycasting
+#
+###########################################
+
+# This is a table of the deltas and magnitudes for a fixed-point representation
+# of a cosine function. 64 entries correspond to ~5.6 degrees each.
+# deltas are interleaved with magnitudes- 0 for positive and 1 for negative.
+# deltas are normalized to slightly over half a step to make the distance calculations
+# come up with a maximum distance of roughly 15. Generated like so:
+#
+# for(int x = 0; x < 64; x++) {
+#	double s = Math.cos(Math.PI*2/64*x);
+#	System.out.format("0x%02X 0x%02X ", (int)(140 * Math.abs(s)), (s>=0) ?0 : 1);
+#	if (x % 8 == 7) { System.out.println(); }
+# }
+
+: cosine-table
+	0x8C 0x00 0x8B 0x00 0x89 0x00 0x85 0x00 0x81 0x00 0x7B 0x00 0x74 0x00 0x6C 0x00 
+	0x62 0x00 0x58 0x00 0x4D 0x00 0x41 0x00 0x35 0x00 0x28 0x00 0x1B 0x00 0x0D 0x00 
+	0x00 0x00 0x0D 0x01 0x1B 0x01 0x28 0x01 0x35 0x01 0x41 0x01 0x4D 0x01 0x58 0x01 
+	0x62 0x01 0x6C 0x01 0x74 0x01 0x7B 0x01 0x81 0x01 0x85 0x01 0x89 0x01 0x8B 0x01 
+	0x8C 0x01 0x8B 0x01 0x89 0x01 0x85 0x01 0x81 0x01 0x7B 0x01 0x74 0x01 0x6C 0x01 
+	0x62 0x01 0x58 0x01 0x4D 0x01 0x41 0x01 0x35 0x01 0x28 0x01 0x1B 0x01 0x0D 0x01 
+	0x00 0x01 0x0D 0x00 0x1B 0x00 0x28 0x00 0x35 0x00 0x41 0x00 0x4D 0x00 0x58 0x00 
+	0x62 0x00 0x6C 0x00 0x74 0x00 0x7B 0x00 0x81 0x00 0x85 0x00 0x89 0x00 0x8B 0x00
+
+: get-cosine
+	# takes angle in v0,
+	# returns delta, magnitude in v0, v1
+	vf := 0b111111
+	v0 &= vf # mod 64
+	v0 <<= v0
+	i := cosine-table
+	i += v0
+	load v1
+;
+
+: get-angles
+	# takes angle in v3,
+	# unpacks x/y delta/mag into v4-v7
+
+	# cos(a) = cosine-table[(a % 64) << 1]
+	v0 := v3
+	get-cosine
+	v4 := v0 # x delta
+	v5 := v1 # x magnitude
+		
+	# sin(a) = cosine-table[(a+16 % 64) << 1]
+	v0 := v3
+	v0 += 16
+	get-cosine
+	v6 := v0 # y delta
+	v7 := v1 # y magnitude
+;
+
+: delta-step
+	vf := 0
+	if v5 == 0 then va += v4 # positive x delta
+	if vf == 1 then vc += 1  # carry in
+
+	vf := 0
+	if v5 == 1 then va -= v4 # negative x delta
+	if vf == 1 then vc += -1 # borrow out
+
+	vf := 0
+	if v7 == 0 then vb += v6 # positive y delta
+	if vf == 1 then vd += 1  # carry in
+
+	vf := 0
+	if v7 == 1 then vb -= v6 # negative y delta
+	if vf == 1 then vd += -1 # borrow out
+;
+
+: heights
+	# {height, color}
+	0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+	0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+
+: raycast
+	save-position
+	
+	#v0-v1 are available as scratch.
+
+	v8 := 0  # loop index * 2
+	v3 := v9 # scan angle
+	v3 += -8
+	loop
+		get-angles
+
+		v2 := 16 # height+1
+		loop
+			delta-step
+			v2 += -1       # count down height
+			collision-test # returns result in v0
+			while v2 != 0
+			if v0 == 0 then
+		again
+
+		# save height and color in heights table:
+		i := heights
+		i += v8
+		v1 := v0
+		v0 := v2
+		save v1
+		
+		vf := v3
+		restore-position
+		v3 := vf
+
+		v8 += 2
+		v3 += 1 # 16 slices * 5.625 = 90 degree FoV
+		if v8 != 32 then
+	again
+;
+
+###########################################
+#
+#  Rendering
+#
+###########################################
+
+# this 45-byte table allows me to construct all the necessary vertical
+# strips using only immediate i and a height offset:
+
+: top 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00
+: btm 0xF0 0xF0 0xF0 0xF0 0xF0 0xF0 0xF0 0xF0 0xF0 0xF0 0xF0 0xF0 0xF0 0xF0 0xF0
+      0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00
+
+: sync
+	# take advantage of the fact that vf
+	# is always a free register if we aren't
+	# doing any operations that can carry:
+	loop
+		vf := delay
+		if vf != 0 then
+	again
+	vf := 1
+	delay := vf
+;
+
+: draw-heights
+	# registers for draw loop:
+	# v0 is used to store the current height
+	# v1 stores the 'color' bitmask
+	v2 :=  0 # heightmap index
+	v3 :=  1 # upward strip Y
+	v4 := 16 # down strip Y
+	v5 :=  0 # strip X (avoid shifting v1 in loop)
+	v6 := 15 # constant
+
+	sync clear
+	loop
+		# fetch height of column
+		i := heights
+		i += v2
+		load v1
+			
+		# apply PWM duty cycle for 'color'
+		v1 &= ve
+		if v1 == 0 then v0 := 0
+
+		# draw upward strip
+		i := top
+		i += v0
+		v0 =- v6
+		sprite v5 v3 15
+
+		# draw downward strip
+		i := btm
+		i += v0
+		sprite v5 v4 15
+
+		# draw 16 columns
+		v2 += 2
+		v5 += 4
+		if v2 != 32 then
+	again
+	
+;
+
+###########################################
+#
+#  Main Loop
+#
+###########################################
+
+: gun
+	0x10 0x18 0x24 0x24 0x24 0x24 0x5A 0xC2 0xE7 0x7F 0x3E 0x21 0x41 0x41 
+
+: spin-left
+	v9 += -1
+	raycast
+;
+
+: spin-right
+	v9 += 1
+	raycast
+;
+
+: walk-forward
+	v3 := v9
+	get-angles
+	delta-step
+	raycast
+;
+
+: walk-backward
+	v3 := v9
+	get-angles
+	vf := 1
+	v5 ^= vf
+	v7 ^= vf
+	delta-step
+	raycast
+;
+
+: main
+	# global state:
+	v9 :=  30 # player angle
+	va := 128 # x position (fractional)
+	vb := 128 # y position (fractional)
+	vc :=   5 # x position (whole)
+	vd :=   5 # y position (whole)
+	ve :=   0 # rolling frame counter
+
+	raycast
+
+	loop
+		draw-heights
+		i := gun
+		v0 := 38
+		v1 := 18
+		sprite v0 v1 14
+
+		ve += 1
+
+		v0 := 7
+		if v0 key then spin-left
+		v0 := 9
+		if v0 key then spin-right
+		v0 := 5
+		if v0 key then walk-forward
+		v0 := 8
+		if v0 key then walk-backward
+	again
