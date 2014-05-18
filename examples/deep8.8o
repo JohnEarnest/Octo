@@ -1,0 +1,389 @@
+######################################################
+##
+##  Deep8:
+##
+##  A stripped down port of the Mako game "Deep"
+##  for the Chip8 platform.
+##
+##  John Earnest
+##
+######################################################
+
+: waves
+	0b00110011
+	0b11101110
+
+: boat
+	0b00000100
+	0b00000100
+	0b11111111
+	0b11111111
+	0b01111101
+
+: boat-flip
+	0b00000000
+	0b00000000
+	0b01111101
+	0b11111111
+	0b11111111
+
+: bomb
+	0b00001000
+	0b00010100
+	0b00010000
+	0b00111000
+	0b00111000
+	0b00111000
+
+: fall
+	0b01000000
+	0b01010000
+	0b01100000
+	0b11110000
+	0b01100000
+	0b01000000
+
+: squid-0
+	0b00111100
+	0b00111100
+	0b01011010
+	0b01011010
+
+: squid-1
+	0b00111100
+	0b00111100
+	0b11011011
+	0b00100100
+
+: boom
+	0b10010000
+	0b00010010
+	0b01100000
+	0b00000000
+	0b10000011
+	0b00100100
+	0b00100001
+
+: title-0
+	0b00010000
+	0b00010000
+	0b00010000
+	0b00010000
+	0b01110000
+	0b10010000
+	0b10010000
+	0b10010000
+	0b10010000
+	0b01110000
+: title-1
+	0b01100000
+	0b10010000
+	0b11110000
+	0b10000000
+	0b10000000
+	0b01110000
+: title-2
+	0b11100000
+	0b10010000
+	0b10010000
+	0b10010000
+	0b10010000
+	0b11100010
+	0b10000000
+	0b10000000
+	0b10000000
+	0b10000000
+
+: end-0
+	0b11101010
+	0b01001110
+	0b01001010
+	0b01001010
+: end-1
+	0b11100111
+	0b11000110
+	0b10000100
+	0b11100111
+: end-2
+	0b01100110
+	0b01010101
+	0b01010101
+	0b01010110
+
+# register scratchpad:
+: scratch      0 0 0 0
+
+# storage for BCD decoding:
+: score-digits 0 0 0
+
+# enemy data:
+: e1  1 0 0
+: e2 20 0 0
+: e3 40 0 0
+: e4 90 0 0
+
+######################################################
+##
+##  Introduction
+##
+######################################################
+
+: draw-waves
+	i  := waves
+	v0 := 0 # x
+	v1 := 7 # y
+	loop
+		sprite v0 v1 2
+		v0 += 8
+		while v0 != 64
+	again
+;
+
+: title
+	draw-waves
+	i  := title-0
+	v0 := 16
+	v1 := 12
+	sprite v0 v1 10
+	i  := title-1
+	v0 +=  8
+	v1 +=  4
+	sprite v0 v1  6
+	v0 +=  8
+	sprite v0 v1  6
+	i  := title-2
+	v0 +=  8
+	sprite v0 v1 10
+	v0 := key
+;
+
+: draw-score
+	i := score-digits
+	load v2
+	i  := hex v0
+	v0 := 49
+	v3 :=  1
+	sprite v0 v3 5
+	i  := hex v1
+	v0 += 5
+	sprite v0 v3 5
+	i  := hex v2
+	v0 += 5
+	sprite v0 v3 5
+;
+
+: inc-score
+	i := scratch
+	save v3
+	draw-score
+	v9 += 1
+	i := score-digits
+	bcd v9
+	draw-score
+	i := scratch
+	load v3
+;
+
+: init-game
+	clear
+	draw-waves
+	v8 :=  0    # enemy  tick timer
+	v9 :=  0    # player score
+	va := 32    # player horizontal position
+	vb :=  1    # player vertical   position
+	vc := 10    # bomb   horizontal position
+	vd := 10    # bomb   vertical   position
+	ve :=  0    # bomb   state (0=invisible, 1=falling, 2+=exploding)
+
+	# draw initial boat
+	i  := boat
+	sprite va vb 5
+
+	# draw initial score
+	draw-score
+;
+
+######################################################
+##
+##  Game Over
+##
+######################################################
+
+: delay-loop
+	v0 := 0
+	loop
+		v0 += 1
+		while v0 != 32
+	again 
+;
+
+: game-over
+	# erase player
+	i  := boat
+	sprite va vb 5
+	
+	# flip boat
+	i  := boat-flip
+	sprite va vb 5
+
+	# animate the player sinking
+	i  := fall
+	vb := 8
+	sprite va vb 6
+	loop
+		delay-loop
+		sprite va vb 6
+		vb += 1
+		sprite va vb 6
+		while vb != 26
+	again
+	sprite va vb 6
+	
+	# show 'the end'
+	va := 20
+	vb := 14
+	i  := end-0
+	sprite va vb 4
+	i  := end-1
+	va += 8
+	sprite va vb 4
+	i  := end-2
+	va += 8
+	sprite va vb 4
+
+	loop again
+;
+
+######################################################
+##
+##  Enemy Logic
+##
+######################################################
+
+# v0 - enemy timer. (0=swim, >0=time until next spawn)
+# v1 - horizontal position
+# v2 - vertical   position
+
+: enemy-sprite
+	v4 := 1
+	v4 &= v2
+	i  := squid-0
+	if v4 == 1 then i := squid-1
+;
+
+: spawn-enemy
+	v1 := random 63
+	v2 := 28
+	enemy-sprite
+	sprite v1 v2 4
+;
+
+: count-enemy
+	v0 -= v3
+	if v0 == 0 then spawn-enemy
+;
+
+: update-enemy
+	if v0 != 0 then jump count-enemy
+	enemy-sprite
+	sprite v1 v2 4
+	v2 -= v3
+
+	# kill the player if
+	# an enemy reaches the surface:
+	if v2 == 8 then jump game-over
+
+	enemy-sprite
+	sprite v1 v2 4
+
+	# die on collision:
+	if vf == 0 then return
+	sprite v1 v2 4
+	v0 := random 31
+	v0 += 10
+	inc-score
+;
+
+: update-enemies
+	v3 := 1
+	v8 ^= v3
+	if v8 == 0 then return
+	i := e1 load v2 update-enemy i := e1 save v2
+	i := e2 load v2 update-enemy i := e2 save v2
+	i := e3 load v2 update-enemy i := e3 save v2
+	i := e4 load v2 update-enemy i := e4 save v2
+;
+
+######################################################
+##
+##  Player/Bomb Logic
+##
+######################################################
+
+: bomb-fire
+	if ve != 0 then return
+	vc := va
+	vd := 10
+	ve := 1
+	i  := bomb
+	sprite vc vd 6
+;
+
+: update-player
+	v2 := 3
+	v1 := va
+	v0 := 7
+	if v0 key then va -= v2
+	v0 := 9
+	if v0 key then va += v2
+	v0 := 8
+	if v0 key then bomb-fire
+	if v1 == va then return
+	i := boat
+	sprite v1 vb 5
+	sprite va vb 5
+;
+
+: bomb-explode
+	ve := 2
+	i  := boom
+	sprite vc vd 7
+;
+
+: bomb-falling
+	i  := bomb
+	sprite vc vd 6
+	vd += 1
+	if vd == 25 then jump bomb-explode
+	v0 := 8
+	if v0 -key then  jump bomb-explode
+	sprite vc vd 6
+;
+
+: bomb-exploding
+	ve += 1
+	if ve != 4 then return
+	ve := 0
+	i  := boom
+	sprite vc vd 7
+;
+
+: update-bomb
+	if ve == 1 then jump bomb-falling
+	if ve != 0 then jump bomb-exploding
+;
+
+######################################################
+##
+##  Main Loop
+##
+######################################################
+
+: main
+	title
+	init-game
+	loop
+		update-player
+		update-bomb
+		update-enemies
+	again
