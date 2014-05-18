@@ -27,7 +27,7 @@ The Chip8 specification doesn't say how fast programs should run. Experimentally
 			v0 += 1
 		again
 
-Since we know the delay timer counts down at 60hz, we can use it to precisely time an interframe delay. Take a look at this modified program and note that animation will run at a consistent speed even if your interpreter is cranked up really fast:
+Since we know the `delay` timer counts down at 60hz, we can use it to precisely time an interframe delay. Take a look at this modified program and note that animation will run at a consistent speed even if your interpreter is cranked up really fast:
 
 	: box
 		0b11110000
@@ -36,17 +36,15 @@ Since we know the delay timer counts down at 60hz, we can use it to precisely ti
 		0b11110000
 
 	: sync
+		loop
+			vf := delay
+			if vf != 0 then
+		again
+
 		# delay for up to 1/60th of a second
 		# using the fixed-rate delay timer
-		v2 := 1
-		delay := v2
-		loop
-			v2 := delay
-
-			# note the use of 'if-then' immediately before 'again'
-			# to efficiently break out of a loop, an octo-specific idiom.
-			if v2 != 0 then
-		again
+		vf := 1
+		delay := vf
 	;
 
 	: main
@@ -60,13 +58,13 @@ Since we know the delay timer counts down at 60hz, we can use it to precisely ti
 			sync
 		again
 
-Consider making use of a routine like 'sync' in your own programs to ensure a consistent gameplay experience on different interpreters.
+Consider making use of a routine like `sync` in your own programs to ensure a consistent gameplay experience on different interpreters.
 
 Keeping Score
 -------------
 Whether it's counting down the number of missiles stored in your gigantic mech or telling you how many human skulls you've crushed beneath the treads of your tank, video games frequently involve displaying numbers on screen. Fortunately, Chip8 provides some instructions specially for this purpose.
 
-To display a single digit from a register, we can make use of the 'hex' operation to load the address of a (built-in) hexadecimal character into i. Then it's just a matter of using 'sprite' to display it:
+To display a single digit from a register, we can make use of the `hex` statement to load the address of a (built-in) hexadecimal character into `i`. Then it's just a matter of using `sprite` to display it:
 
 	: main
 		v0 := 7        # some one-digit number
@@ -74,7 +72,7 @@ To display a single digit from a register, we can make use of the 'hex' operatio
 		sprite v0 v0 5 # built in characters are 5 pixels tall
 		loop again
 
-There are two caveats here: the number displayed is in hexadecimal and we can only display a single digit. How do we display larger numbers? That's where 'bcd' comes in. It'll take a number in a register, split it into hundreds, tens and ones and then store those into sequential addresses in memory. Then we use 'load' to scoop those values into the bottom three registers and use 'hex' like before to display them.
+There are two caveats here: the number displayed is in hexadecimal and we can only display a single digit. How do we display larger numbers? That's where `bcd` comes in. It'll take a number in a register, split it into hundreds, tens and ones and then store those into sequential addresses in memory. Then we use `load` to scoop those values into the bottom three registers and use `hex` like before to display them.
 
 	# temporary storage for hundreds, tens and ones:
 	: digits 0 0 0
@@ -102,13 +100,13 @@ There are two caveats here: the number displayed is in hexadecimal and we can on
 
 		loop again
 
-You can also use 'bcd' as a way of dividing numbers by 10 or 100, but it's a little fiddly for this purpose.
+You can also use `bcd` as a way of dividing numbers by 10 or 100, but it's a little fiddly for this purpose.
 
 Moving Slowly
 -------------
 It's easy to make objects move in whole numbers of pixels per second- just store a speed in a register and add that speed to the object's position every time you update the display. What may be less obvious is how you move objects slower than 1 pixel per frame.
 
-One technique for accomplishing this is to use fixed-point and the carry (vF) register. You'll store a fractional position in one register, accumulating your speed into it and incrementing the real position whenever the result sets the carry register- that is, whenever the result wraps around.
+One technique for accomplishing this is to use fixed-point and the flag (`vf`) register. You'll store a fractional position in one register, accumulating your speed into it and incrementing the real position whenever the result sets the carry register- that is, whenever the result wraps around.
 
 	: ball
 		0b0110000
@@ -140,11 +138,11 @@ One technique for accomplishing this is to use fixed-point and the carry (vF) re
 			clear
 		again
 
-Note that immediate adds (adding a constant) do not set vF on overflow; we must store the velocity of the balls in registers, at least temporarily.
+Note that immediate adds (adding a constant) do not set `vf` on overflow; we must store the velocity of the balls in registers, at least temporarily.
 
 Tile-based Movement
 -------------------
-Say you want to make a turn-based game where a player moves an 8x8 tile at a time. We can use 'key' to wait for key input and then move the player based on the value we get. In this example I will represent the player's horizontal and vertical position using a single "tile" coordinate system which numbers each 8x8 region on the screen left to right, top to bottom. Later on, this system would make it easy to add obstacles and tiles which do special things when a player walks on them.
+Say you want to make a turn-based game where a player moves an 8x8 tile at a time. We can use `key` to wait for key input and then move the player based on the value we get. In this example I will represent the player's horizontal and vertical position using a single "tile" coordinate system which numbers each 8x8 region on the screen left to right, top to bottom. Later on, this system would make it easy to add obstacles and tiles which do special things when a player walks on them.
 
 	: darwinian
 		0b00000000
@@ -193,7 +191,7 @@ Say you want to make a turn-based game where a player moves an 8x8 tile at a tim
 
 Note that since we do no boundary checking the player can wrap around the edges of the screen. You could add additional logic to prevent this, or you could take advantage of it as a game mechanic.
 
-On the other hand, perhaps the tile coordinate system is unnecessary overhead for your game. Here's a similar program which uses discrete x and y position registers. A jump table based on jump0 (which jumps to an address + the contents of v0) is used to decode keypresses. The 'launch' routine is a subroutine so that after the jump0 and second jump into the body of each handler we can 'return' to the caller of 'launch'.
+On the other hand, perhaps the tile coordinate system is unnecessary overhead for your game. Here's a similar program which uses discrete x and y position registers. A jump table based on `jump0` (which jumps to an address + the contents of `v0`) is used to decode keypresses. The `launch` routine is a subroutine so that after the jump0 and second jump into the body of each handler we can `return` to the caller of `launch`.
 
 Movement is constrained to avoid having the player wrap around the edges of the screen. Finally, we avoid using subtraction instructions when moving the player by using immediate adds which will wrap around to the desired value.
 
@@ -237,11 +235,11 @@ Movement is constrained to avoid having the player wrap around the edges of the 
 			launch
 		again
 
-The jump0 instruction can be very useful for eliminating complex nests of branches and conditionals. Remember that if your jump table entries are 2 bytes long you can only have 128 in a table (such as if they are jumps) and if they are 4 bytes long you can only have 64 (such as if they are a sub call followed by a return).
+The `jump0` instruction can be very useful for eliminating complex nests of branches and conditionals. Remember that if your jump table entries are 2 bytes long you can only have 128 in a table (such as if they are `jump`s) and if they are 4 bytes long you can only have 64 (such as if they are a subroutine `call` followed by a `return`).
 
 Tiles and Indirection
 ---------------------
-Say you want to make a game that draws a series of 'tiles' to fill the screen as in an RPG overworld. We can start by declaring the tile data the rest of our experiments will use.
+Say you want to make a game that draws a series of "tiles" to fill the screen as in an RPG overworld. We can start by declaring the tile data the rest of our experiments will use.
 
 	# 8x8 tiles for a simple RPG-like overworld
 	: ground  0b11101111 0b10111101 0b11110111 0b11011110
@@ -271,7 +269,7 @@ First, let's try writing some simple loops that cover the entire display with tr
 		again
 		loop again
 
-Now we want to extend this program to randomly scatter tiles. Let's generate a tile offset in v2 by using 'random' and a mask which will select random numbers spaced 8 bytes apart. This process is made very convenient because both the size and number of tiles are powers of two.
+Now we want to extend this program to randomly scatter tiles. Let's generate a tile offset in v2 by using `random` and a mask which will select random numbers spaced 8 bytes apart. This process is made very convenient because both the size and number of tiles are powers of two.
 
 	: get-tile
 		v2 := random 0b11000 # { 0, 8, 16, 24 }
@@ -295,7 +293,7 @@ Now we want to extend this program to randomly scatter tiles. Let's generate a t
 		again
 		loop again
 
-What if instead of picking tiles randomly we had static data defining a level? There are many ways we might store the level data with varying degrees of compactness. For simplicity and ease of editing, let's represent each tile in the map with a byte, 0-3. Data will be stored a row at a time to correspond to the way we draw the level. I've rearranged our registers a bit because we need low registers free to be able to use 'load'.
+What if instead of picking tiles randomly we had static data defining a level? There are many ways we might store the level data with varying degrees of compactness. For simplicity and ease of editing, let's represent each tile in the map with a byte, 0-3. Data will be stored a row at a time to correspond to the way we draw the level. I've rearranged our registers a bit because we need low registers free to be able to use `load`.
 
 	: map
 		1 1 1 1 1 2 2 2
@@ -333,15 +331,15 @@ What if instead of picking tiles randomly we had static data defining a level? T
 		again
 		loop again
 
-Naturally we could simplify our 'get-tile' routine a bit if we stored tiles in multiples of 8 to begin with. Perhaps we could use the lower-order bits to store other information and mask them off with a simple AND before using them to index into the tile sheet. This approach can support up to 32 8x8 tiles before v0 will wrap around while computing an offset for i. If we wanted more tiles, we would need to add to i in multiple smaller steps.
+Naturally we could simplify our `get-tile` routine a bit if we stored tiles in multiples of 8 to begin with. Perhaps we could use the lower-order bits to store other information and mask them off with a simple `and` before using them to index into the tile sheet. This approach can support up to 32 8x8 tiles before `v0` will wrap around while computing an offset for `i`. If we wanted more tiles, we would need to add to `i` in multiple smaller steps.
 
 Multiple Indirection
 --------------------
 In everyday programming, it is not unusual to want to dereference more than one pointer in sequence- imagine indexing a "jagged" 2d array or traversing a linked list. Unfortunately, it is difficult to do something like this in the Chip8 instruction set.
 
-We can only load data from memory through the 12-bit i register, and and we can only load into an 8 bit ordinary register. i can be initialized to a constant or we can add an 8 bit value to it. How can we load an arbitrary value in normal registers into i?
+We can only load data from memory through the 16-bit `i` register, and and we can only load into an 8 bit ordinary register. `i` can be initialized to a constant or we can add an 8 bit value to it. How can we load an arbitrary value in normal registers into `i`?
 
-One approach would be to use repeated addition into i:
+One approach would be to use repeated addition into `i`:
 
 	v0 :=   2 # high 4 bits of desired i
 	v1 :=  37 # low 8 bits of desired i
@@ -356,7 +354,7 @@ One approach would be to use repeated addition into i:
 		v0 += 255 # equivalent to subtracting 1
 	again
 
-Another approach would be to use self-modifying code to place an "i := NNN" instruction in memory before executing it. This looks like "0xANNN" in memory, so we can OR our high nybble with 0xA0.
+Another approach would be to use self-modifying code to place an `i := NNN` instruction in memory before executing it. This looks like "0xANNN" in memory, so we can `or` our high nybble with `0xA0`.
 
 	: trampoline
 		0 0 # destination for i := NNN
@@ -372,7 +370,7 @@ Another approach would be to use self-modifying code to place an "i := NNN" inst
 		save v1         # write the instruction
 		trampoline      # execute our instruction, setting i.
 
-And another approach could be to use a jump table. This doesn't allow us to store completely arbitrary values into i, but it does allow us to select an i based on the contents of a register. Since the jump table entries are 4 bytes each and are indexed by v0, we can have at most 64 such entries in a table.
+And another approach could be to use a jump table. This doesn't allow us to store completely arbitrary values into `i`, but it does allow us to select an `i` based on the contents of a register. Since the jump table entries are 4 bytes each and are indexed by `v0`, we can have at most 64 such entries in a table.
 
 	: table
 		i := 0x123 ;
@@ -391,7 +389,7 @@ And another approach could be to use a jump table. This doesn't allow us to stor
 
 Scrolling
 ---------
-Basic Chip8 doesn't have any instructions for scrolling the screen, but since sprites occupy small regions of memory it's fairly easy to scroll their images directly. We must remain aware that the 'load' and 'save' opcodes both increment i to the address immediately after the region of memory they operate upon, which unfortunately is not very useful most of the time.
+Basic Chip8 doesn't have any instructions for scrolling the screen, but since sprites occupy small regions of memory it's fairly easy to scroll their images directly. We must remain aware that the `load` and `save` statements both increment `i` to the address immediately after the region of memory they operate upon, which unfortunately is not very useful most of the time.
 
 Let's begin with a byte-wise scroll upwards of an 8 pixel tall sprite:
 
@@ -469,12 +467,12 @@ On the other hand, we might save ourselves quite a bit of grief by repeating our
 			v1 &= v0
 		again
 
-Scrolling horizontally requires bitshifts. Both shift instructions leave vF with the bit that was shifted out. Rotating a byte left is easy, since we can simply OR vF into the result of the shift:
+Scrolling horizontally requires bitshifts. Both shift instructions leave `vf` with the bit that was shifted out. Rotating a byte left is easy, since we can simply `or` `vf` into the result of the shift:
 
 	v0 <<= v0 # shift most significant bit out left
 	v0 |= vF  # OR it back in as the new least significant bit
 
-Rotating right is slightly more complicated because we need to mask vF's 1 or 0 value into the most significant bit of the result.
+Rotating right is slightly more complicated because we need to mask `vf`'s 1 or 0 value into the most significant bit of the result.
 
 	v0 >>= v0 # shift the least significant bit out right
 	if vF == 1 then vF := 128
