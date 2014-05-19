@@ -205,16 +205,15 @@ Movement is constrained to avoid having the player wrap around the edges of the 
 		0b00101000
 		0b00101000
 
-	: no ; # a no-op stub for unused entries
 	: lf  if va !=  0 then va += 248 ;
 	: rt  if va != 56 then va +=   8 ;
 	: up  if vb !=  0 then vb += 248 ;
 	: dn  if vb != 24 then vb +=   8 ;
 
-	: code  jump no jump no jump no jump no
-	        jump no jump up jump no jump lf
-	        jump dn jump rt jump no jump no
-	        jump no jump no jump no jump no
+	: code  return  return  return  return
+	        return  jump up return  jump lf
+	        jump dn jump rt return  return
+	        return  return  return  return
 
 	: launch
 		# launch is a sub so that jump
