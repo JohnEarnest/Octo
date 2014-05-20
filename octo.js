@@ -70,6 +70,8 @@ var keys = {};       // track keys which are pressed
 var waiting = false; // are we waiting for a keypress?
 var waitReg = -1;    // destination register of an awaited key
 
+var halted = false;
+
 function init(program) {
 	for(var z = 0; z < 4096; z++) { m[z] = 0; }
 	for(var z = 0; z < font.length; z++) { m[z] = font[z]; }
@@ -83,6 +85,7 @@ function init(program) {
 	keys = {};
 	waiting = false;
 	waitReg = -1;
+	halted = false;
 }
 
 function math(x, y, op) {
@@ -129,49 +132,56 @@ function sprite(x, y, len) {
 }
 
 function tick() {
-	var op  = (m[pc  ] << 8) | m[pc+1];
-	var o   = (m[pc  ] >> 4) & 0x00F;
-	var x   = (m[pc  ]     ) & 0x00F;
-	var y   = (m[pc+1] >> 4) & 0x00F;
-	var n   = (m[pc+1]     ) & 0x00F;
-	var nn  = (m[pc+1]     ) & 0x0FF;
-	var nnn = op             & 0xFFF;
-	pc += 2;
+	if (halted) { return; }
+	try {
+		var op  = (m[pc  ] << 8) | m[pc+1];
+		var o   = (m[pc  ] >> 4) & 0x00F;
+		var x   = (m[pc  ]     ) & 0x00F;
+		var y   = (m[pc+1] >> 4) & 0x00F;
+		var n   = (m[pc+1]     ) & 0x00F;
+		var nn  = (m[pc+1]     ) & 0x0FF;
+		var nnn = op             & 0xFFF;
+		pc += 2;
 
-	if (op == 0x00E0) {
-		for(var z = 0; z < 32*64; z++) { p[z] = false; }
-		return;
-	}
-	if (op == 0x00EE) {
-		pc = r.pop();
-		return;
-	}
-	if ((op & 0xF0FF) == 0xE09E) {
-		if (KEYMAP[v[x]] in keys) { pc += 2; }
-		return;
-	}
-	if ((op & 0xF0FF) == 0xE0A1) {
-		if (!(KEYMAP[v[x]] in keys)) { pc += 2; }
-		return;
-	}
+		if (op == 0x00E0) {
+			for(var z = 0; z < 32*64; z++) { p[z] = false; }
+			return;
+		}
+		if (op == 0x00EE) {
+			pc = r.pop();
+			return;
+		}
+		if ((op & 0xF0FF) == 0xE09E) {
+			if (KEYMAP[v[x]] in keys) { pc += 2; }
+			return;
+		}
+		if ((op & 0xF0FF) == 0xE0A1) {
+			if (!(KEYMAP[v[x]] in keys)) { pc += 2; }
+			return;
+		}
 
-	switch(o) {
-		case 0x0: throw "machinecode not supported.";
-		case 0x1: pc = nnn;                      break;
-		case 0x2: r.push(pc); pc = nnn;          break;
-		case 0x3: if (v[x] == nn)   { pc += 2; } break;
-		case 0x4: if (v[x] != nn)   { pc += 2; } break;
-		case 0x5: if (v[x] == v[y]) { pc += 2; } break;
-		case 0x6: v[x] = nn;                     break;
-		case 0x7: v[x] = (v[x] + nn) & 0xFF;     break;
-		case 0x8: math(x, y, n);                 break;
-		case 0x9: if (v[x] != v[y]) { pc += 2; } break;
-		case 0xA: i = nnn;                       break;
-		case 0xB: pc = nnn + v[0];               break;
-		case 0xC: v[x] = (Math.random()*255)&nn; break;
-		case 0xD: sprite(v[x], v[y], n);         break;
-		case 0xF: misc(x, nn);                   break;
-		default: throw "unknown op: " + o;
+		switch(o) {
+			case 0x0: throw "machinecode not supported.";
+			case 0x1: pc = nnn;                      break;
+			case 0x2: r.push(pc); pc = nnn;          break;
+			case 0x3: if (v[x] == nn)   { pc += 2; } break;
+			case 0x4: if (v[x] != nn)   { pc += 2; } break;
+			case 0x5: if (v[x] == v[y]) { pc += 2; } break;
+			case 0x6: v[x] = nn;                     break;
+			case 0x7: v[x] = (v[x] + nn) & 0xFF;     break;
+			case 0x8: math(x, y, n);                 break;
+			case 0x9: if (v[x] != v[y]) { pc += 2; } break;
+			case 0xA: i = nnn;                       break;
+			case 0xB: pc = nnn + v[0];               break;
+			case 0xC: v[x] = (Math.random()*255)&nn; break;
+			case 0xD: sprite(v[x], v[y], n);         break;
+			case 0xF: misc(x, nn);                   break;
+			default: throw "unknown op: " + o;
+		}
+	}
+	catch(err) {
+		console.log("halted: " + err);
+		halted = true;
 	}
 }
 
