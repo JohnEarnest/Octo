@@ -200,25 +200,35 @@ function tokenize(text) {
 	var ret   = [];
 	var index = 0;
 	var token = "";
+	var tokenStart = -1;
 
 	while(index < text.length) {
 		var c = text.charAt(index++);
 		if (c == '#') {
-			if (token.length > 0) { ret.push(parse(token)); }
+			if (token.length > 0) {
+				ret.push([ parse(token), tokenStart, index ]);
+				tokenStart = -1;
+			}
 			token = "";
 			while(c != '\n' && index < text.length) {
 				c = text.charAt(index++);
 			}
 		}
 		else if (" \t\n\r\v".indexOf(c) >= 0) {
-			if (token.length > 0) { ret.push(parse(token)); }
+			if (token.length > 0) {
+				ret.push([ parse(token), tokenStart, index ]);
+				tokenStart = -1;
+			}
 			token = "";
 		}
 		else {
+			if (tokenStart == -1) { tokenStart = index; }
 			token += c;
 		}
 	}
-	if (token.length > 0) { ret.push(parse(token)); }
+	if (token.length > 0) {
+		ret.push([ parse(token), tokenStart, index]);
+	}
 	return ret;
 }
 
@@ -250,8 +260,11 @@ function Compiler(source) {
 	this.protos = {}; // map<name, list<addr>>
 	this.hasmain = true;
 
+	this.pos = null;
+
 	this.tokens = tokenize(source);
-	this.next = function()    { var ret = this.tokens[0]; this.tokens.splice(0, 1); return ret; }
+	this.next = function()    { this.pos = this.tokens[0]; this.tokens.splice(0, 1); return this.pos[0]; }
+	this.peek = function()    { return this.tokens[0][0]; }
 	this.here = function()    { return this.rom.length + 0x200; }
 	this.inst = function(a,b) { this.rom.push(a & 0xFF); this.rom.push(b & 0xFF); }
 
@@ -269,7 +282,7 @@ function Compiler(source) {
 	}
 
 	this.isRegister = function(name) {
-		if (!name && (name != 0)) { name = this.tokens[0]; }
+		if (!name && (name != 0)) { name = this.peek(); }
 		if (typeof name != "string") { return false; }
 		name = name.toUpperCase();
 		if (name.length != 2) { return false; }
@@ -465,7 +478,7 @@ function Compiler(source) {
 	this.go = function() {
 		this.inst(0, 0); // reserve a jump slot
 		while(this.tokens.length > 0) {
-			if (typeof this.tokens[0] == "number") {
+			if (typeof this.peek() == "number") {
 				var nn = this.next();
 				if (nn < -128 || nn > 255) {
 					throw "Literal value '"+nn+"' does not fit in a byte- must be [-128, 255].";
@@ -515,6 +528,11 @@ function compile() {
 	}
 	catch(error) {
 		status.innerHTML = "<font color='red'>" + error + "</font>";
+		if (c.pos != null) {
+			input.focus();
+			input.selectionStart = c.pos[1]-1;
+			input.selectionEnd   = c.pos[2]-1;
+		}
 	}
 
 	return c.rom;
