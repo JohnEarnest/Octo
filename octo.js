@@ -672,3 +672,15 @@ function keyUp(event) {
 		}
 	}
 }
+
+document.getElementById("input").onkeydown = function(event) {
+	if (event.keyCode == 9) {
+		var text  = this.value;
+		var start = this.selectionStart;
+		var end   = this.selectionEnd;
+
+		this.value = text.substring(0, start) + '\t' + text.substring(end);
+		this.selectionStart = this.selectionEnd = start + 1;
+		return false;
+	}
+};
