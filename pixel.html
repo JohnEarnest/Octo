@@ -35,12 +35,13 @@
 
 		function editHex() {
 			var output = document.getElementById("output");
-			var bytes = output.value.split(" ");
+			var bytes = output.value.trim().split(new RegExp("\\s+"));
+
 			for(var z = 0; z < 15; z++) {
 				if (z < bytes.length) {
-					var p = parseInt(bytes[z].slice(2), 16);
-					if (isNaN(p)) { p = 0; }
-					pixel[z] = p;
+					var tok = bytes[z].trim();
+					var num = (tok.slice(0, 2) == "0b") ? parseInt(tok.slice(2),2) : parseInt(tok);
+					pixel[z] = isNaN(num) ? 0 : num;
 				}
 				else {
 					pixel[z] = 0;
