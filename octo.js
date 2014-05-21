@@ -533,6 +533,7 @@ function compile() {
 			input.selectionStart = c.pos[1]-1;
 			input.selectionEnd   = c.pos[2]-1;
 		}
+		return null;
 	}
 
 	return c.rom;
@@ -545,6 +546,7 @@ function run() {
 }
 
 function runRom(rom) {
+	if (rom === null) { return; }
 	init(rom);
 	document.getElementById("editor").style.display = "none";
 	document.getElementById("target").style.display = "inline";
