@@ -227,7 +227,7 @@ function tokenize(text) {
 		}
 	}
 	if (token.length > 0) {
-		ret.push([ parse(token), tokenStart, index]);
+		ret.push([ parse(token), tokenStart, index+1]);
 	}
 	return ret;
 }
