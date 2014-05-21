@@ -254,7 +254,7 @@ function display(rom) {
 
 function Compiler(source) {
 	this.rom    = []; // list<int>
-	this.loops  = []; // stack<int>
+	this.loops  = []; // stack<[addr, marker]>
 	this.whiles = []; // stack<int>
 	this.dict   = {}; // map<name, addr>
 	this.protos = {}; // map<name, list<addr>>
@@ -450,16 +450,22 @@ function Compiler(source) {
 		else if (token == "jump")    { this.immediate(0x10, this.wideValue()); }
 		else if (token == "sprite")  { this.inst(0xD0 | this.register(), (this.register() << 4) | this.tinyValue()); }
 		else if (token == "loop") {
-			this.loops.push(this.here());
+			this.loops.push([this.here(), this.pos]);
 			this.whiles.push(null);
 		}
 		else if (token == "while") {
+			if (this.loops.length < 1) {
+				throw "This 'while' is not within a loop.";
+			}
 			this.conditional(true);
 			this.whiles.push(this.here());
 			this.immediate(0x10, 0);
 		}
 		else if (token == "again") {
-			this.immediate(0x10, this.loops.pop());
+			if (this.loops.length < 1) {
+				throw "This 'again' does not have a matching 'loop'.";
+			}
+			this.immediate(0x10, this.loops.pop()[0]);
 			while (this.whiles[this.whiles.length - 1] != null) {
 				this.jump(this.whiles.pop(), this.here());
 			}
@@ -497,6 +503,10 @@ function Compiler(source) {
 		for (var k in this.protos) { keys.push(k); }
 		if (keys.length > 0) {
 			throw "Unresolved prototypes: " + keys;
+		}
+		if (this.loops.length > 0) {
+			this.pos = this.loops[0][1];
+			throw "This 'loop' does not have a matching 'again'.";
 		}
 	}
 }
