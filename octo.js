@@ -253,12 +253,13 @@ function display(rom) {
 ////////////////////////////////////
 
 function Compiler(source) {
-	this.rom     = []; // list<int>
-	this.loops   = []; // stack<[addr, marker]>
-	this.whiles  = []; // stack<int>
-	this.dict    = {}; // map<name, addr>
-	this.protos  = {}; // map<name, list<addr>>
-	this.aliases = {}; // map<name, registernum>>
+	this.rom       = []; // list<int>
+	this.loops     = []; // stack<[addr, marker]>
+	this.whiles    = []; // stack<int>
+	this.dict      = {}; // map<name, addr>
+	this.protos    = {}; // map<name, list<addr>>
+	this.aliases   = {}; // map<name, registernum>
+	this.constants = {}; // map<name, token>
 	this.hasmain = true;
 
 	this.pos = null;
@@ -309,12 +310,35 @@ function Compiler(source) {
 		if (thing != token) { throw "Expected '" + token + "', got '" + thing + "'!"; }
 	}
 
+	this.constantValue = function() {
+		var number = this.next();
+		if (typeof number != "number") {
+			if (number in this.protos) {
+				throw "Constants cannot refer to the address of a forward declaration.";
+			}
+			else if (number in this.dict) {
+				number = this.dict[number];
+			}
+			else if (number in this.constants) {
+				number = this.constants[number];
+			}
+			else { throw "Undefined name '"+number+"'."; }
+		}
+		if ((typeof number != "number") || (number < -128) || (number > 0xFFF)) {
+			throw "Constant value '"+number+"' is out of range- must be in [-128, 4095].";
+		}
+		return (number & 0xFFF);
+	}
+
 	this.wideValue = function(nnn) {
 		// can be forward references.
 		// call, jump, jump0, i:=
 		if (!nnn & (nnn != 0)) { nnn = this.next(); }
 		if (typeof nnn != "number") {
-			if (nnn in this.protos) {
+			if (nnn in this.constants) {
+				nnn = this.constants[nnn];
+			}
+			else if (nnn in this.protos) {
 				this.protos[nnn].push(this.here());
 				nnn = 0;
 			}
@@ -333,13 +357,14 @@ function Compiler(source) {
 		// vx:=, vx+=, vx==, v!=, random
 		if (!nn && (nn != 0)) { nn = this.next(); }
 		if (typeof nn != "number") {
-			if (nn in this.dict) { nn = this.dict[nn]; }
+			if (nn in this.constants) { nn = this.constants[nn]; }
+			else if (nn in this.dict) { nn = this.dict[nn]; }
 			else { throw "Undefined name '"+nn+"'."; }
 		}
 		// silently trim negative numbers, but warn
 		// about positive numbers which are too large:
 		if ((typeof nn != "number") || (nn < -128) || (nn > 255)) {
-			throw "Argument '"+nn+"' does not fit in a byte- must be [-128, 255].";
+			throw "Argument '"+nn+"' does not fit in a byte- must be in [-128, 255].";
 		}
 		return (nn & 0xFF);
 	}
@@ -347,8 +372,12 @@ function Compiler(source) {
 	this.tinyValue = function() {
 		// sprite length
 		var n = this.next();
+		if (typeof n != "number") {
+			if (n in this.constants) { n = this.constants[n]; }
+			else { throw "Undefined name '"+n+"'."; }
+		}
 		if ((typeof n != "number") || (n < 0) || (n > 15)) {
-			throw "Invalid sprite size '"+n+"'; must be [0,15].";
+			throw "Invalid sprite size '"+n+"'; must be in [0,15].";
 		}
 		return (n & 0xF);
 	}
@@ -441,6 +470,7 @@ function Compiler(source) {
 		}
 		else if (token == ":proto")  { this.protos[this.next()] = []; }
 		else if (token == ":alias")  { this.aliases[this.next()] = this.register(); }
+		else if (token == ":const")  { this.constants[this.next()] = this.constantValue(); }
 		else if (token in this.protos) { this.immediate(0x20, this.wideValue(token)); }
 		else if (token in this.dict) { this.immediate(0x20, this.wideValue(token)); }
 		else if (token == ";")       { this.inst(0x00, 0xEE); }
