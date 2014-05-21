@@ -79,6 +79,7 @@
 		canvas.addEventListener("mousedown", pressDraw, false);
 		canvas.addEventListener("mouseup"  , release, false);
 		canvas.oncontextmenu = function(event) { mode = 2; drag(event); return false; };
+		canvas.addEventListener("mouseout", release, false);
 		
 		var render = canvas.getContext("2d");
 		render.fillStyle = "#996600";
