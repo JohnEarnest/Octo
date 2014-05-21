@@ -253,11 +253,12 @@ function display(rom) {
 ////////////////////////////////////
 
 function Compiler(source) {
-	this.rom    = []; // list<int>
-	this.loops  = []; // stack<[addr, marker]>
-	this.whiles = []; // stack<int>
-	this.dict   = {}; // map<name, addr>
-	this.protos = {}; // map<name, list<addr>>
+	this.rom     = []; // list<int>
+	this.loops   = []; // stack<[addr, marker]>
+	this.whiles  = []; // stack<int>
+	this.dict    = {}; // map<name, addr>
+	this.protos  = {}; // map<name, list<addr>>
+	this.aliases = {}; // map<name, registernum>>
 	this.hasmain = true;
 
 	this.pos = null;
@@ -284,6 +285,7 @@ function Compiler(source) {
 	this.isRegister = function(name) {
 		if (!name && (name != 0)) { name = this.peek(); }
 		if (typeof name != "string") { return false; }
+		if (name in this.aliases) { return true; }
 		name = name.toUpperCase();
 		if (name.length != 2) { return false; }
 		if (name[0] != 'V') { return false; }
@@ -294,6 +296,9 @@ function Compiler(source) {
 		if (!name) { name = this.next(); }
 		if (!this.isRegister(name)) {
 			throw "Expected register, got '" + name + "'";
+		}
+		if (name in this.aliases) {
+			return this.aliases[name];
 		}
 		name = name.toUpperCase();
 		return "0123456789ABCDEF".indexOf(name[1]);
@@ -435,6 +440,7 @@ function Compiler(source) {
 			}
 		}
 		else if (token == ":proto")  { this.protos[this.next()] = []; }
+		else if (token == ":alias")  { this.aliases[this.next()] = this.register(); }
 		else if (token in this.protos) { this.immediate(0x20, this.wideValue(token)); }
 		else if (token in this.dict) { this.immediate(0x20, this.wideValue(token)); }
 		else if (token == ";")       { this.inst(0x00, 0xEE); }
