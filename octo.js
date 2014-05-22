@@ -661,7 +661,13 @@ function share() {
 		}
 	}
 	var prog = document.getElementById("input").value;
-	var options = JSON.stringify({"tickrate": TICKS_PER_FRAME});
+	var options = JSON.stringify({
+		"tickrate"        : TICKS_PER_FRAME,
+		"backgroundColor" : BACK_COLOR,
+		"fillColor"       : FILL_COLOR,
+		"buzzColor"       : BUZZ_COLOR,
+		"quietColor"      : QUIET_COLOR
+	});
 	xhr.send(JSON.stringify({
 		"description" : "Octo Chip8 Program",
 		"public" : true,
@@ -694,6 +700,10 @@ function runGist() {
 			} else {
 				TICKS_PER_FRAME = framerateEl.value;
 			}
+			if (options["backgroundColor"]) { BACK_COLOR  = options["backgroundColor"]; }
+			if (options["fillColor"      ]) { FILL_COLOR  = options["fillColor"      ]; }
+			if (options["buzzColor"      ]) { BUZZ_COLOR  = options["buzzColor"      ]; }
+			if (options["quietColor"     ]) { QUIET_COLOR = options["quietColor"     ]; }
 			run();
 		}
 	}
