@@ -65,6 +65,34 @@
 			<button type="button" onClick="window.open('Readme.html', '_blank');">
 				Manual
 			</button>
+			<button type="button" onClick="toggleColors();">Colors...</button>
+		</center>
+	</div>
+
+	<div id="colors" style="display:none">
+		<center>
+			<table border=0>
+				<tr>
+					<td>Background</td>
+					<td><textarea id="backEdit" rows="1" cols="7" onchange="editBack();" onkeyup="editBack();"></textarea></td>
+					<td bgcolor="0xFF0000" id="backSample"  >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+				</tr>
+				<tr>
+					<td>Foreground</td>
+					<td><textarea id="foreEdit" rows="1" cols="7" onchange="editFore();" onkeyup="editFore();"></textarea></td>
+					<td bgcolor="0xFF0000" id="foreSample"  >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+				</tr>
+				<tr>
+					<td>Buzzer</td>
+					<td><textarea id="buzzEdit" rows="1" cols="7" onchange="editBuzz();" onkeyup="editBuzz();"></textarea></td>
+					<td bgcolor="0xFF0000" id="buzzSample"  >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+				</tr>
+				<tr>
+					<td>Silence</td>
+					<td><textarea id="silentEdit" rows="1" cols="7" onchange="editSilent();" onkeyup="editSilent();"></textarea></td>
+					<td bgcolor="0xFF0000" id="silentSample"  >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+				</tr>
+			</table>
 		</center>
 	</div>
 

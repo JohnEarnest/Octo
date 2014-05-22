@@ -595,6 +595,7 @@ function runRom(rom) {
 	if (rom === null) { return; }
 	init(rom);
 	document.getElementById("editor").style.display = "none";
+	document.getElementById("colors").style.display = "none";
 	document.getElementById("target").style.display = "inline";
 	window.addEventListener("keydown", keyDown, false);
 	window.addEventListener("keyup"  , keyUp  , false);
@@ -605,6 +606,7 @@ function runRom(rom) {
 function reset() {
 	document.getElementById("editor").style.display = "inline";
 	document.getElementById("target").style.display = "none";
+	document.getElementById("colors").style.display = "none";
 	window.removeEventListener("keydown", keyDown, false);
 	window.removeEventListener("keyup"  , keyUp  , false);
 	window.clearInterval(intervalHandle);
@@ -750,3 +752,47 @@ document.getElementById("input").onkeydown = function(event) {
 		return false;
 	}
 };
+
+////////////////////////////////////
+//
+//   Color picker stuff:
+//
+////////////////////////////////////
+
+function editBack() {
+	var val = document.getElementById("backEdit").value;
+	document.getElementById("backSample").bgColor = val;
+	BACK_COLOR = val;
+}
+
+function editFore() {
+	var val = document.getElementById("foreEdit").value;
+	document.getElementById("foreSample").bgColor = val;
+	FILL_COLOR = val;
+}
+
+function editBuzz() {
+	var val = document.getElementById("buzzEdit").value;
+	document.getElementById("buzzSample").bgColor = val;
+	BUZZ_COLOR = val;
+}
+
+function editSilent() {
+	var val = document.getElementById("silentEdit").value;
+	document.getElementById("silentSample").bgColor = val;
+	QUIET_COLOR = val;
+}
+
+function toggleColors() {
+	var colors = document.getElementById("colors");
+	if (colors.style.display == "none") {
+		colors.style.display = "inline";
+		document.getElementById("backEdit").value   = BACK_COLOR;  editBack();
+		document.getElementById("foreEdit").value   = FILL_COLOR;  editFore();
+		document.getElementById("buzzEdit").value   = BUZZ_COLOR;  editBuzz();
+		document.getElementById("silentEdit").value = QUIET_COLOR; editSilent();
+	}
+	else {
+		colors.style.display = "none";
+	}
+}
