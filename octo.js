@@ -773,12 +773,14 @@ function editBack() {
 	var val = document.getElementById("backEdit").value;
 	document.getElementById("backSample").bgColor = val;
 	BACK_COLOR = val;
+	showPixels();
 }
 
 function editFore() {
 	var val = document.getElementById("foreEdit").value;
 	document.getElementById("foreSample").bgColor = val;
 	FILL_COLOR = val;
+	showPixels();
 }
 
 function editBuzz() {
@@ -806,3 +808,91 @@ function toggleColors() {
 		colors.style.display = "none";
 	}
 }
+
+////////////////////////////////////
+//
+//   Sprite editor stuff:
+//
+////////////////////////////////////
+
+function toggleSpriteEditor() {
+	var editor = document.getElementById("spriteEditor");
+	if (editor.style.display == "none") {
+		editor.style.display = "inline";
+		showPixels();
+	}
+	else {
+		editor.style.display = "none";
+	}
+}
+
+function showPixels() {
+	var render = document.getElementById("draw").getContext("2d");
+	render.fillStyle = BACK_COLOR;
+	render.fillRect(0, 0, 200, 375);
+	render.fillStyle = FILL_COLOR;
+	for(var row = 0; row < 16; row++) {
+		for(var col = 0; col < 8; col++) {
+			if (pixel[row] & (1 << (7-col))) {
+				render.fillRect(col * 25, row * 25, 25, 25);
+			}
+		}
+	}
+}
+
+function showHex() {
+	var output = document.getElementById("spriteData");
+	var hex = "";
+	for(var z = 0; z < 15; z++) {
+		var digits = pixel[z].toString(16).toUpperCase();
+		hex += "0x" + (digits.length == 1 ? "0"+digits : digits) + " ";
+	}
+	output.value = hex;
+}
+
+function editHex() {
+	var output = document.getElementById("spriteData");
+	var bytes = output.value.trim().split(new RegExp("\\s+"));
+	for(var z = 0; z < 15; z++) {
+		if (z < bytes.length) {
+			var tok = bytes[z].trim();
+			var num = (tok.slice(0, 2) == "0b") ? parseInt(tok.slice(2),2) : parseInt(tok);
+			pixel[z] = isNaN(num) ? 0 : num;
+		}
+		else {
+			pixel[z] = 0;
+		}
+	}
+	showPixels();
+}
+
+function drag(event) {
+	if (mode == 0) { return; }
+	var rect = document.getElementById("draw").getBoundingClientRect();
+	var mx   = event.clientX - rect.left;
+	var my   = event.clientY - rect.top;
+	if (mode == 1) {
+		// draw
+		pixel[Math.floor(my/25)] |= (128 >> Math.floor(mx/25));
+	}
+	else {
+		// erase
+		pixel[Math.floor(my/25)] &= ~(128 >> Math.floor(mx/25));
+	}
+	showHex();
+	showPixels();
+}
+
+function release(event)    { mode = 0; drag(event); }
+function pressDraw(event)  { mode = 1; drag(event); }
+
+var mode = 0;
+var pixel = [];
+for(var z = 0; z < 15; z++) { pixel[z] = 0; }
+
+var spriteCanvas = document.getElementById("draw");
+spriteCanvas.addEventListener("mousemove", drag, false);
+spriteCanvas.addEventListener("mousedown", pressDraw, false);
+spriteCanvas.addEventListener("mouseup"  , release, false);
+spriteCanvas.oncontextmenu = function(event) { mode = 2; drag(event); return false; };
+spriteCanvas.addEventListener("mouseout", release, false);
