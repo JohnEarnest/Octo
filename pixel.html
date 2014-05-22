@@ -70,7 +70,7 @@
 		}
 	
 		function release(event)    { mode = 0; drag(event); }
-		function pressDraw(event)  { mode = 1; drag(event); }
+		function pressDraw(event)  { if (event.button == 2) {mode = 2;} else {mode = 1;} drag(event); }
 
 		var mode = 0;
 		var pixel = [];
@@ -80,7 +80,7 @@
 		canvas.addEventListener("mousemove", drag, false);
 		canvas.addEventListener("mousedown", pressDraw, false);
 		canvas.addEventListener("mouseup"  , release, false);
-		canvas.oncontextmenu = function(event) { mode = 2; drag(event); return false; };
+		canvas.oncontextmenu = function(event) { drag(event); return false; };
 		canvas.addEventListener("mouseout", release, false);
 		
 		var render = canvas.getContext("2d");
