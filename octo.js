@@ -884,7 +884,7 @@ function drag(event) {
 }
 
 function release(event)    { mode = 0; drag(event); }
-function pressDraw(event)  { mode = 1; drag(event); }
+function pressDraw(event)  { if (event.button == 2) {mode = 2;} else {mode = 1;} drag(event); }
 
 var mode = 0;
 var pixel = [];
@@ -894,5 +894,5 @@ var spriteCanvas = document.getElementById("draw");
 spriteCanvas.addEventListener("mousemove", drag, false);
 spriteCanvas.addEventListener("mousedown", pressDraw, false);
 spriteCanvas.addEventListener("mouseup"  , release, false);
-spriteCanvas.oncontextmenu = function(event) { mode = 2; drag(event); return false; };
+spriteCanvas.oncontextmenu = function(event) { drag(event); return false; };
 spriteCanvas.addEventListener("mouseout", release, false);
