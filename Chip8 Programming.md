@@ -511,3 +511,53 @@ If we use an unrolled loop, we can employ both operations for an interesting eff
 		again
 
 As demonstrated here, if you have enough registers to spare you can very conveniently operate on chunks of memory at once. An entire sprite can often fit in the Chip8 register file, but you may need to spill and restore your working registers. While it may seem unintuitive coming from other architectures, consider copying sprite data from place to place for animation as an alternative to using frame offsets.
+
+Bitwise Arithmetic
+------------------
+Taking full advantage of the limited set of arithmetic operations available in Chip8 is extremely important for writing efficient programs. Let's look at some applications of operators which may not be immediately obvious.
+
+If we `xor` a register with `0xFF` it inverts all the bits in the original register- this is how you perform a `not`:
+
+	vf := 0xFF
+	v0 ^= vf
+
+Any number is 0 if you `xor` it with itself, so `xor` is often used as an equal-to operator in assembly language. Since the conditional branches in Chip8 can test if a register is equal to a constant or register this use of `xor` is not often necessary.
+
+Shifts leave the shifted out bit in `vf`. Thus, we can use a left or right shift to obtain the most or least significant bit of a byte, respectively. Most Chip8 documentation does not specify what should happen when shifting into `vf` itself, but Octo's interpreter always writes carry values AFTER storing the main result in the destination register. Thus, we can take advantage of this and save a temporary register when obtaining the MSB or LSB of a byte:
+
+	vf <<= v0 # store MSB of v0 in vf
+	if vf == 0 then ...
+
+We can apply this idea to count the number of 1 bits in a byte:
+
+	v0 := 0xF3 # number to examine
+	v1 := 0x00 # the count
+	loop
+		while v0 != 0
+		v0 >>= v0
+		v1 +=  vf
+	again
+
+Of course, if speed was important this could be calculated using a 256-entry lookup table or an unrolled loop.
+
+Sometimes it is useful to obtain the value (1 << N); that is, a particular single-bit vector for masking or setting bits in a register. There is no Chip8 instruction for doing multiple shifts at once, so like many operations the most efficient strategy ends up being to use a lookup table:
+
+	: bits 1 2 4 8 16 32 64 128
+	...
+	i := bits
+	i += v0   # index N
+	load v0   # result
+
+Taking the bitwise `or` of N with N+1 will have the effect of setting the least significant (or rightmost) zero bit in the byte:
+
+	v1 := v0 # use v1 as a temporary copy
+	v0 += 1
+	v0 |= v1
+
+Similarly, the bitwise `and` of N with N-1 will clear the least significant (or rightmost) one bit in the byte:
+
+	v1 := v0
+	v0 += -1
+	v0 &= v1
+
+If a (nonzero) number becomes zero after performing this operation you know it had exactly one bit set and was thus a power of two.
