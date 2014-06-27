@@ -652,4 +652,4 @@ The following algorithm is one way around that problem. This time we'll be manip
 		again
 	;
 
-This algorithm has some bias, but can generate any 16-bit permutation with N bits set with roughly equal probability. Note the use of several techniques described in the section on bitwise arithmetic.
+This algorithm has significant bias- contiguous runs of 1s are considerably more likely than other patterns. However, it can generate any 16-bit permutation with N bits set and the results may be sufficiently well distributed for many games. Note the use of several techniques described in the section on bitwise arithmetic.
