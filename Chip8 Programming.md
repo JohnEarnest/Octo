@@ -561,3 +561,95 @@ Similarly, the bitwise `and` of N with N-1 will clear the least significant (or 
 	v0 &= v1
 
 If a (nonzero) number becomes zero after performing this operation you know it had exactly one bit set and was thus a power of two.
+
+Random Bit Vector Permutations
+------------------------------
+Let's consider a problem which is at the heart of a number of types of puzzle and strategy games: Given N objects, how do we randomly distribute them over M locations without placing any two at the same location? For example, consider the placement of mines in a game of Minesweeper. We can represent the locations as a bit vector where 1 bits are objects.
+
+The simplest approach is to pregenerate a selection of appropriate vectors and index randomly into a table. Here's a table with 32 of the 60 possible 8-bit vectors containing 4 set bits and appropriate code for fetching one into v0:
+
+	: bit-vectors
+		0xCC 0x39 0x53 0x78 0xF0 0xB1 0x93 0xD8
+		0xA9 0x1D 0x55 0xC3 0x3C 0x8D 0xE2 0x63
+		0x87 0x56 0xAC 0x27 0x4E 0x36 0x72 0x5C
+		0x4D 0x1B 0x0F 0xE4 0xA3 0x5A 0x95 0x2B
+	: get-vector
+		v0 := random 0b11111
+		i  := bit-vectors
+		i  += v0
+		load v0
+	;
+
+This has the disadvantage that it's not complete- there are bit vectors which will never be generated. Depending on your game, this may be OK.
+
+A slightly more complex approach is to generate a completely random number and then verify that it has the correct number of bits, trying new numbers until an appropriate one is found:
+
+	: get-vector
+		loop
+			v0 := random 0xFF
+			v1 := v0 # working copy
+			v2 :=  0 # bit count
+			loop
+				while v1 != 0
+				v1 >>= v1
+				v2 += vf
+			again
+			if v2 != 4 then
+		again
+	;
+
+The problem with this approach is it could take an arbitrarily long time to run if the random number generator keeps coming up with "bad" numbers.
+
+The following algorithm is one way around that problem. This time we'll be manipulating a 16-bit vector, which requires us to use a pair of registers together and chain operations together through `vf`. For each of the N bits we want set in our output we rotate our bit vector by a random number of bits if the least significant bit is 1. Then we set the least significant 0 bit. Then we rotate the vector a second time.
+
+	# rotate the output vector
+	# by a random number of places:
+	: rotate-random
+		v3 := random 0b1111
+		loop
+			while v3 != 0
+			v3 += -1
+
+			# rotate the 16 bits in v1 and v0
+			# using v4 as a temporary:
+			v0 <<= v0
+			v4 :=  vf
+			v1 <<= v1
+			v0 |=  vf
+			v1 |=  v4
+		again
+	;
+	
+	# generate a random permutation of
+	# 16 bits, with N of those bits set:
+	: permute-bits
+		v0 := 0 # output (hi)
+		v1 := 0 # output (lo)
+		v2 := 8 # loop counter (N)
+				# trash v3, v4
+		loop
+			# rotate if the LSB of output is set,
+			# to avoid creating runs of 1s:
+			v3 >>= v1
+			if vf != 0 then rotate-random
+	
+			# OR output vector with itself + 1
+			# to set the least significant 0:
+			v3 := v0
+			v4 := 1
+			v4 += v1
+			v3 += vf
+			v0 |= v3
+			v1 |= v4
+	
+			# rotate again, to avoid always having
+			# 1 as the least significant bit:
+			rotate-random
+	
+			# repeat N times
+			v2 += -1
+			if v2 != 0 then
+		again
+	;
+
+This algorithm has some bias, but can generate any 16-bit permutation with N bits set with roughly equal probability. Note the use of several techniques described in the section on bitwise arithmetic.
