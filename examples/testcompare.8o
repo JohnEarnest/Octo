@@ -1,0 +1,60 @@
+# numeric comparison test program.
+# exercises all combination of register-to-register
+# and register-to-constant comparisons with < > <= and >=
+
+: print
+	i := hex v0
+	sprite va vb 5
+	va += 5
+	v0 := 0
+;
+
+: newline
+	va := 0
+	vb += 6
+;
+
+: greater?   if v1 > v2  then v0 := 1 print ;
+: greater5?  if v1 > 5   then v0 := 1 print ;
+: less?      if v1 < v2  then v0 := 1 print ;
+: less5?     if v1 < 5   then v0 := 1 print ;
+: greatere?  if v1 >= v2 then v0 := 1 print ;
+: greatere5? if v1 >= 5  then v0 := 1 print ;
+: lesse?     if v1 <= v2 then v0 := 1 print ;
+: lesse5?    if v1 <= 5  then v0 := 1 print ;
+
+: main
+	# 001001
+	v1 := 3 v2 := 5 greater?
+	v1 := 3 v2 := 3 greater?
+	v1 := 5 v2 := 3 greater?
+	v1 := 3 greater5?
+	v1 := 5 greater5?
+	v1 := 7 greater5?
+	newline
+
+	# 100100
+	v1 := 3 v2 := 5 less?
+	v1 := 3 v2 := 3 less?
+	v1 := 5 v2 := 3 less?
+	v1 := 3 less5?
+	v1 := 5 less5?
+	v1 := 7 less5?
+	newline
+
+	# 110110
+	v1 := 3 v2 := 5 greatere?
+	v1 := 3 v2 := 3 greatere?
+	v1 := 5 v2 := 3 greatere?
+	v1 := 3 greatere5?
+	v1 := 5 greatere5?
+	v1 := 7 greatere5?
+	newline
+
+	# 011011
+	v1 := 3 v2 := 5 lesse?
+	v1 := 3 v2 := 3 lesse?
+	v1 := 5 v2 := 3 lesse?
+	v1 := 3 lesse5?
+	v1 := 5 lesse5?
+	v1 := 7 lesse5?

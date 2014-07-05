@@ -385,11 +385,16 @@ function Compiler(source) {
 	this.conditional = function(negated) {
 		var reg   = this.register();
 		var token = this.next();
+		var compTemp = 0xE; // temporary reg for comparison operators
 		if (negated) {
 			if      (token == "=="  ) { token = "!="; }
 			else if (token == "!="  ) { token = "=="; }
 			else if (token == "key" ) { token == "-key"; }
 			else if (token == "-key") { token == "key"; }
+			else if (token == "<"   ) { token == ">="; }
+			else if (token == ">"   ) { token == "<="; }
+			else if (token == ">="  ) { token == "<"; }
+			else if (token == "<="  ) { token == ">"; }
 		}
 		if (token == "==") {
 			if (this.isRegister()) { this.inst(0x90 | reg, this.register() << 4); }
@@ -404,6 +409,30 @@ function Compiler(source) {
 		}
 		else if (token == "-key") {
 			this.inst(0xE0 | reg, 0x9E);
+		}
+		else if (token == ">") {
+			if (this.isRegister()) { this.fourop(0x8, compTemp, this.register(), 0x0); }
+			else                   { this.inst  (0x60 | compTemp, this.shortValue()); }
+			this.fourop(0x8, compTemp, reg, 0x5); // ve -= v1
+			this.inst(0x3F, 0);                   // if vf != 0 then ...
+		}
+		else if (token == "<") {
+			if (this.isRegister()) { this.fourop(0x8, compTemp, this.register(), 0x0); }
+			else                   { this.inst  (0x60 | compTemp, this.shortValue()); }
+			this.fourop(0x8, compTemp, reg, 0x7); // ve =- v1
+			this.inst(0x3F, 0);                   // if vf != 0 then ...
+		}
+		else if (token == ">=") {
+			if (this.isRegister()) { this.fourop(0x8, compTemp, this.register(), 0x0); }
+			else                   { this.inst  (0x60 | compTemp, this.shortValue()); }
+			this.fourop(0x8, compTemp, reg, 0x5); // ve -= v1
+			this.inst(0x4F, 0);                   // if vf == 0 then ...
+		}
+		else if (token == "<=") {
+			if (this.isRegister()) { this.fourop(0x8, compTemp, this.register(), 0x0); }
+			else                   { this.inst  (0x60 | compTemp, this.shortValue()); }
+			this.fourop(0x8, compTemp, reg, 0x7); // ve =- v1
+			this.inst(0x4F, 0);                   // if vf == 0 then ...
 		}
 		else {
 			throw "Conditional flag expected, got '" + token + "!";
