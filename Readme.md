@@ -79,6 +79,11 @@ The Chip8 conditional opcodes are all conditional skips, so Octo control structu
 
 	if v0 != 5 then v1 += 2
 
+Octo also provides pseudo-ops for using `<`, `>`, `<=` and `>=` to compare two registers or a register with a constant. These are implemented by using the subtraction instructions `-=` and `=-` and querying `vf`, and will destroy the previous contents of the `ve` register:
+
+	if v1 >  v2  then v3 := 5
+	if v1 <= 0xA then v3 := 7
+
 `loop...again` is an unconditional infinite loop. `loop` marks the address of the start of the loop and produces no code, while `again` compiles a jump instruction based on the address provided by `loop`. Since `again` is itself a statement, we can use an `if...then` at the end of a loop to skip over the backwards jump and efficiently break out of the loop. The following loop will execute 5 times:
 
 	v0 := 0
