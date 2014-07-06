@@ -1,0 +1,74 @@
+###########################################
+#
+#  A modular stack data structure using
+#  a v0-based calling convention.
+#  vf is used as a working temporary
+#  register because it is "fragile".
+#  maximum stack size is 256 bytes.
+#
+###########################################
+
+# the first value is the pointer index
+: stack 0 0 0 0 0 0 0 0 0
+
+: push
+	# modifies vf, v0
+	# takes argument in v0
+	# stack[++stack[0] + 1] := v0
+	
+	i  := stack
+	vf := v0
+	load  v0
+	i  += v0
+	v0 := vf
+	save  v0
+
+	i  := stack
+	load  v0
+	v0 +=  1
+	i  := stack
+	save  v0
+;
+
+: pop
+	# modifies vf, v0
+	# returns result in v0
+	# v0 := stack[stack[0]-- + 1]
+
+	i  := stack
+	load  v0
+	v0 += -1
+	vf := v0
+	i  := stack
+	save  v0
+	i  += vf
+	load  v0
+;
+
+###########################################
+#
+#  Usage Example:
+#
+###########################################
+
+: print
+	# takes an arg in v0	
+	i := hex v0
+	sprite va vb 5
+	va += 6
+;
+
+: main
+	va := 3
+	vb := 3
+
+	v0 := 5 push
+	v0 := 3 push
+	v0 := 1 push
+	pop print
+	v0 := 9 push
+	pop print
+	pop print
+	pop print
+
+	# should print '1935'

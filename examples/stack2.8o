@@ -1,0 +1,80 @@
+###########################################
+#
+#  A modular stack data structure using
+#  a vf-based calling convention.
+#  This approach can only be extended up to
+#  a size 16 stack.
+#
+###########################################
+
+: scratch 0 0 0 0 0 0 0 0
+: under   0
+: stack   0
+: over    0 0 0 0 0 0 0
+
+: push
+	# here we take our argument from vf.
+	# and do not corrupt any other registers.
+	# we can eliminate the scratch saving
+	# and restoring if low registers don't
+	# need to be preserved.
+
+	i := scratch
+	save v6
+
+	i := stack
+	load v6
+	i := over
+	save v6
+	i := stack
+	v0 := vf
+	save v0
+
+	i := scratch
+	load v6
+;
+
+: pop
+	# result is left in vf.
+	# again, we don't corrupt any other registers.
+
+	i := scratch
+	save v7
+
+	i := stack
+	load v7
+	vf := v0
+	i := under
+	save v7
+	
+	i := scratch
+	load v7
+;
+
+###########################################
+#
+#  Usage Example:
+#
+###########################################
+
+: print
+	# takes an arg in vf	
+	i := hex vf
+	sprite va vb 5
+	va += 6
+;
+
+: main
+	va := 3
+	vb := 3
+
+	vf := 5 push
+	vf := 3 push
+	vf := 1 push
+	pop print
+	vf := 9 push
+	pop print
+	pop print
+	pop print
+
+	# should print '1935'
