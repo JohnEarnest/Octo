@@ -2,6 +2,8 @@
 # exercises all combination of register-to-register
 # and register-to-constant comparisons with < > <= and >=
 
+:alias compare-temp v3
+
 : print
 	i := hex v0
 	sprite va vb 5

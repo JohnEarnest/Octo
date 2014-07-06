@@ -385,7 +385,7 @@ function Compiler(source) {
 	this.conditional = function(negated) {
 		var reg   = this.register();
 		var token = this.next();
-		var compTemp = 0xE; // temporary reg for comparison operators
+		var compTemp = this.aliases["compare-temp"];
 		if (negated) {
 			if      (token == "=="  ) { token = "!="; }
 			else if (token == "!="  ) { token = "=="; }
@@ -547,6 +547,8 @@ function Compiler(source) {
 	}
 
 	this.go = function() {
+		this.aliases["compare-temp"] = 0xE;
+
 		this.inst(0, 0); // reserve a jump slot
 		while(this.tokens.length > 0) {
 			if (typeof this.peek() == "number") {
