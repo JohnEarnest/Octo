@@ -44,7 +44,7 @@
 	v1 := 7 less5?
 	newline
 
-	# 110110
+	# 011011
 	v1 := 3 v2 := 5 greatere?
 	v1 := 3 v2 := 3 greatere?
 	v1 := 5 v2 := 3 greatere?
@@ -53,7 +53,7 @@
 	v1 := 7 greatere5?
 	newline
 
-	# 011011
+	# 110110
 	v1 := 3 v2 := 5 lesse?
 	v1 := 3 v2 := 3 lesse?
 	v1 := 5 v2 := 3 lesse?

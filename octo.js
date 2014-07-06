@@ -425,13 +425,13 @@ function Compiler(source) {
 		else if (token == ">=") {
 			if (this.isRegister()) { this.fourop(0x8, compTemp, this.register(), 0x0); }
 			else                   { this.inst  (0x60 | compTemp, this.shortValue()); }
-			this.fourop(0x8, compTemp, reg, 0x5); // ve -= v1
+			this.fourop(0x8, compTemp, reg, 0x7); // ve =- v1
 			this.inst(0x4F, 0);                   // if vf == 0 then ...
 		}
 		else if (token == "<=") {
 			if (this.isRegister()) { this.fourop(0x8, compTemp, this.register(), 0x0); }
 			else                   { this.inst  (0x60 | compTemp, this.shortValue()); }
-			this.fourop(0x8, compTemp, reg, 0x7); // ve =- v1
+			this.fourop(0x8, compTemp, reg, 0x5); // ve -= v1
 			this.inst(0x4F, 0);                   // if vf == 0 then ...
 		}
 		else {
