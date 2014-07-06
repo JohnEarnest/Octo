@@ -23,7 +23,7 @@
 #  but one of the attackers and loose one troop,
 #  or none if they have only a single troop.
 #
-#  After each player has taken a turn,
+#  After white has taken a turn,
 #  each territory has a 50% chance of
 #  producing one new troop.
 #  The game ends when black or white has
@@ -136,10 +136,9 @@
 :const MOVE    0
 :const ATTACK  1
 :const AIMOVE  2
-:const RESTOCK 3
-:const WIN     4
-:const LOSE    5
-:const RESET   6
+:const WIN     3
+:const LOSE    4
+:const RESET   5
 
 # space owners (owns-at)
 :const START 0
@@ -696,14 +695,15 @@
 :proto restock
 
 : start-ai-turn
-	draw-p1
+	restock
+	draw-map
+	longwait
 	draw-p2
 	mode := AIMOVE
 	ai-move
 	if mode == LOSE then return
 	mode := MOVE
-	restock
-	draw-map
+	draw-p2
 	draw-p1
 ;
 
@@ -971,7 +971,6 @@
 	place-empty
 	place-owned
 	restock
-	restock	
 ;
 
 ###########################################
