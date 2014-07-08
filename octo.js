@@ -628,6 +628,7 @@ function runRom(rom) {
 	document.getElementById("editor").style.display = "none";
 	document.getElementById("colors").style.display = "none";
 	document.getElementById("target").style.display = "inline";
+	if (SHOW_KEYPAD) { document.getElementById("keypad").style.display = "inline"; }
 	window.addEventListener("keydown", keyDown, false);
 	window.addEventListener("keyup"  , keyUp  , false);
 	intervalHandle = setInterval(render, 1000/60);
@@ -637,6 +638,7 @@ function runRom(rom) {
 function reset() {
 	document.getElementById("editor").style.display = "inline";
 	document.getElementById("target").style.display = "none";
+	document.getElementById("keypad").style.display = "none";
 	document.getElementById("colors").style.display = "none";
 	window.removeEventListener("keydown", keyDown, false);
 	window.removeEventListener("keyup"  , keyUp  , false);
@@ -927,3 +929,36 @@ spriteCanvas.addEventListener("mousedown", pressDraw, false);
 spriteCanvas.addEventListener("mouseup"  , release, false);
 spriteCanvas.oncontextmenu = function(event) { drag(event); return false; };
 spriteCanvas.addEventListener("mouseout", release, false);
+
+////////////////////////////////////
+//
+//   Virtual keypad stuff:
+//
+////////////////////////////////////
+
+function buttonDn(key) {
+	keyDown({ keyCode: KEYMAP[key]});
+}
+function buttonUp(key) {
+	if (KEYMAP[key] in keys) {
+		keyUp({ keyCode: KEYMAP[key]});
+	}
+}
+
+for(var k = 0; k <= 0xF; k++) {
+	var hex = k.toString(16).toUpperCase();
+	var button = document.getElementById("0x" + hex);
+	button.onmousedown = buttonDn.bind(undefined, k);
+	button.onmouseup   = buttonUp.bind(undefined, k);
+	button.onmouseout  = buttonUp.bind(undefined, k);
+}
+
+var SHOW_KEYPAD = false;
+if(typeof window.orientation !== 'undefined') {
+	// In principle this can identify non-desktops,
+	// and thus devices with no keyboard.
+	// in practice, it's a flaky heuristic just like
+	// any other way I could try to determine whether
+	// I need to offer a fake keyboard.
+	SHOW_KEYPAD = true;
+}
