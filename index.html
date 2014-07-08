@@ -33,6 +33,15 @@
 			background-color: black;
 			border: 1px solid white;
 		}
+		a.exit {
+			position: fixed;
+			top: 40px;
+			left: 40px;
+			color: white;
+			font-family: sans-serif;
+			font-weight: bold;
+			font-size: 25;
+		}
 	</style>
 </head>
 
@@ -159,12 +168,8 @@
 				<td class="key" id="0xF">F</td>
 			</tr>
 		</table>
-		<table>
-			<tr>
-				<td class="key" id="exit" onclick="keyUp({keyCode:27})">Exit</td>
-			</tr>
-		</table>
 		</center>
+		<a class="exit" onclick="keyUp({keyCode:27})">x</a>
 	</div>
 
 	<script src="octo.js"></script>
