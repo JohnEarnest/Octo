@@ -523,12 +523,7 @@ If we `xor` a register with `0xFF` it inverts all the bits in the original regis
 
 Any number is 0 if you `xor` it with itself, so `xor` is often used as an equal-to operator in assembly language. Since the conditional branches in Chip8 can test if a register is equal to a constant or register this use of `xor` is not often necessary.
 
-Shifts leave the shifted out bit in `vf`. Thus, we can use a left or right shift to obtain the most or least significant bit of a byte, respectively. Most Chip8 documentation does not specify what should happen when shifting into `vf` itself, but Octo's interpreter always writes carry values AFTER storing the main result in the destination register. Thus, we can take advantage of this and save a temporary register when obtaining the MSB or LSB of a byte:
-
-	vf <<= v0 # store MSB of v0 in vf
-	if vf == 0 then ...
-
-We can apply this idea to count the number of 1 bits in a byte:
+Shifts leave the shifted out bit in `vf`. Thus, we can use a left or right shift to obtain the most or least significant bit of a byte, respectively. We can apply this idea to count the number of 1 bits in a byte:
 
 	v0 := 0xF3 # number to examine
 	v1 := 0x00 # the count
