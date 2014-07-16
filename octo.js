@@ -627,7 +627,7 @@ function runRom(rom) {
 	init(rom);
 	document.getElementById("editor").style.display = "none";
 	document.getElementById("colors").style.display = "none";
-	document.getElementById("target").style.display = "inline";
+	document.getElementById("emulator").style.display = "inline";
 	window.addEventListener("keydown", keyDown, false);
 	window.addEventListener("keyup"  , keyUp  , false);
 	intervalHandle = setInterval(render, 1000/60);
@@ -636,8 +636,7 @@ function runRom(rom) {
 
 function reset() {
 	document.getElementById("editor").style.display = "inline";
-	document.getElementById("target").style.display = "none";
-	document.getElementById("keypad").style.display = "none";
+	document.getElementById("emulator").style.display = "none";
 	document.getElementById("colors").style.display = "none";
 	window.removeEventListener("keydown", keyDown, false);
 	window.removeEventListener("keyup"  , keyUp  , false);
