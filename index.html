@@ -33,14 +33,10 @@
 			background-color: black;
 			border: 1px solid white;
 		}
-		a.exit {
+		div.buttons {
 			position: fixed;
 			top: 40px;
 			left: 40px;
-			color: white;
-			font-family: sans-serif;
-			font-weight: bold;
-			font-size: 25;
 		}
 	</style>
 </head>
@@ -169,7 +165,10 @@
 			</tr>
 		</table>
 		</center>
-		<a class="exit" onclick="keyUp({keyCode:27})">x</a>
+		<div class="buttons">
+			<img src="images/close.png" onclick="keyUp({keyCode:27})"></img>
+			<img src="images/keypad.png" onclick="toggleKeypad()" style="padding-left: 10px;"></img>
+		</div>
 	</div>
 
 	<script src="octo.js"></script>

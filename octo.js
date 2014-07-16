@@ -628,7 +628,6 @@ function runRom(rom) {
 	document.getElementById("editor").style.display = "none";
 	document.getElementById("colors").style.display = "none";
 	document.getElementById("target").style.display = "inline";
-	if (SHOW_KEYPAD) { document.getElementById("keypad").style.display = "inline"; }
 	window.addEventListener("keydown", keyDown, false);
 	window.addEventListener("keyup"  , keyUp  , false);
 	intervalHandle = setInterval(render, 1000/60);
@@ -953,12 +952,12 @@ for(var k = 0; k <= 0xF; k++) {
 	button.onmouseout  = buttonUp.bind(undefined, k);
 }
 
-var SHOW_KEYPAD = false;
-if(typeof window.orientation !== 'undefined') {
-	// In principle this can identify non-desktops,
-	// and thus devices with no keyboard.
-	// in practice, it's a flaky heuristic just like
-	// any other way I could try to determine whether
-	// I need to offer a fake keyboard.
-	SHOW_KEYPAD = true;
+function toggleKeypad() {
+	var keypad = document.getElementById("keypad");
+	if (keypad.style.display == "none") {
+		keypad.style.display = "inline";
+	}
+	else {
+		keypad.style.display = "none";
+	}
 }
