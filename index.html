@@ -46,8 +46,10 @@
 		<center>
 		<table border="0"><tr><td>
 <textarea id="input"  rows="40" cols="80" spellcheck="false">
-# A very simple example program which draws smiley faces
-# on the screen randomly and periodically clears the display.
+# Chip8 is a virtual machine designed in 1977 for programming video games.
+# Octo is a high level assembler and simulator for Chip8.
+# Here is an example program which draws sprites on the screen
+# randomly and periodically clears the display:
 
 : smile
 	0b00100100
@@ -71,7 +73,12 @@
 
 : main
 	i := smile
-	loop body again
+	loop
+		body
+	again
+
+# for more examples and documentation, consult the project page:
+#	https://github.com/JohnEarnest/Octo
 </textarea></td>
 		<td>
 			<div id="spriteEditor" style="display:none">

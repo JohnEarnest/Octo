@@ -103,3 +103,5 @@ The other way to break out of a loop is `while`. `while` creates a conditional s
 		while v0 != 5
 		# do something...
 	again
+
+`loop...again` constructs may be nested as desired and will behave as expected, but note that simply chaining together `if...then` statements (as in `if v0 == 0 then if v1 == 1 then v2 := 4`) does not elicit useful behavior. If complex nested conditionals are desired, the first `if...then` should be combined with a `jump`, `jump0` or subroutine call to subsequent conditionals.

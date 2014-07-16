@@ -949,7 +949,6 @@ for(var k = 0; k <= 0xF; k++) {
 	button.onmousedown = buttonDn.bind(undefined, k);
 	button.onmouseup   = buttonUp.bind(undefined, k);
 	button.onmouseout  = buttonUp.bind(undefined, k);
-	button.onclick     = function(event) {};
 }
 
 function toggleKeypad() {
