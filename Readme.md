@@ -56,8 +56,8 @@ The various chip8 copy/fetch/arithmetic opcodes have been abstracted to mostly f
 - `vx := key`      block for a keypress and then store code in register.
 - `vx += n`        add constant to register.
 - `vx += vy`       add register to register. (set vF to 1 if result overflows, else 0)
-- `vx -= vy`       subtract y from x, store in x (set vF to 1 if result underflows, else 0)
-- `vx =- vy`       subtract x from y, store in x (set vF to 1 if result underflows, else 0)
+- `vx -= vy`       subtract y from x, store in x (set vF to 0 if result underflows, else 1)
+- `vx =- vy`       subtract x from y, store in x (set vF to 0 if result underflows, else 1)
 - `vx |= vy`       bitwise OR register with register. 
 - `vx &= vy`       bitwise AND register with register.
 - `vx ^= vy`       bitwise XOR register with register.

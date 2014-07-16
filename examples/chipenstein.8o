@@ -122,7 +122,7 @@
 
 	vf := 0
 	if v5 == 1 then va -= v4 # negative x delta
-	if vf == 1 then vc += -1 # borrow out
+	if vf == 0 then vc += -1 # borrow out
 
 	vf := 0
 	if v7 == 0 then vb += v6 # positive y delta
@@ -130,7 +130,7 @@
 
 	vf := 0
 	if v7 == 1 then vb -= v6 # negative y delta
-	if vf == 1 then vd += -1 # borrow out
+	if vf == 0 then vd += -1 # borrow out
 ;
 
 : heights
