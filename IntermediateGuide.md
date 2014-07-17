@@ -462,7 +462,6 @@ Fortunately, giving these bullets the necessary punch is a very simple addition.
 		move-right-player
 		if vf != 0 then jump gameover
 
-		i := bullet
 		if leftfire  != 0 then move-left-bullet
 		if leftfire  == 0 then fire-left-bullet
 		if rightfire != 0 then move-right-bullet
