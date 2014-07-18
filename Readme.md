@@ -5,7 +5,9 @@ title: Octo Manual
 Octo
 ====
 
-Octo is a simple high-level assembler for the Chip8 virtual machine, complete with an environment for testing programs. While a program is running, you can press escape to return to the editor. The chip8 keypad is represented on your keyboard as follows:
+Octo is a simple high-level assembler for the Chip8 virtual machine, complete with an environment for testing programs. You can try it out [here](http://johnearnest.github.io/Octo/).
+
+While a program is running, you can press escape to return to the editor. The chip8 keypad is represented on your keyboard as follows:
 
 	Chip8 Key   Keyboard
 	---------   ---------
