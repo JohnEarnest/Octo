@@ -107,3 +107,14 @@ The other way to break out of a loop is `while`. `while` creates a conditional s
 	again
 
 `loop...again` constructs may be nested as desired and will behave as expected, but note that simply chaining together `if...then` statements (as in `if v0 == 0 then if v1 == 1 then v2 := 4`) does not elicit useful behavior. If complex nested conditionals are desired, the first `if...then` should be combined with a `jump`, `jump0` or subroutine call to subsequent conditionals.
+
+Indirection
+-----------
+Sometimes you may wish to have the 12-bit address represented by a label available in `v` registers. Octo provides a command called `:unpack` for this purpose which expands into a pair of register assignment opcodes. It takes a nybble (0-15 numeric literal or constant) followed by a label as arguments. The lower 8 bits of the address will be stored in `v1` and the upper 4 bits of the address will be bitwise ORed with the specified nybble shifted left 4 bits and stored in `v0`. If the label `cucumber` represented the address `0x582`, the following sets of statements would be identical in meaning:
+
+	v0 := 0xA5
+	v1 := 0x82
+	
+	:unpack 0xA cucumber
+
+This operation makes it possible to write self-modifying code without hardcoding addresses as numeric literals. If you wish to unpack addresses into registers other than `v0` and `v1` you can define aliases called `unpack-hi` or `unpack-lo`, respectively.

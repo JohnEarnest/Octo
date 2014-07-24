@@ -369,6 +369,15 @@ Another approach would be to use self-modifying code to place an `i := NNN` inst
 		save v1         # write the instruction
 		trampoline      # execute our instruction, setting i.
 
+If you want to generate an `i :=` instruction pointing to a label known at assembly time, you can use Octo's `:unpack` statement to achieve the same trick:
+
+	: code
+		:unpack 0xA some-label # store address in v0-v1
+		:proto trampoline      # forward reference to destination
+		i := trampoline        # select destination for instruction
+		save v1                # write the instruction
+		: trampoline 0 0       # execute our instruction, setting i.
+
 And another approach could be to use a jump table. This doesn't allow us to store completely arbitrary values into `i`, but it does allow us to select an `i` based on the contents of a register. Since the jump table entries are 4 bytes each and are indexed by `v0`, we can have at most 64 such entries in a table.
 
 	: table

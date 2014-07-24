@@ -370,14 +370,14 @@ function Compiler(source) {
 	}
 
 	this.tinyValue = function() {
-		// sprite length
+		// sprite length, unpack high nybble
 		var n = this.next();
 		if (typeof n != "number") {
 			if (n in this.constants) { n = this.constants[n]; }
 			else { throw "Undefined name '"+n+"'."; }
 		}
 		if ((typeof n != "number") || (n < 0) || (n > 15)) {
-			throw "Invalid sprite size '"+n+"'; must be in [0,15].";
+			throw "Invalid argument '"+n+"'; must be in [0,15].";
 		}
 		return (n & 0xF);
 	}
@@ -497,6 +497,12 @@ function Compiler(source) {
 				delete this.protos[label];
 			}
 		}
+		else if (token == ":unpack") {
+			var v = this.tinyValue();
+			var a = this.wideValue();
+			this.inst(0x60 | this.aliases["unpack-hi"], (v << 4) | (a >> 8));
+			this.inst(0x60 | this.aliases["unpack-lo"], a);
+		}
 		else if (token == ":proto")  { this.protos[this.next()] = []; }
 		else if (token == ":alias")  { this.aliases[this.next()] = this.register(); }
 		else if (token == ":const")  { this.constants[this.next()] = this.constantValue(); }
@@ -548,6 +554,8 @@ function Compiler(source) {
 
 	this.go = function() {
 		this.aliases["compare-temp"] = 0xE;
+		this.aliases["unpack-hi"]    = 0x0;
+		this.aliases["unlack-lo"]    = 0x1;
 
 		this.inst(0, 0); // reserve a jump slot
 		while(this.tokens.length > 0) {
