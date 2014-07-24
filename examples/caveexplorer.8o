@@ -176,8 +176,7 @@
 ;
 
 : draw-phrase-1
-	v0 := 0xA3
-	v1 := 0x78
+	:unpack 0xA phrase1
 	i  := text-addr
 	save v1
 	v4 := 19
@@ -185,8 +184,7 @@
 ;
 
 : draw-phrase-2
-	v0 := 0xA3
-	v1 := 0x8B
+	:unpack 0xA phrase2
 	i  := text-addr
 	save v1
 	v4 := 12
@@ -194,8 +192,7 @@
 ;
 
 : draw-phrase-3
-	v0 := 0xA3
-	v1 := 0x97
+	:unpack 0xA phrase3
 	i  := text-addr
 	save v1
 	v4 := 13
@@ -1023,8 +1020,7 @@
 	save v0
 
 	clear
-	v0 := 0xA5
-	v1 := 0xA5
+	:unpack 0xA rumbletext
 	i  := text-addr
 	save v1
 	v4 := 36
@@ -1044,8 +1040,7 @@
 
 : useless-gold
 	clear
-	v0 := 0xA5
-	v1 := 0xC9
+	:unpack 0xA uselesstext
 	i  := text-addr
 	save v1
 	v4 := 32
@@ -1055,8 +1050,7 @@
 
 : pyramid-hint
 	clear
-	v0 := 0xA6
-	v1 := 0x15
+	:unpack 0xA pyramidtext
 	i  := text-addr
 	save v1
 	v4 := 36
@@ -1066,8 +1060,7 @@
 
 : gross-skull
 	clear
-	v0 := 0xA6
-	v1 := 0x39
+	:unpack 0xA skulltext
 	i  := text-addr
 	save v1
 	v4 := 36
@@ -1077,8 +1070,7 @@
 
 : dead-end
 	clear
-	v0 := 0xA6
-	v1 := 0x8A
+	:unpack 0xA deadendtext
 	i  := text-addr
 	save v1
 	v4 := 17
@@ -1088,8 +1080,7 @@
 
 : maze-hint
 	clear
-	v0 := 0xA6
-	v1 := 0x9B
+	:unpack 0xA mazetext
 	i  := text-addr
 	save v1
 	v4 := 5
@@ -1112,8 +1103,7 @@
 	block-puzzle
 
 	clear
-	v0 := 0xA5
-	v1 := 0xE9
+	:unpack 0xA exittext
 	i  := text-addr
 	save v1
 	v4 := 44
@@ -1151,8 +1141,7 @@
 	save v0
 	
 	clear
-	v0 := 0xA6
-	v1 := 0x5D
+	:unpack 0xA puzzlestext
 	i  := text-addr
 	save v1
 	v4 := 45
