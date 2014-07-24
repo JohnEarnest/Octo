@@ -555,7 +555,7 @@ function Compiler(source) {
 	this.go = function() {
 		this.aliases["compare-temp"] = 0xE;
 		this.aliases["unpack-hi"]    = 0x0;
-		this.aliases["unlack-lo"]    = 0x1;
+		this.aliases["unpack-lo"]    = 0x1;
 
 		this.inst(0, 0); // reserve a jump slot
 		while(this.tokens.length > 0) {
