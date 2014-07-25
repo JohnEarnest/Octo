@@ -261,6 +261,7 @@ function Compiler(source) {
 	this.aliases   = {}; // map<name, registernum>
 	this.constants = {}; // map<name, token>
 	this.hasmain = true;
+	this.schip = false;
 
 	this.pos = null;
 
@@ -519,7 +520,13 @@ function Compiler(source) {
 		else if (token == "if")      { this.conditional(false); this.expect("then"); }
 		else if (token == "jump0")   { this.immediate(0xB0, this.wideValue()); }
 		else if (token == "jump")    { this.immediate(0x10, this.wideValue()); }
-		else if (token == "sprite")  { this.inst(0xD0 | this.register(), (this.register() << 4) | this.tinyValue()); }
+		else if (token == "sprite")  {
+			var r1 = this.register();
+			var r2 = this.register();
+			var size = this.tinyValue();
+			if (size == 0) { this.schip = true; }
+			this.inst(0xD0 | r1, (r2 << 4) | size);
+		}
 		else if (token == "loop") {
 			this.loops.push([this.here(), this.pos]);
 			this.whiles.push(null);
@@ -541,6 +548,11 @@ function Compiler(source) {
 				this.jump(this.whiles.pop(), this.here());
 			}
 		}
+		else if (token == "scroll-down")  { this.schip = true; this.inst(0x00, 0xC0 | this.tinyValue()); }
+		else if (token == "scroll-right") { this.schip = true; this.inst(0x00, 0xFB); }
+		else if (token == "scroll-left")  { this.schip = true; this.inst(0x00, 0xFC); }
+		else if (token == "lores")        { this.schip = true; this.inst(0x00, 0xFE); }
+		else if (token == "hires")        { this.schip = true; this.inst(0x00, 0xFF); }
 		else if (token == "i") {
 			this.iassign(this.next());
 		}
@@ -610,6 +622,7 @@ function compile() {
 		output.value = display(c.rom);
 		output.style.display = "initial";
 		status.innerHTML = ((c.rom.length) + " bytes, " + (MAX_ROM-c.rom.length) + " free.");
+		if (c.schip) { status.innerHTML += " (SuperChip instructions used)"; }
 	}
 	catch(error) {
 		status.innerHTML = "<font color='red'>" + error + "</font>";
