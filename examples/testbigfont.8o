@@ -1,0 +1,14 @@
+# high resolution font test program.
+# draws the complete alphabet of SuperChip high res characters.
+
+: main
+	hires
+	loop
+		i := bighex v0
+		sprite v1 v2 10
+		v1 += 9
+		v0 += 1
+		if v0 == 8 then v1 := 0
+		if v0 == 8 then v2 += 11
+		if v0 != 16 then
+	again
