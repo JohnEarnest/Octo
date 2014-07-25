@@ -118,3 +118,18 @@ Sometimes you may wish to have the 12-bit address represented by a label availab
 	:unpack 0xA cucumber
 
 This operation makes it possible to write self-modifying code without hardcoding addresses as numeric literals. If you wish to unpack addresses into registers other than `v0` and `v1` you can define aliases called `unpack-hi` or `unpack-lo`, respectively.
+
+SuperChip
+---------
+SuperChip or SCHIP is a set of extended Chip8 instructions. Octo can emulate these instructions and will indicate if any such instructions are used in an assembled program. The SuperChip instructions are as follows:
+
+- `hires` Switch to a 128x64 pixel high resolution display mode.
+- `lores` Switch to the normal 64x32 pixel low resolution display mode.
+- `scroll-down n` Scroll the contents of the display down by 0-15 pixels.
+- `scroll-left` Scroll the contents of the display left by 4 pixels.
+- `scroll-right` Scroll the contents of the display right by 4 pixels.
+- `i := bighex vX` Set I to a large 8x10 hex char corresponding to register value.
+
+Finally, drawing a sprite with height 0 (which would otherwise do nothing) is used by the SuperChip to draw a large 16x16 sprite. The sprite data itself is stored as 16 pairs of bytes representing each row.
+
+Support for SuperChip instructions is a work in progress.
