@@ -969,8 +969,8 @@ function toggleOptions() {
 		document.getElementById("foreEdit").value   = FILL_COLOR;  editFore();
 		document.getElementById("buzzEdit").value   = BUZZ_COLOR;  editBuzz();
 		document.getElementById("silentEdit").value = QUIET_COLOR; editSilent();
-		document.getElementById("shiftQuirks").value = SHIFT_QUIRKS;
-		document.getElementById("loadStoreQuirks").value = LOAD_STORE_QUIRKS;
+		document.getElementById("shiftQuirks").checked = SHIFT_QUIRKS;
+		document.getElementById("loadStoreQuirks").checked = LOAD_STORE_QUIRKS;
 	}
 	else {
 		options.style.display = "none";
@@ -979,14 +979,14 @@ function toggleOptions() {
 
 function setShiftQuirks() {
 	var check = document.getElementById("shiftQuirks");
-	if (check.value) { SHIFT_QUIRKS = true;  }
-	else             { SHIFT_QUIRKS = false; }
+	if (check.checked) { SHIFT_QUIRKS = true;  }
+	else               { SHIFT_QUIRKS = false; }
 }
 
 function setLoadStoreQuirks() {
 	var check = document.getElementById("loadStoreQuirks");
-	if (check.value) { LOAD_STORE_QUIRKS = true;  }
-	else             { LOAD_STORE_QUIRKS = false; }
+	if (check.checked) { LOAD_STORE_QUIRKS = true;  }
+	else               { LOAD_STORE_QUIRKS = false; }
 }
 
 ////////////////////////////////////
