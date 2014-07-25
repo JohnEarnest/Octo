@@ -62,8 +62,8 @@
 : body
 	v2 := 0
 	loop
-		v0 := random 0b00111111
-		v1 := random 0b00011111
+		v0 := random 0b01111111
+		v1 := random 0b00111111
 		sprite v0 v1 6
 		v2 += 1
 		if v2 != 32 then
@@ -72,6 +72,8 @@
 ;
 
 : main
+	# uncomment for SuperChip high resolution mode:
+	#hires
 	i := smile
 	loop
 		body

@@ -57,14 +57,15 @@ var font = [
 	0xF0, 0x80, 0xF0, 0x80, 0x80  // F
 ];
 
-var p  = [];    // pixels
-var m  = [];    // memory (bytes)
-var r  = [];    // return stack
-var v  = [];    // registers
-var pc = 0x200; // program counter
-var i  = 0;     // index register
-var dt = 0;     // delay timer
-var st = 0;     // sound timer
+var p  = [];       // pixels
+var m  = [];       // memory (bytes)
+var r  = [];       // return stack
+var v  = [];       // registers
+var pc = 0x200;    // program counter
+var i  = 0;        // index register
+var dt = 0;        // delay timer
+var st = 0;        // sound timer
+var hires = false; // are we in SuperChip high res mode?
 
 var keys = {};       // track keys which are pressed
 var waiting = false; // are we waiting for a keypress?
@@ -82,6 +83,7 @@ function init(program) {
 	i  = 0;
 	dt = 0;
 	st = 0;
+	hires = false;
 	keys = {};
 	waiting = false;
 	waitReg = -1;
@@ -120,9 +122,11 @@ function misc(x, rest) {
 
 function sprite(x, y, len) {
 	v[0xF] = 0x0;
+	var rowSize = hires ? 128 : 64;
+	var colSize = hires ?  64 : 32;
 	for(var a = 0; a < len; a++) {
 		for(var b = 0; b < 8; b++) {
-			var target = ((x+b) % 64) + ((y+a) % 32)*64;
+			var target = ((x+b) % rowSize) + ((y+a) % colSize)*rowSize;
 			var source = ((m[i+a] >> (7-b)) & 0x1) != 0;
 			if (!source) { continue; }
 			if (p[target]) { p[target] = false; v[0xF] = 0x1; }
@@ -144,7 +148,7 @@ function tick() {
 		pc += 2;
 
 		if (op == 0x00E0) {
-			for(var z = 0; z < 32*64; z++) { p[z] = false; }
+			for(var z = 0; z < p.length; z++) { p[z] = false; }
 			return;
 		}
 		if (op == 0x00EE) {
@@ -157,6 +161,46 @@ function tick() {
 		}
 		if ((op & 0xF0FF) == 0xE0A1) {
 			if (!(KEYMAP[v[x]] in keys)) { pc += 2; }
+			return;
+		}
+		if ((op & 0xFFF0) == 0x00C0) {
+			// scroll down n pixels
+			var rowSize = hires ? 128 : 64;
+			for(var z = p.length; z >= 0; z--) {
+				p[z] = (z > rowSize * n) ? p[z - (rowSize * n)] : 0;
+			}
+			return;
+		}
+		if (op == 0x00FB) {
+			// scroll right 4 pixels
+			var rowSize = hires ? 128 : 64;
+			for(var a = 0; a < p.length; a += rowSize) {
+				for(var b = rowSize-1; b >= 0; b--) {
+					p[a + b] = (b > 4) ? p[a + b - 1] : 0;
+				}
+			}
+			return;
+		}
+		if (op == 0x00FC) {
+			// scroll left 4 pixels
+			var rowSize = hires ? 128 : 64;
+			for(var a = 0; a < p.length; a += rowSize) {
+				for(var b = 0; b < rowSize; b++) {
+					p[a + b] = (b < rowSize - 4) ? p[a + b + 1] : 0;
+				}
+			}
+			return;
+		}
+		if (op == 0x00FE) {
+			hires = false;
+			p = [];
+			for(var z = 0; z < 32*64; z++) { p[z] = false; }
+			return;
+		}
+		if (op == 0x00FF) {
+			hires = true;
+			p = [];
+			for(var z = 0; z < 64*128; z++) { p[z] = false; }
 			return;
 		}
 
@@ -780,8 +824,16 @@ function render() {
 	g.fillStyle = BACK_COLOR;
 	g.fillRect(0, 0, 640, 320);
 	g.fillStyle = FILL_COLOR;
-	for(var z = 0; z < 32*64; z++) {
-		if (p[z]) { g.fillRect(Math.floor(z%64)*10, Math.floor(z/64)*10, 10, 10); }
+
+	if (hires) {
+		for(var z = 0; z < 64*128; z++) {
+			if (p[z]) { g.fillRect(Math.floor(z%128)*5, Math.floor(z/128)*5, 5, 5); }
+		}
+	}
+	else {
+		for(var z = 0; z < 32*64; z++) {
+			if (p[z]) { g.fillRect(Math.floor(z%64)*10, Math.floor(z/64)*10, 10, 10); }
+		}
 	}
 }
 
