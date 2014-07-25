@@ -969,6 +969,8 @@ function toggleOptions() {
 		document.getElementById("foreEdit").value   = FILL_COLOR;  editFore();
 		document.getElementById("buzzEdit").value   = BUZZ_COLOR;  editBuzz();
 		document.getElementById("silentEdit").value = QUIET_COLOR; editSilent();
+		document.getElementById("shiftQuirks").value = SHIFT_QUIRKS;
+		document.getElementById("loadStoreQuirks").value = LOAD_STORE_QUIRKS;
 	}
 	else {
 		options.style.display = "none";
