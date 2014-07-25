@@ -1,0 +1,29 @@
+# quirks mode test program.
+# examines the behavior of operations which have
+# multiple interpretations in the wild and demonstrates
+# the distinction between Octo's defaults and quirks modes.
+
+: buffer 0 3
+
+: main
+	# Perform a shift where source and dest
+	# differ. The correct behavior will draw
+	# a 1 while in-place vx modification will draw 2:
+	v0 := 4
+	v1 := 2
+	v0 >>= v1
+	i  := hex v0
+	va := 5
+	sprite va va 5
+
+	# perform a repeated store and load.
+	# the correct behavior should print 3 due to i autoincrements.
+	# quirks mode will print 4.
+	i := buffer
+	v0 := 4
+	save v0
+	v0 := 9 # just clobber v0 in case
+	load v0
+	i := hex v0
+	vb := 12
+	sprite va vb 5
