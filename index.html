@@ -112,13 +112,14 @@
 			<button type="button" onClick="window.open('Readme.html', '_blank');">
 				Manual
 			</button>
-			<button type="button" onClick="toggleColors();">Colors...</button>
+			<button type="button" onClick="toggleOptions();">Options...</button>
 			<button type="button" onClick="toggleSpriteEditor();">Sprite Editor</button>
 		</center>
 	</div>
 
-	<div id="colors" style="display:none">
+	<div id="options" style="display:none">
 		<center>
+			<br/><b>Colors:</b>
 			<table border=0>
 				<tr>
 					<td>Background</td>
@@ -139,6 +140,17 @@
 					<td>Silence</td>
 					<td><textarea id="silentEdit" rows="1" cols="7" onchange="editSilent();" onkeyup="editSilent();"></textarea></td>
 					<td bgcolor="0xFF0000" id="silentSample"  >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+				</tr>
+			</table>
+			<br/><b>Compatibility Options:</b>
+			<table>
+				<tr>
+					<td><input type="checkbox" id="shiftQuirks" onchange="setShiftQuirks();"></input></td>
+					<td><tt>&lt;&lt;=</tt> and <tt>&gt;&gt;=</tt> modify <tt>vx</tt> in place and ignore <tt>vy</tt>.</td>
+				</tr>
+				<tr>
+					<td><input type="checkbox" id="loadStoreQuirks" onchange="setLoadStoreQuirks();"></input></td>
+					<td><tt>load</tt> and <tt>store</tt> operations leave <tt>i</tt> unchanged.</td>
 				</tr>
 			</table>
 		</center>

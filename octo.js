@@ -12,6 +12,9 @@ var BACK_COLOR  = "#996600";
 var BUZZ_COLOR  = "#FFAA00";
 var QUIET_COLOR = "#000000";
 
+var SHIFT_QUIRKS = false;
+var LOAD_STORE_QUIRKS = false;
+
 var KEYMAP = [
 	// chip8    // keyboard
 	/* 0 */ 88, // x
@@ -118,9 +121,19 @@ function math(x, y, op) {
 		case 0x3: v[x] ^= v[y]; break;
 		case 0x4: var t = v[x]+v[y]; v[0xF] = (t > 0xFF)    ?1:0 ; v[x] = (t & 0xFF); break;
 		case 0x5: var t = v[x]-v[y]; v[0xF] = (v[x] > v[y]) ?1:0 ; v[x] = (t & 0xFF); break;
-		case 0x6: var t = v[y] >> 1; v[0xF] = (v[y] & 0x1)       ; v[x] = (t & 0xFF); break;
 		case 0x7: var t = v[y]-v[x]; v[0xF] = (v[y] > v[x]) ?1:0 ; v[x] = (t & 0xFF); break;
-		case 0xE: var t = v[y] << 1; v[0xF] = ((v[y] >> 7) & 0x1); v[x] = (t & 0xFF); break;
+		case 0x6:
+			if (SHIFT_QUIRKS) { y = x; }
+			var t = v[y] >> 1;
+			v[0xF] = (v[y] & 0x1);
+			v[x] = (t & 0xFF);
+			break;
+		case 0xE:
+			if (SHIFT_QUIRKS) { y = x; }
+			var t = v[y] << 1;
+			v[0xF] = ((v[y] >> 7) & 0x1);
+			v[x] = (t & 0xFF);
+			break;
 		default: throw "unknown math op: " + op;
 	}
 }
@@ -135,8 +148,14 @@ function misc(x, rest) {
 		case 0x29: i = ((v[x] & 0xF) * 5); break;
 		case 0x30: i = ((v[x] & 0xF) * 10 + font.length); break;
 		case 0x33: m[i] = Math.floor(v[x]/100)%10; m[i+1] = Math.floor(v[x]/10)%10; m[i+2] = v[x]%10; break;
-		case 0x55: for(var z = 0; z <= x; z++) { m[i+z] = v[z]; } i = (i+x+1)&0xFFF; break;
-		case 0x65: for(var z = 0; z <= x; z++) { v[z] = m[i+z]; } i = (i+x+1)&0xFFF; break;
+		case 0x55:
+			for(var z = 0; z <= x; z++) { m[i+z] = v[z]; }
+			if (!LOAD_STORE_QUIRKS) { i = (i+x+1)&0xFFF; }
+			break;
+		case 0x65:
+			for(var z = 0; z <= x; z++) { v[z] = m[i+z]; }
+			if (!LOAD_STORE_QUIRKS) { i = (i+x+1)&0xFFF; }
+			break;
 		default: throw "unknown misc op: " + rest;
 	}
 }
@@ -523,7 +542,7 @@ function Compiler(source) {
 		if (token == ":=") {
 			var o = this.next();
 			if (o == "hex") { this.inst(0xF0 | this.register(), 0x29); }
-			if (o == "bighex") {
+			else if (o == "bighex") {
 				this.schip = true;
 				this.inst(0xF0 | this.register(), 0x30);
 			}
@@ -730,7 +749,7 @@ function runRom(rom) {
 	if (rom === null) { return; }
 	init(rom);
 	document.getElementById("editor").style.display = "none";
-	document.getElementById("colors").style.display = "none";
+	document.getElementById("options").style.display = "none";
 	document.getElementById("emulator").style.display = "inline";
 	window.addEventListener("keydown", keyDown, false);
 	window.addEventListener("keyup"  , keyUp  , false);
@@ -741,7 +760,7 @@ function runRom(rom) {
 function reset() {
 	document.getElementById("editor").style.display = "inline";
 	document.getElementById("emulator").style.display = "none";
-	document.getElementById("colors").style.display = "none";
+	document.getElementById("options").style.display = "none";
 	window.removeEventListener("keydown", keyDown, false);
 	window.removeEventListener("keyup"  , keyUp  , false);
 	window.clearInterval(intervalHandle);
@@ -801,7 +820,9 @@ function share() {
 		"backgroundColor" : BACK_COLOR,
 		"fillColor"       : FILL_COLOR,
 		"buzzColor"       : BUZZ_COLOR,
-		"quietColor"      : QUIET_COLOR
+		"quietColor"      : QUIET_COLOR,
+		"shiftQuirks"     : SHIFT_QUIRKS,
+		"loadStoreQuirks" : LOAD_STORE_QUIRKS
 	});
 	xhr.send(JSON.stringify({
 		"description" : "Octo Chip8 Program",
@@ -839,6 +860,8 @@ function runGist() {
 			if (options["fillColor"      ]) { FILL_COLOR  = options["fillColor"      ]; }
 			if (options["buzzColor"      ]) { BUZZ_COLOR  = options["buzzColor"      ]; }
 			if (options["quietColor"     ]) { QUIET_COLOR = options["quietColor"     ]; }
+			if (options["shiftQuirks"    ]) { SHIFT_QUIRKS = options["shiftQuirks"   ]; }
+			if (options["loadStoreQuirks"]) { LOAD_STORE_QUIRKS = options["loadStoreQuirks"]; }
 			run();
 		}
 	}
@@ -908,7 +931,7 @@ document.getElementById("input").onkeydown = function(event) {
 
 ////////////////////////////////////
 //
-//   Color picker stuff:
+//   Configuration options:
 //
 ////////////////////////////////////
 
@@ -938,18 +961,30 @@ function editSilent() {
 	QUIET_COLOR = val;
 }
 
-function toggleColors() {
-	var colors = document.getElementById("colors");
-	if (colors.style.display == "none") {
-		colors.style.display = "inline";
+function toggleOptions() {
+	var options = document.getElementById("options");
+	if (options.style.display == "none") {
+		options.style.display = "inline";
 		document.getElementById("backEdit").value   = BACK_COLOR;  editBack();
 		document.getElementById("foreEdit").value   = FILL_COLOR;  editFore();
 		document.getElementById("buzzEdit").value   = BUZZ_COLOR;  editBuzz();
 		document.getElementById("silentEdit").value = QUIET_COLOR; editSilent();
 	}
 	else {
-		colors.style.display = "none";
+		options.style.display = "none";
 	}
+}
+
+function setShiftQuirks() {
+	var check = document.getElementById("shiftQuirks");
+	if (check.value) { SHIFT_QUIRKS = true;  }
+	else             { SHIFT_QUIRKS = false; }
+}
+
+function setLoadStoreQuirks() {
+	var check = document.getElementById("loadStoreQuirks");
+	if (check.value) { LOAD_STORE_QUIRKS = true;  }
+	else             { LOAD_STORE_QUIRKS = false; }
 }
 
 ////////////////////////////////////
