@@ -1033,15 +1033,55 @@ function toggleSpriteEditor() {
 	}
 }
 
+function setSpriteEditorSize() {
+	var check = document.getElementById("spriteEditorSize");
+	var canvas = document.getElementById("draw");
+	if (check.checked) {
+		largeSprite = true;
+		canvas.width  = 25 * 16;
+		canvas.height = 25 * 16;
+		var newpixels = [];
+		for(var z = 0; z < 32; z++) { newpixels[z] = 0; }
+		for(var z = 0; z < pixel.length; z++) {
+			newpixels[z * 2] = pixel[z];
+		}
+		pixel = newpixels;
+	}
+	else {
+		largeSprite = false;
+		canvas.width  = 25 * 8;
+		canvas.height = 25 * 15;
+		var newpixels = [];
+		for(var z = 0; z < 15; z++) {
+			newpixels[z] = pixel[z*2];
+		}
+		pixel = newpixels;
+	}
+	showPixels();
+	showHex();
+}
+
 function showPixels() {
-	var render = document.getElementById("draw").getContext("2d");
+	var canvas = document.getElementById("draw");
+	var render = canvas.getContext("2d");
 	render.fillStyle = BACK_COLOR;
-	render.fillRect(0, 0, 200, 375);
+	render.fillRect(0, 0, canvas.width, canvas.height);
 	render.fillStyle = FILL_COLOR;
-	for(var row = 0; row < 16; row++) {
-		for(var col = 0; col < 8; col++) {
-			if (pixel[row] & (1 << (7-col))) {
-				render.fillRect(col * 25, row * 25, 25, 25);
+	if (largeSprite) {
+		for(var row = 0; row < 16; row++) {
+			for(var col = 0; col < 16; col++) {
+				if (pixel[row*2 + (col > 7 ? 1:0)] & (1 << (7-(col%8)))) {
+					render.fillRect(col * 25, row * 25, 25, 25);
+				}
+			}
+		}
+	}
+	else {
+		for(var row = 0; row < 15; row++) {
+			for(var col = 0; col < 8; col++) {
+				if (pixel[row] & (1 << (7-col))) {
+					render.fillRect(col * 25, row * 25, 25, 25);
+				}
 			}
 		}
 	}
@@ -1050,7 +1090,7 @@ function showPixels() {
 function showHex() {
 	var output = document.getElementById("spriteData");
 	var hex = "";
-	for(var z = 0; z < 15; z++) {
+	for(var z = 0; z < pixel.length; z++) {
 		var digits = pixel[z].toString(16).toUpperCase();
 		hex += "0x" + (digits.length == 1 ? "0"+digits : digits) + " ";
 	}
@@ -1060,7 +1100,8 @@ function showHex() {
 function editHex() {
 	var output = document.getElementById("spriteData");
 	var bytes = output.value.trim().split(new RegExp("\\s+"));
-	for(var z = 0; z < 15; z++) {
+	var maxBytes = largeSprite ? 32 : 15;
+	for(var z = 0; z < maxBytes; z++) {
 		if (z < bytes.length) {
 			var tok = bytes[z].trim();
 			var num = (tok.slice(0, 2) == "0b") ? parseInt(tok.slice(2),2) : parseInt(tok);
@@ -1076,16 +1117,12 @@ function editHex() {
 function drag(event) {
 	if (mode == 0) { return; }
 	var rect = document.getElementById("draw").getBoundingClientRect();
-	var mx   = event.clientX - rect.left;
-	var my   = event.clientY - rect.top;
-	if (mode == 1) {
-		// draw
-		pixel[Math.floor(my/25)] |= (128 >> Math.floor(mx/25));
-	}
-	else {
-		// erase
-		pixel[Math.floor(my/25)] &= ~(128 >> Math.floor(mx/25));
-	}
+	var mx   = Math.floor((event.clientX - rect.left)/25);
+	var my   = Math.floor((event.clientY - rect.top )/25);
+	var dest = largeSprite ? (my*2 + (mx > 7 ? 1:0)) : my;
+	var src  = (128 >> (mx % 8));
+	if (mode == 1) { pixel[dest] |=  src; } // draw
+	else           { pixel[dest] &= ~src; } // erase
 	showHex();
 	showPixels();
 }
@@ -1093,6 +1130,7 @@ function drag(event) {
 function release(event)    { mode = 0; drag(event); }
 function pressDraw(event)  { if (event.button == 2) {mode = 2;} else {mode = 1;} drag(event); }
 
+var largeSprite = false;
 var mode = 0;
 var pixel = [];
 for(var z = 0; z < 15; z++) { pixel[z] = 0; }
