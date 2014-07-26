@@ -89,6 +89,8 @@ var dt = 0;        // delay timer
 var st = 0;        // sound timer
 var hires = false; // are we in SuperChip high res mode?
 
+var flags = []     // semi-persistent hp48 flag vars
+
 var keys = {};       // track keys which are pressed
 var waiting = false; // are we waiting for a keypress?
 var waitReg = -1;    // destination register of an awaited key
@@ -155,6 +157,12 @@ function misc(x, rest) {
 		case 0x65:
 			for(var z = 0; z <= x; z++) { v[z] = m[i+z]; }
 			if (!LOAD_STORE_QUIRKS) { i = (i+x+1)&0xFFF; }
+			break;
+		case 0x75:
+			for(var z = 0; z <= x; z++) { flags[z] = v[z]; }
+			break;
+		case 0x85:
+			for(var z = 0; z <= x; z++) { v[z] = flags[z]; }
 			break;
 		default: throw "unknown misc op: " + rest;
 	}
@@ -243,6 +251,11 @@ function tick() {
 					p[a + b] = (b < rowSize - 4) ? p[a + b + 1] : 0;
 				}
 			}
+			return;
+		}
+		if (op == 0x00FD) {
+			halted = true;
+			reset();
 			return;
 		}
 		if (op == 0x00FE) {
@@ -653,8 +666,21 @@ function Compiler(source) {
 		else if (token == "scroll-down")  { this.schip = true; this.inst(0x00, 0xC0 | this.tinyValue()); }
 		else if (token == "scroll-right") { this.schip = true; this.inst(0x00, 0xFB); }
 		else if (token == "scroll-left")  { this.schip = true; this.inst(0x00, 0xFC); }
+		else if (token == "exit")         { this.schip = true; this.inst(0x00, 0xFD); }
 		else if (token == "lores")        { this.schip = true; this.inst(0x00, 0xFE); }
 		else if (token == "hires")        { this.schip = true; this.inst(0x00, 0xFF); }
+		else if (token == "saveflags") {
+			var flags = this.tinyValue();
+			if (flags > 7) { throw "saveflags argument must be [0,7]."; }
+			this.schip = true;
+			this.inst(0xF0 | flags, 0x75);
+		}
+		else if (token == "loadflags") {
+			var flags = this.tinyValue();
+			if (flags > 7) { throw "loadflags argument must be [0,7]."; }
+			this.schip = true;
+			this.inst(0xF0 | flags, 0x85);
+		}
 		else if (token == "i") {
 			this.iassign(this.next());
 		}
@@ -877,6 +903,7 @@ function render() {
 	var g = c.getContext("2d");
 
 	for(var z = 0; (z < TICKS_PER_FRAME) && (!waiting); z++) { tick(); }
+	if (halted) { return; }
 
 	if (dt > 0) { dt--; }
 	if (st > 0) { st--; }

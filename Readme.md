@@ -128,7 +128,10 @@ SuperChip or SCHIP is a set of extended Chip8 instructions. Octo can emulate the
 - `scroll-down n` Scroll the contents of the display down by 0-15 pixels.
 - `scroll-left` Scroll the contents of the display left by 4 pixels.
 - `scroll-right` Scroll the contents of the display right by 4 pixels.
-- `i := bighex vX` Set I to a large 8x10 hex char corresponding to register value.
+- `i := bighex v` Set I to a large 8x10 hex char corresponding to register value.
+- `exit` Halt the program and quit the emulator.
+- `saveflags n` Save v0-vn (n < 8) to flag registers. (Originally, HP-48 flag registers.)
+- `loadflags n` Restore v0-vn (n < 8) from flag registers.
 
 Finally, drawing a sprite with height 0 (which would otherwise do nothing) is used by the SuperChip to draw a large 16x16 sprite. The sprite data itself is stored as 16 pairs of bytes representing each row.
 
