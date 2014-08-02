@@ -358,14 +358,14 @@ function Compiler(source) {
 		else if (token == "lores")        { this.schip = true; this.inst(0x00, 0xFE); }
 		else if (token == "hires")        { this.schip = true; this.inst(0x00, 0xFF); }
 		else if (token == "saveflags") {
-			var flags = this.tinyValue();
-			if (flags > 7) { throw "saveflags argument must be [0,7]."; }
+			var flags = this.register();
+			if (flags > 7) { throw "saveflags argument must be v[0,7]."; }
 			this.schip = true;
 			this.inst(0xF0 | flags, 0x75);
 		}
 		else if (token == "loadflags") {
-			var flags = this.tinyValue();
-			if (flags > 7) { throw "loadflags argument must be [0,7]."; }
+			var flags = this.register();
+			if (flags > 7) { throw "loadflags argument must be v[0,7]."; }
 			this.schip = true;
 			this.inst(0xF0 | flags, 0x85);
 		}
