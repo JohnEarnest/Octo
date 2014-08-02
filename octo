@@ -1,0 +1,21 @@
+#!/usr/bin/env node
+// simple piped commandline octo compiler
+
+var compiler = require('./compiler');
+
+process.stdin.setEncoding('utf8');
+
+var input = '';
+
+process.stdin.on('readable', function() {
+    var chunk = process.stdin.read();
+    if (chunk !== null) {
+        input += chunk;
+    }
+});
+
+process.stdin.on('end', function() {
+	var comp = new compiler.Compiler(input);
+	comp.go();
+	process.stdout.write(new Buffer(comp.rom));
+});
