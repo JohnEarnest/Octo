@@ -487,11 +487,8 @@ function render() {
 	var g = c.getContext("2d");
 
 	for(var z = 0; (z < TICKS_PER_FRAME) && (!waiting); z++) { tick(); }
-	if (halted) { return; }
-
 	if (dt > 0) { dt--; }
 	if (st > 0) { st--; }
-	document.body.style.backgroundColor = (st > 0) ? BUZZ_COLOR : QUIET_COLOR;
 
 	g.setTransform(1, 0, 0, 1, 0, 0);
 	g.fillStyle = BACK_COLOR;
@@ -508,6 +505,9 @@ function render() {
 			if (p[z]) { g.fillRect(Math.floor(z%64)*10, Math.floor(z/64)*10, 10, 10); }
 		}
 	}
+
+	if (halted) { return; }
+	document.body.style.backgroundColor = (st > 0) ? BUZZ_COLOR : QUIET_COLOR;
 }
 
 function keyDown(event) {
