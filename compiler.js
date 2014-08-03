@@ -282,25 +282,28 @@ function Compiler(source) {
 		}
 	}
 
-	this.instruction = function(token) {
-		if (token == ":") {
-			var label = this.next();
-			if ((this.here() == 0x202) && (label == "main")) {
-				this.hasmain = false;
-				this.rom = [];
-			}
-			this.dict[label] = this.here();
-
-			if (label in this.protos) {
-				for(var z = 0; z < this.protos[label].length; z++) {
-					var addr  = this.protos[label][z];
-					var patch = this.here();
-					this.rom[addr - 0x200] = (this.rom[addr - 0x200] & 0xF0) | ((patch >> 8)&0xF);
-					this.rom[addr - 0x1FF] = (patch & 0xFF);
-				}
-				delete this.protos[label];
-			}
+	this.resolveLabel = function(offset) {
+		var target = (this.here() + offset);
+		var label = this.next();
+		if ((target == 0x202) && (label == "main")) {
+			this.hasmain = false;
+			this.rom = [];
 		}
+		this.dict[label] = target;
+
+		if (label in this.protos) {
+			for(var z = 0; z < this.protos[label].length; z++) {
+				var addr  = this.protos[label][z];
+				this.rom[addr - 0x200] = (this.rom[addr - 0x200] & 0xF0) | ((target >> 8)&0xF);
+				this.rom[addr - 0x1FF] = (target & 0xFF);
+			}
+			delete this.protos[label];
+		}
+	}
+
+	this.instruction = function(token) {
+		if (token == ":") { this.resolveLabel(0); }
+		else if (token == ":next") { this.resolveLabel(1); }
 		else if (token == ":unpack") {
 			var v = this.tinyValue();
 			var a = this.wideValue();
