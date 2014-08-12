@@ -148,4 +148,8 @@ SuperChip or SCHIP is a set of extended Chip8 instructions. Octo can emulate the
 
 Finally, drawing a sprite with height 0 (which would otherwise do nothing) is used by the SuperChip to draw a large 16x16 sprite. The sprite data itself is stored as 16 pairs of bytes representing each row.
 
-Support for SuperChip instructions is a work in progress.
+Debugging
+---------
+Octo provides basic debugging facilities for Chip8 programs. While a program is running, pressing the "i" key will interrupt execution and display the contents of the `v` registers, `i` and the program counter. Pressing space or clicking the "continue" icon resumes execution.
+
+Breakpoints can also be placed in source code by using the command `:breakpoint` followed by a name- the name will be shown when the breakpoint is encountered so that multiple breakpoints can be readily distinguished. `:breakpoint` is an out-of-band debugging facility and inserting a breakpoint into your program will not add any code or modify any Chip8 registers.
