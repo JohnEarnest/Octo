@@ -204,7 +204,6 @@ function sprite(x, y, len) {
 }
 
 function tick() {
-	if (breakpoint) { return; }
 	if (halted) { return; }
 	try {
 		var op  = (m[pc  ] << 8) | m[pc+1];
@@ -496,20 +495,9 @@ function framerate() {
 	TICKS_PER_FRAME = document.getElementById("framerate").value;
 }
 
-function render() {
+function renderDisplay() {
 	var c = document.getElementById("target");
 	var g = c.getContext("2d");
-
-	for(var z = 0; (z < TICKS_PER_FRAME) && (!waiting); z++) {
-		tick();
-		if (breakpoint != true && pc in metadata.breakpoints) {
-			haltBreakpoint(metadata.breakpoints[pc]);
-		}
-	}
-	if (breakpoint != true) {
-		if (dt > 0) { dt--; }
-		if (st > 0) { st--; }
-	}
 
 	g.setTransform(1, 0, 0, 1, 0, 0);
 	g.fillStyle = BACK_COLOR;
@@ -526,6 +514,23 @@ function render() {
 			if (p[z]) { g.fillRect(Math.floor(z%64)*10, Math.floor(z/64)*10, 10, 10); }
 		}
 	}
+}
+
+function render() {
+	for(var z = 0; (z < TICKS_PER_FRAME) && (!waiting); z++) {
+		if (breakpoint != true) {
+			tick();
+			if (pc in metadata.breakpoints) {
+				haltBreakpoint(metadata.breakpoints[pc]);
+			}
+		}
+	}
+	if (breakpoint != true) {
+		if (dt > 0) { dt--; }
+		if (st > 0) { st--; }
+	}
+
+	renderDisplay();
 
 	if (halted) { return; }
 	document.body.style.backgroundColor = (st > 0) ? BUZZ_COLOR : QUIET_COLOR;
@@ -538,11 +543,20 @@ function keyDown(event) {
 function keyUp(event) {
 	if (event.keyCode in keys) { delete keys[event.keyCode]; }
 	if (event.keyCode == 27) { reset(); }
-	if (event.keyCode == 73) {
-		haltBreakpoint("user interrupt");
+	if (event.keyCode == 73) { // i
+		if (breakpoint) {
+			clearBreakpoint();
+		}
+		else {
+			haltBreakpoint("user interrupt");
+		}
 	}
-	if (breakpoint && event.keyCode == 32) {
-		clearBreakpoint();
+	if (event.keyCode == 79) { // o
+		if (breakpoint) {
+			tick();
+			renderDisplay();
+			haltBreakpoint("single stepping");
+		}
 	}
 	if (waiting) {
 		for(var z = 0; z < 16; z++) {
@@ -834,7 +848,7 @@ function haltBreakpoint(breakName) {
 		regdump += "v" + hex + " := " + hexFormat(v[k]) + formatAliases(k) +"<br>";
 	}
 
-	regdump += "inferred stack trace:<br>";
+	regdump += "<br>inferred stack trace:<br>";
 	for(var x = 0; x < r.length; x++) {
 		regdump += hexFormat(r[x]) + getLabel(r[x]) + "<br>";
 	}

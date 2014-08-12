@@ -150,6 +150,6 @@ Finally, drawing a sprite with height 0 (which would otherwise do nothing) is us
 
 Debugging
 ---------
-Octo provides basic debugging facilities for Chip8 programs. While a program is running, pressing the "i" key will interrupt execution and display the contents of the `v` registers, `i` and the program counter. Any register aliases and (guessed) labels will be indicated next to the raw register contents. Pressing the spacebar or clicking the "continue" icon resumes execution.
+Octo provides basic debugging facilities for Chip8 programs. While a program is running, pressing the "i" key will interrupt execution and display the contents of the `v` registers, `i` and the program counter. Any register aliases and (guessed) labels will be indicated next to the raw register contents. When interrupted, pressing "i" again or clicking the "continue" icon will resume execution, while pressing "o" will single-step through the program. Note that while single-stepping the Chip8 timers will not count down.
 
 Breakpoints can also be placed in source code by using the command `:breakpoint` followed by a name- the name will be shown when the breakpoint is encountered so that multiple breakpoints can be readily distinguished. `:breakpoint` is an out-of-band debugging facility and inserting a breakpoint into your program will not add any code or modify any Chip8 registers.
