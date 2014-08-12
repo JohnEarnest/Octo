@@ -109,6 +109,7 @@ function init(rom) {
 	for(var z = 0; z < 16; z++) { v[z] = 0; }
 	for(var z = 0; z < 32*64; z++) { p[z] = false; }
 	pc = 0x200;
+	r = [];
 	i  = 0;
 	dt = 0;
 	st = 0;
@@ -356,7 +357,8 @@ function compile() {
 	return {
 		rom        :c.rom,
 		breakpoints:c.breakpoints,
-		aliases    :c.aliases
+		aliases    :c.aliases,
+		labels     :c.dict
 	};
 }
 
@@ -399,7 +401,7 @@ function load() {
 		function actuallyLoad() {
 			var buff = reader.result;
 			var bytes = new Uint8Array(buff);
-			runRom({ rom:bytes, breakpoints:{}, aliases:{} });
+			runRom({ rom:bytes, breakpoints:{}, aliases:{}, labels:{} });
 		}
 
 		reader.onload = actuallyLoad;
@@ -790,6 +792,20 @@ function toggleKeypad() {
 //
 ////////////////////////////////////
 
+function getLabel(address) {
+	var bestname = "???";
+	var besta = 0x200;
+	for(var key in metadata.labels) {
+		var v = metadata.labels[key];
+		if ((v > besta) && (v <= address)) {
+			bestname = key;
+			besta = v;
+		}
+	}
+	if (besta == address) { return " (" + bestname + ")"; }
+	return " (" + bestname + " + " + (address - besta) + ")";
+}
+
 function formatAliases(id) {
 	var names = [];
 	for(var key in metadata.aliases) {
@@ -811,12 +827,18 @@ function haltBreakpoint(breakName) {
 
 	var regdump =
 		"breakpoint: " + breakName + "<br>" +
-		"pc := " + hexFormat(pc) + "<br>" +
-		"i := " + hexFormat(i) + "<br>";
+		"pc := " + hexFormat(pc) + getLabel(pc) + "<br>" +
+		"i := " + hexFormat(i) + getLabel(i) + "<br>";
 	for(var k = 0; k <= 0xF; k++) {
 		var hex = k.toString(16).toUpperCase();
 		regdump += "v" + hex + " := " + hexFormat(v[k]) + formatAliases(k) +"<br>";
 	}
+
+	regdump += "inferred stack trace:<br>";
+	for(var x = 0; x < r.length; x++) {
+		regdump += hexFormat(r[x]) + getLabel(r[x]) + "<br>";
+	}
+
 	regs.innerHTML = regdump;
 	breakpoint = true;
 }
