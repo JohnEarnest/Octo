@@ -97,11 +97,11 @@ var waitReg = -1;    // destination register of an awaited key
 
 var halted = false;
 var breakpoint = false;
-var breakpoints = {} // address -> breakpoint label
+var metadata = {};
 
 function init(rom) {
 	var program = rom.rom;
-	breakpoints = rom.breakpoints;
+	metadata = rom;
 	for(var z = 0; z < 4096; z++) { m[z] = 0; }
 	for(var z = 0; z < font.length; z++) { m[z] = font[z]; }
 	for(var z = 0; z < bigfont.length; z++) { m[z + font.length] = bigfont[z]; }
@@ -353,7 +353,11 @@ function compile() {
 		return null;
 	}
 
-	return { rom:c.rom, breakpoints:c.breakpoints };
+	return {
+		rom        :c.rom,
+		breakpoints:c.breakpoints,
+		aliases    :c.aliases
+	};
 }
 
 var intervalHandle;
@@ -395,7 +399,7 @@ function load() {
 		function actuallyLoad() {
 			var buff = reader.result;
 			var bytes = new Uint8Array(buff);
-			runRom({ rom:bytes, breakpoints:{} });
+			runRom({ rom:bytes, breakpoints:{}, aliases:{} });
 		}
 
 		reader.onload = actuallyLoad;
@@ -496,8 +500,8 @@ function render() {
 
 	for(var z = 0; (z < TICKS_PER_FRAME) && (!waiting); z++) {
 		tick();
-		if (breakpoint != true && pc in breakpoints) {
-			haltBreakpoint(breakpoints[pc]);
+		if (breakpoint != true && pc in metadata.breakpoints) {
+			haltBreakpoint(metadata.breakpoints[pc]);
 		}
 	}
 	if (breakpoint != true) {
@@ -786,6 +790,19 @@ function toggleKeypad() {
 //
 ////////////////////////////////////
 
+function formatAliases(id) {
+	var names = [];
+	for(var key in metadata.aliases) {
+		if (metadata.aliases[key] == id) { names.push(key); }
+	}
+	if (names.length == 0) { return ""; }
+	var ret = " (" + names[0];
+	for(var x = 1; x < names.length; x++) {
+		ret += ", " + names[x];
+	}
+	return ret + ")";
+}
+
 function haltBreakpoint(breakName) {
 	var button = document.getElementById("continueButton");
 	var regs   = document.getElementById("registerView");
@@ -798,7 +815,7 @@ function haltBreakpoint(breakName) {
 		"i := " + hexFormat(i) + "<br>";
 	for(var k = 0; k <= 0xF; k++) {
 		var hex = k.toString(16).toUpperCase();
-		regdump += "v" + hex + " := " + hexFormat(v[k]) + "<br>";
+		regdump += "v" + hex + " := " + hexFormat(v[k]) + formatAliases(k) +"<br>";
 	}
 	regs.innerHTML = regdump;
 	breakpoint = true;
