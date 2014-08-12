@@ -793,8 +793,8 @@ function toggleKeypad() {
 ////////////////////////////////////
 
 function getLabel(address) {
-	var bestname = "???";
-	var besta = 0x200;
+	var bestname = "hex-font";
+	var besta = 0;
 	for(var key in metadata.labels) {
 		var v = metadata.labels[key];
 		if ((v > besta) && (v <= address)) {
