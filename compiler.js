@@ -61,6 +61,7 @@ function Compiler(source) {
 	this.constants = {}; // map<name, token>
 	this.hasmain = true;
 	this.schip = false;
+	this.breakpoints = {}; // map<address, name>
 
 	this.pos = null;
 
@@ -310,6 +311,7 @@ function Compiler(source) {
 			this.inst(0x60 | this.aliases["unpack-hi"], (v << 4) | (a >> 8));
 			this.inst(0x60 | this.aliases["unpack-lo"], a);
 		}
+		else if (token == ":breakpoint") { this.breakpoints[this.here()] = this.next(); }
 		else if (token == ":proto")  { this.protos[this.next()] = []; }
 		else if (token == ":alias")  { this.aliases[this.next()] = this.register(); }
 		else if (token == ":const")  { this.constants[this.next()] = this.constantValue(); }

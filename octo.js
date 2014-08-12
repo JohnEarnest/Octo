@@ -96,8 +96,12 @@ var waiting = false; // are we waiting for a keypress?
 var waitReg = -1;    // destination register of an awaited key
 
 var halted = false;
+var breakpoint = false;
+var breakpoints = {} // address -> breakpoint label
 
-function init(program) {
+function init(rom) {
+	var program = rom.rom;
+	breakpoints = rom.breakpoints;
 	for(var z = 0; z < 4096; z++) { m[z] = 0; }
 	for(var z = 0; z < font.length; z++) { m[z] = font[z]; }
 	for(var z = 0; z < bigfont.length; z++) { m[z + font.length] = bigfont[z]; }
@@ -113,6 +117,7 @@ function init(program) {
 	waiting = false;
 	waitReg = -1;
 	halted = false;
+	breakpoint = false;
 }
 
 function math(x, y, op) {
@@ -198,6 +203,7 @@ function sprite(x, y, len) {
 }
 
 function tick() {
+	if (breakpoint) { return; }
 	if (halted) { return; }
 	try {
 		var op  = (m[pc  ] << 8) | m[pc+1];
@@ -302,11 +308,12 @@ function tick() {
 //
 ////////////////////////////////////
 
+function hexFormat(num) {
+	var hex = num.toString(16).toUpperCase();
+	return "0x" + ((hex.length > 1) ? hex : "0" + hex);
+}
+
 function display(rom) {
-	function hexFormat(num) {
-		var hex = num.toString(16).toUpperCase();
-		return "0x" + ((hex.length > 1) ? hex : "0" + hex);
-	}
 	return "[" + (rom.map(hexFormat).join(", ")) + "]";
 }
 
@@ -346,7 +353,7 @@ function compile() {
 		return null;
 	}
 
-	return c.rom;
+	return { rom:c.rom, breakpoints:c.breakpoints };
 }
 
 var intervalHandle;
@@ -375,6 +382,7 @@ function reset() {
 	window.removeEventListener("keyup"  , keyUp  , false);
 	window.clearInterval(intervalHandle);
 	document.body.style.backgroundColor = "#FFFFFF";
+	clearBreakpoint();
 }
 
 function load() {
@@ -387,7 +395,7 @@ function load() {
 		function actuallyLoad() {
 			var buff = reader.result;
 			var bytes = new Uint8Array(buff);
-			runRom(bytes);
+			runRom({ rom:bytes, breakpoints:{} });
 		}
 
 		reader.onload = actuallyLoad;
@@ -486,9 +494,16 @@ function render() {
 	var c = document.getElementById("target");
 	var g = c.getContext("2d");
 
-	for(var z = 0; (z < TICKS_PER_FRAME) && (!waiting); z++) { tick(); }
-	if (dt > 0) { dt--; }
-	if (st > 0) { st--; }
+	for(var z = 0; (z < TICKS_PER_FRAME) && (!waiting); z++) {
+		tick();
+		if (breakpoint != true && pc in breakpoints) {
+			haltBreakpoint(breakpoints[pc]);
+		}
+	}
+	if (breakpoint != true) {
+		if (dt > 0) { dt--; }
+		if (st > 0) { st--; }
+	}
 
 	g.setTransform(1, 0, 0, 1, 0, 0);
 	g.fillStyle = BACK_COLOR;
@@ -517,6 +532,12 @@ function keyDown(event) {
 function keyUp(event) {
 	if (event.keyCode in keys) { delete keys[event.keyCode]; }
 	if (event.keyCode == 27) { reset(); }
+	if (event.keyCode == 73) {
+		haltBreakpoint("user interrupt");
+	}
+	if (breakpoint && event.keyCode == 32) {
+		clearBreakpoint();
+	}
 	if (waiting) {
 		for(var z = 0; z < 16; z++) {
 			if (KEYMAP[z] == event.keyCode) {
@@ -757,4 +778,36 @@ function toggleKeypad() {
 	else {
 		keypad.style.display = "none";
 	}
+}
+
+////////////////////////////////////
+//
+//   Debugger:
+//
+////////////////////////////////////
+
+function haltBreakpoint(breakName) {
+	var button = document.getElementById("continueButton");
+	var regs   = document.getElementById("registerView");
+	button.style.display = "inline";
+	regs.style.display = "inline";
+
+	var regdump =
+		"breakpoint: " + breakName + "<br>" +
+		"pc := " + hexFormat(pc) + "<br>" +
+		"i := " + hexFormat(i) + "<br>";
+	for(var k = 0; k <= 0xF; k++) {
+		var hex = k.toString(16).toUpperCase();
+		regdump += "v" + hex + " := " + hexFormat(v[k]) + "<br>";
+	}
+	regs.innerHTML = regdump;
+	breakpoint = true;
+}
+
+function clearBreakpoint() {
+	var button = document.getElementById("continueButton");
+	var regs   = document.getElementById("registerView");
+	button.style.display = "none";
+	regs.style.display = "none";
+	breakpoint = false;
 }

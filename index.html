@@ -38,6 +38,13 @@
 			top: 40px;
 			left: 40px;
 		}
+		div.debugger {
+			position: fixed;
+			top: 100px;
+			left: 40px;
+			font-family: monospace;
+			color: white;
+		}
 	</style>
 </head>
 
@@ -188,8 +195,27 @@
 		</table>
 		</center>
 		<div class="buttons">
-			<img src="images/close.png" onclick="keyUp({keyCode:27})"></img>
-			<img src="images/keypad.png" onclick="toggleKeypad()" style="padding-left: 10px;"></img>
+			<img
+				title="close"
+				src="images/close.png"
+				onclick="keyUp({keyCode:27})"
+			></img>
+			<img
+				title="toggle keypad"
+				src="images/keypad.png"
+				onclick="toggleKeypad()"
+				style="padding-left: 10px;"
+			></img>
+			<img
+				id="continueButton"
+				title="continue"
+				src="images/continue.png"
+				onclick="clearBreakpoint()"
+				style="padding-left: 10px; display:none;"
+			></img>
+		</div>
+		<div class="debugger" id="registerView" style="display:none">
+			register display.
 		</div>
 	</div>
 	<script src="compiler.js"></script>
