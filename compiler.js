@@ -289,6 +289,7 @@ function Compiler(source) {
 		if ((target == 0x202) && (label == "main")) {
 			this.hasmain = false;
 			this.rom = [];
+			target = 0x200;
 		}
 		this.dict[label] = target;
 
