@@ -345,24 +345,19 @@ function analyze(rom) {
 	for(var x = 0; x < 4096; x++)       { program[x] = 0x00; }
 	for(var x = 0; x < rom.length; x++) { program[x+0x200] = rom[x]; }
 	
-	function reachingMatches(a, b) {
-		// b must be AT LEAST equal to a,
-		// or it could be a superset of a.
-		for(var reg in a) {
-			for(var val in a[reg]) {
-				if (!(val in b[reg])) { return false; }
-			}
-		}
-		return true;
-	}
-	
 	function reachingMerge(a, b) {
 		// take the union of two reaching sets.
+		// if we altered b, it was a subset of a.
+		var changed = false;
 		for(var register in a) {
-			for(var v in a[register]) {
-				b[register][v] = true;
+			for(var value in a[register]) {
+				if(!(value in b[register])) {
+					changed = true;
+					b[register][value] = true;
+				}
 			}
 		}
+		return changed;
 	}
 
 	while(fringe.length > 0) {
@@ -385,10 +380,9 @@ function analyze(rom) {
 					fringe.push(child);
 				}
 			}
-			else if (!reachingMatches(output, reaching[child])) {
-				// merge our reaching defs with non-superset
-				// children and then re-explore them:
-				reachingMerge(output, reaching[child]);
+			else if (reachingMerge(output, reaching[child])) {
+				// if merging expanded the child reaching set,
+				// explore it again:
 				if (fringe.lastIndexOf(child) == -1) {
 					fringe.push(child);
 				}
