@@ -358,17 +358,11 @@ function analyze(rom) {
 	
 	function reachingMerge(a, b) {
 		// take the union of two reaching sets.
-		var ret = {}
 		for(var register in a) {
-			ret[register] = {}
 			for(var v in a[register]) {
-				ret[register][v] = true;
-			}
-			for(var v in b[register]) {
-				ret[register][v] = true;
+				b[register][v] = true;
 			}
 		}
-		return ret;
 	}
 
 	while(fringe.length > 0) {
@@ -394,7 +388,7 @@ function analyze(rom) {
 			else if (!reachingMatches(output, reaching[child])) {
 				// merge our reaching defs with non-superset
 				// children and then re-explore them:
-				reaching[child] = reachingMerge(output, reaching[child]);
+				reachingMerge(output, reaching[child]);
 				if (fringe.lastIndexOf(child) == -1) {
 					fringe.push(child);
 				}
