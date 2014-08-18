@@ -277,6 +277,7 @@ function successors(address, prevret) {
 		var pass = false;
 		var skip = false;
 		for(var vx in reaching[address][x]) {
+			if (pass && skip) { break; }
 			for(var vy in reaching[address][y]) {
 				if (predicate(vx, vy, nn)) { skip = true; }
 				else                       { pass = true; }
