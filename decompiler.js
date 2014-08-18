@@ -12,6 +12,11 @@
 var LOAD_STORE_QUIRKS = false; // ignore i increment with loads
 var SHIFT_QUIRKS      = false; // shift vx in place, ignore vy
 
+var regNames = [
+	0x0,0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9,0xA,0xB,0xC,0xD,0xE,0xF,
+	'f0','f1','f2','f3','f4','f5','f6','f7','i','rets'
+];
+
 // global state:
 var program  = []; // chip8 memory
 var reaching = {}; // map<address, map<register, set<int>>>
@@ -101,10 +106,11 @@ function apply(address) {
 
 	// start with a deep copy of the source reaching set:
 	var ret = {};
-	for(var reg in reaching[address]) {
-		ret[reg] = {};
-		for(var val in reaching[address][reg]) {
-			ret[reg][val] = true;
+	for(var z = 0; z < regNames.length; z++) {
+		var register = regNames[z];
+		ret[register] = {};
+		for(var val in reaching[address][register]) {
+			ret[register][val] = true;
 		}
 	}
 
@@ -334,13 +340,11 @@ function successors(address, prevret) {
 }
 
 function analyze(rom) {
-	reaching[0x200] = {
-		0x0:{0:true}, 0x1:{0:true}, 0x2:{0:true}, 0x3:{0:true}, 0x4:{0:true}, 0x5:{0:true},
-		0x6:{0:true}, 0x7:{0:true}, 0x8:{0:true}, 0x9:{0:true}, 0xA:{0:true}, 0xB:{0:true},
-		0xC:{0:true}, 0xD:{0:true}, 0xE:{0:true}, 0xF:{0:true}, 'i':{0:true}, 'rets':{},
-		f0:{0:true}, f1:{0:true}, f2:{0:true}, f3:{0:true},
-		f4:{0:true}, f5:{0:true}, f6:{0:true}, f7:{0:true}
-	};
+	reaching[0x200] = {};
+	for(var z = 0; z < regNames.length; z++) {
+		reaching[0x200][regNames[z]] = { 0:true };
+	}
+	reaching[0x200]['rets'] = {};
 	var fringe = [0x200];
 
 	for(var x = 0; x < 4096; x++)       { program[x] = 0x00; }
@@ -350,7 +354,8 @@ function analyze(rom) {
 		// take the union of two reaching sets.
 		// if we altered b, it was a subset of a.
 		var changed = false;
-		for(var register in a) {
+		for(var z = 0; z < regNames.length; z++) {
+			var register = regNames[z];
 			for(var value in a[register]) {
 				if(!(value in b[register])) {
 					changed = true;
