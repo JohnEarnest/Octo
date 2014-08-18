@@ -109,8 +109,9 @@ function apply(address) {
 	for(var z = 0; z < regNames.length; z++) {
 		var register = regNames[z];
 		ret[register] = {};
-		for(var val in reaching[address][register]) {
-			ret[register][val] = true;
+		var values = Object.keys(reaching[address][register]);
+		for(var vindex = 0; vindex < values.length; vindex++) {
+			ret[register][values[vindex]] = true;
 		}
 	}
 
@@ -123,7 +124,6 @@ function apply(address) {
 	var y   = (nn >> 4) & 0xF;
 	var n   = (nn     ) & 0xF;
 	var nnn = op & 0xFFF;
-
 
 	// log label and subroutine references:
 	if (o == 0x1 || o == 0xA || o == 0xB) {
@@ -356,7 +356,9 @@ function analyze(rom) {
 		var changed = false;
 		for(var z = 0; z < regNames.length; z++) {
 			var register = regNames[z];
-			for(var value in a[register]) {
+			var values = Object.keys(a[register]);
+			for(var vindex = 0; vindex < values.length; vindex++) {
+				var value = values[vindex];
 				if(!(value in b[register])) {
 					changed = true;
 					b[register][value] = true;
