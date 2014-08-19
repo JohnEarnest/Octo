@@ -471,6 +471,9 @@ function formatProgram(programSize) {
 		var a = (x + 0x200);
 
 		// emit labels and find loop heads
+		if (a in subroutines) {
+			console.log("\n: " + snames[a]);
+		}
 		if (a in labels) {
 			if (lnames[a] == "main") { console.log(": main"); }
 
@@ -483,7 +486,7 @@ function formatProgram(programSize) {
 				// must be in a contiguous forward block
 				var foundBreak = false;
 				for(var scan = a; scan <= u; scan += 2) {
-					if (scan in subroutines) {
+					if (scan in subroutines && scan != a) {
 						// a contiguous block can't contain subroutine entrypoints
 						foundBreak = true;
 						break;
@@ -505,9 +508,6 @@ function formatProgram(programSize) {
 			if (labels[a].length > 0 && lnames[a] != "main") {
 				console.log(": " + lnames[a]);
 			}
-		}
-		else if (a in subroutines) {
-			console.log("\n: " + snames[a]);
 		}
 
 		// emit half-labels
