@@ -197,6 +197,15 @@ function apply(address) {
 		ret[x]   = r;
 		ret[0xF] = c;
 	}
+	function chaseReturns() {
+		var destinations = {};
+		for(var rsource in ret['rets']) {
+			for(var rdest in reaching[parseInt(rsource)-2]['rets']) {
+				destinations[rdest] = true;
+			}
+		}
+		return destinations;
+	}
 	function markRead(size) {
 		for(var w in ret['i']) {
 			var addr = parseInt(w);
@@ -213,7 +222,7 @@ function apply(address) {
 	// simulate postconditions:
 	if (SHIFT_QUIRKS && o == 0x8 && (n == 0x6 || n == 0xE)) { y = x; }
 
-	if (op == 0x00EE)           { ret['rets'] = {};                              } // return
+	if (op == 0x00EE)           { ret['rets'] = chaseReturns();                  } // return
 	if (o == 0x2)               { ret['rets'] = single(address + 2);             } // call
 	if (o == 0x6)               { ret[x] = single(nn);                           } // vx := nn
 	if (o == 0x7)               { ret[x] = unary(function(a) { return a + nn;}); } // vx += nn
@@ -499,6 +508,12 @@ function formatProgram(programSize) {
 		}
 		else if (a in subroutines) {
 			console.log("\n: " + snames[a]);
+		}
+
+		// emit half-labels
+		if (type[a] == "code" || type[a] == "smc") {
+			if      ((a + 1) in labels     ) { console.log(":next " + lnames[a+1]); }
+			else if ((a + 1) in subroutines) { console.log(":next " + snames[a+1]); }
 		}
 
 		// emit instruction/data
