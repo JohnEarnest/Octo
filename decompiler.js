@@ -389,6 +389,7 @@ function analyze(rom) {
 
 		for(var x = 0; x < children.length; x++) {
 			var child = children[x];
+			var isReturn = (program[child] == 0x00 && program[child+1] == 0xEE);
 
 			if ((typeof reaching[child]) == "undefined") {
 				// always explore fresh nodes:
@@ -397,7 +398,7 @@ function analyze(rom) {
 					fringe.push(child);
 				}
 			}
-			else if (reachingMerge(output, reaching[child])) {
+			else if (reachingMerge(output, reaching[child]) || isReturn) {
 				// if merging expanded the child reaching set,
 				// explore it again:
 				if (fringe.lastIndexOf(child) == -1) {
@@ -557,13 +558,8 @@ function formatProgram(programSize) {
 //   is unclear to me right now; can we be more aggressive and establish invariants
 //   for variables other than the variables directly tested by branches?
 // - if I modeled dt I could calculate vx := dt using the max value set as an upper bound.
-
-// - my first successful attempt at disassembling Brix seems pretty close,
-//   but the ball/paddle appears screwed up and it took 2m37s to process (!)
-//   like many of the ROMs I have been investigating, it seems to have a considerable
-//   amount of statically dead data, with 0x00 padding between each sprite entry.
-//   I'm starting to wonder if the original interpreter treated 'sprite' as drawing
-//   a sprite of height n as n+1 pixels tall, achieving 1-16 tall sprites...
+// - I'm starting to wonder if the original interpreter treated 'sprite' as drawing
+//   a sprite of height n as n+1 pixels tall, achieving 2-16 tall sprites...
 
 var fs = require('fs');
 var buff = fs.readFileSync(process.argv[2]);
