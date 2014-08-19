@@ -65,7 +65,7 @@ function display(a, nn) {
 	if (o == 0x8 && n == 0x6)   { return vx + " >>= " + vy; }
 	if (o == 0x8 && n == 0x7)   { return vx + " =- " + vy; }
 	if (o == 0x8 && n == 0xE)   { return vx + " <<= " + vy; }
-	if (o == 0x9)               { return "if " + rx + " == " + ry + " then"; }
+	if (o == 0x9)               { return "if " + vx + " == " + vy + " then"; }
 	if (o == 0xA)               { return "i := " + lnames[nnn]; }
 	if (o == 0xB)               { return "jump0 " + lnames[nnn]; }
 	if (o == 0xC)               { return vx + " := random " + nn; }
