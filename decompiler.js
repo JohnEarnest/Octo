@@ -194,8 +194,8 @@ function apply(address) {
 				c[(v[1] ? 1 : 0)] = true;
 			}
 		}
-		ret[x]   = r;
 		ret[0xF] = c;
+		ret[x]   = r;
 	}
 	function chaseReturns() {
 		var destinations = {};
