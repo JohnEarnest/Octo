@@ -45,6 +45,31 @@
 			font-family: monospace;
 			color: white;
 		}
+		div.lightbox {
+			position: fixed;
+			top: 0px;
+			left: 0px;
+			width: 100%;
+			height: 100%;
+			background-color: #000000;
+			/*opacity: 0.75;*/
+		}
+		div.decompilebox {
+			vertical-align: center;
+			background-color: #FFFFFF;
+			position: absolute;
+			left: 50%;
+			top: 50%;
+			width: 500;
+			height: 300;
+			margin:-150px 0 0 -250px;
+		}
+		img.centericon {
+			position: absolute;
+			left: 50%;
+			top: 50%;
+			margin: -32px 0 0 -32px;
+		}
 	</style>
 </head>
 
@@ -106,7 +131,7 @@
 			<button type="button" onClick="compile()">Compile</button>
 			<button type="button" onClick="run()">Run</button>
 			<button type="button" onClick="share()">Share</button>
-			<button type="button" onClick="load()">Load Binary</button>
+			<button type="button" onClick="decompileShowModal()">Load Binary</button>
 			<button type="button" onClick="save()">Save Binary</button>
 			<select id="framerate" onchange="framerate()">
 			  <option value="7">7 Cycles/Frame</option>
@@ -218,7 +243,40 @@
 			register display.
 		</div>
 	</div>
+
+	<div class="lightbox" id="decompileModal" style="display:none">
+		<div class="buttons">
+			<img
+				title="close"
+				src="images/close.png"
+				onclick="decompileClose()"
+			></img>
+		</div>
+		<div class="decompilebox">
+			<p style="margin: 10px;">
+				Octo is capable of decompiling existing Chip8 programs into human-readable code.
+				The disassembler performs static analysis to attempt to identify code, data,
+				self-modifying code (SMC) and regions of memory which are never accessed or executed.
+				This feature is still experimental. The analysis can take a significant amount of time
+				and output quality will vary.
+			</p>
+			<center>
+				<b>Enter a JSON-style byte array:</b>
+				<textarea id="decompileInput" rows="6" cols="60">
+[0xD0, 0x15, 0x70, 0x04, 0x40, 0x40, 0x71, 0x05, 0x40, 0x40, 0x60, 0x00, 0x12, 0x00]</textarea><br/>
+				<button type="button" onclick="decompileStart()">Disassemble</button>
+				<button type="button" onclick="decompileFile()">Open File...</button>
+			</center>
+			<input type="file" id="fileinput" onchange="decompileRequestLoad()" style="display:none"></input>
+		</div>
+	</div>
+
+	<div class="lightbox" style="display:none" id="decompileWork">
+		<img src="images/load.gif" class="centericon"></img>
+	</div>
+
 	<script src="compiler.js"></script>
+	<script src="decompiler.js"></script>
 	<script src="octo.js"></script>
 	<script>window.onload = runGist();</script>
 </body>

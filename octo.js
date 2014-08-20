@@ -390,27 +390,6 @@ function reset() {
 	clearBreakpoint();
 }
 
-function load() {
-	var fileSelector = document.createElement('input');
-
-	function requestLoad() {
-		var file = fileSelector.files[0];
-		var reader = new FileReader();
-
-		function actuallyLoad() {
-			var buff = reader.result;
-			var bytes = new Uint8Array(buff);
-			runRom({ rom:bytes, breakpoints:{}, aliases:{}, labels:{} });
-		}
-
-		reader.onload = actuallyLoad;
-		reader.readAsArrayBuffer(file);
-	}
-	fileSelector.setAttribute('type', 'file');
-	fileSelector.onchange = requestLoad;
-	fileSelector.click();
-}
-
 function save() {
 	var bytes = new Uint8Array(compile());
 	var binaryString = "";
@@ -863,4 +842,78 @@ function clearBreakpoint() {
 	button.style.display = "none";
 	regs.style.display = "none";
 	breakpoint = false;
+}
+
+////////////////////////////////////
+//
+//   Decompiler:
+//
+////////////////////////////////////
+
+function decompileShowModal() {
+	document.getElementById("decompileModal").style.display = "inline";
+}
+
+function decompileClose() {
+	document.getElementById("decompileModal").style.display = "none";
+}
+
+function decompileFile() {
+	document.getElementById("fileinput").click();
+}
+
+function decompileRequestLoad() {
+	var file = document.getElementById("fileinput").files[0];
+	var reader = new FileReader();
+
+	function actuallyLoad() {
+		var buff = reader.result;
+		var bytes = new Uint8Array(buff);
+		var disp = "";
+		if (bytes.length > 0) {
+			disp = hexFormat(bytes[0]);
+		}
+		for(var z = 1; z < bytes.length; z++) {
+			disp += ", " + hexFormat(bytes[z]);
+		}
+		document.getElementById("decompileInput").value = "[" + disp + "]";
+	}
+
+	reader.onload = actuallyLoad;
+	reader.readAsArrayBuffer(file);
+}
+
+var decompileProgramLength = 0;
+
+function decompileStart() {
+	document.getElementById("decompileModal").style.display = "none";
+	document.getElementById("decompileWork").style.display = "inline";
+
+	var inData = document.getElementById("decompileInput").value;
+	inData = inData.replace("[", "");
+	inData = inData.replace("]", "");
+	inData = inData.split(",");
+	var buffer = [];
+	for(var z = 0; z < inData.length; z++) {
+		buffer[z] = parse(inData[z]);
+	}
+	analyzeInit(buffer);
+	decompileProgramLength = buffer.length;
+	window.setTimeout(decompileProcess, 0);
+}
+
+function decompileProcess() {
+	var finished = false;
+	for(var z = 0; z < 100; z++) {
+		finished |= analyzeWork();
+		if (finished) { break; }
+	}
+	if (finished) {
+		analyzeFinish();
+		document.getElementById("input").value = "# decompiled program:\n\n" + formatProgram(decompileProgramLength);
+		document.getElementById("decompileWork").style.display = "none";
+	}
+	else {
+		window.setTimeout(decompileProcess, 0);
+	}
 }
