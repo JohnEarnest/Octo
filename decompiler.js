@@ -349,7 +349,7 @@ function successors(address, prevret) {
 	return [address + 2];
 }
 
-function analyzeInit(rom) {
+function analyzeInit(rom, quirks) {
 	program     = [];
 	reaching    = {};
 	type        = {};
@@ -357,6 +357,9 @@ function analyzeInit(rom) {
 	subroutines = {};
 	lnames      = {};
 	snames      = {};
+
+	SHIFT_QUIRKS      = quirks['shiftQuirks']     | false;
+	LOAD_STORE_QUIRKS = quirks['loadStoreQuirks'] | false;
 	
 	reaching[0x200] = {};
 	for(var z = 0; z < regNames.length; z++) {
@@ -435,14 +438,21 @@ function analyzeFinish() {
 	}
 }
 
-function analyze(rom) {
-	analyzeInit(rom);
+function analyze(rom, quirks) {
+	analyzeInit(rom, quirks);
 	while(!analyzeWork()) {}
 	analyzeFinish();
 }
 
 function formatProgram(programSize) {
 	var ret = "";
+	if (SHIFT_QUIRKS) {
+		ret += "# analyzed with shifts that modify vx in place and ignore vy.\n";
+	}
+	if (LOAD_STORE_QUIRKS) {
+		ret += "# analyzed with load and store operations that don't modify i.\n";
+	}
+	ret += "\n";
 
 	// labels beyond rom boundaries
 	// are converted into constants to avoid

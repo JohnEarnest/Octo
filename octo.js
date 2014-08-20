@@ -897,7 +897,11 @@ function decompileStart() {
 	for(var z = 0; z < inData.length; z++) {
 		buffer[z] = parse(inData[z]);
 	}
-	analyzeInit(buffer);
+
+	var quirks = {};
+	quirks['shiftQuirks'    ] = SHIFT_QUIRKS;
+	quirks['loadStoreQuirks'] = LOAD_STORE_QUIRKS;
+	analyzeInit(buffer, quirks);
 	decompileProgramLength = buffer.length;
 	window.setTimeout(decompileProcess, 0);
 }
@@ -910,7 +914,7 @@ function decompileProcess() {
 	}
 	if (finished) {
 		analyzeFinish();
-		document.getElementById("input").value = "# decompiled program:\n\n" + formatProgram(decompileProgramLength);
+		document.getElementById("input").value = "# decompiled program:\n" + formatProgram(decompileProgramLength);
 		document.getElementById("decompileWork").style.display = "none";
 	}
 	else {

@@ -13,5 +13,5 @@ var fs = require('fs');
 var d  = require('./decompiler.js');
 
 var buff = fs.readFileSync(process.argv[2]);
-d.analyze(buff);
+d.analyze(buff, { shiftQuirks:false, loadStoreQuirks:false });
 console.log(d.formatProgram(buff.length));
