@@ -20,6 +20,7 @@ var regNames = [
 // global state:
 var program  = []; // chip8 memory
 var reaching = {}; // map<address, map<register, set<int>>>
+var fringe   = []; // addresses left to explore
 
 // analysis:
 var type        = {}; // map<address, {code | data | smc}>
@@ -28,7 +29,7 @@ var subroutines = {}; // map<address, list<caller addrs>>
 var lnames      = {}; // map<address, name>
 var snames      = {}; // map<address, name>
 
-function display(a, nn) {
+function formatInstruction(a, nn) {
 	// convert a pair of bytes representing an instruction
 	// into a string of the equivalent octo statement.
 	var op  = (a <<  8) | nn;
@@ -348,17 +349,27 @@ function successors(address, prevret) {
 	return [address + 2];
 }
 
-function analyze(rom) {
+function analyzeInit(rom) {
+	program     = [];
+	reaching    = {};
+	type        = {};
+	labels      = {};
+	subroutines = {};
+	lnames      = {};
+	snames      = {};
+	
 	reaching[0x200] = {};
 	for(var z = 0; z < regNames.length; z++) {
 		reaching[0x200][regNames[z]] = { 0:true };
 	}
 	reaching[0x200]['rets'] = {};
-	var fringe = [0x200];
+	fringe = [0x200];
 
 	for(var x = 0; x < 4096; x++)       { program[x] = 0x00; }
 	for(var x = 0; x < rom.length; x++) { program[x+0x200] = rom[x]; }
-	
+}
+
+function analyzeWork() {
 	function reachingMerge(a, b) {
 		// take the union of two reaching sets.
 		// if we altered b, it was a subset of a.
@@ -377,37 +388,40 @@ function analyze(rom) {
 		return changed;
 	}
 
-	while(fringe.length > 0) {
-		var here = fringe.pop();
+	if (fringe.length < 1) { return true; }
+
+	var here = fringe.pop();
 	
-		// compute successor reaching set
-		var prevret = reaching[here]['rets']; // apply blows this away (!)
-		var output = apply(here);
+	// compute successor reaching set
+	var prevret = reaching[here]['rets']; // apply blows this away (!)
+	var output = apply(here);
 
-		// apply successor set to children and enlist them
-		var children = successors(here, prevret);
+	// apply successor set to children and enlist them
+	var children = successors(here, prevret);
 
-		for(var x = 0; x < children.length; x++) {
-			var child = children[x];
-			var isReturn = (program[child] == 0x00 && program[child+1] == 0xEE);
+	for(var x = 0; x < children.length; x++) {
+		var child = children[x];
+		var isReturn = (program[child] == 0x00 && program[child+1] == 0xEE);
 
-			if ((typeof reaching[child]) == "undefined") {
-				// always explore fresh nodes:
-				reaching[child] = output;
-				if (fringe.lastIndexOf(child) == -1) {
-					fringe.push(child);
-				}
+		if ((typeof reaching[child]) == "undefined") {
+			// always explore fresh nodes:
+			reaching[child] = output;
+			if (fringe.lastIndexOf(child) == -1) {
+				fringe.push(child);
 			}
-			else if (reachingMerge(output, reaching[child]) || isReturn) {
-				// if merging expanded the child reaching set,
-				// explore it again:
-				if (fringe.lastIndexOf(child) == -1) {
-					fringe.push(child);
-				}
+		}
+		else if (reachingMerge(output, reaching[child]) || isReturn) {
+			// if merging expanded the child reaching set,
+			// explore it again:
+			if (fringe.lastIndexOf(child) == -1) {
+				fringe.push(child);
 			}
 		}
 	}
+	return false;
+}
 
+function analyzeFinish() {
 	// name all labels and subroutines by order of appearance:
 	var lsize = 0;
 	var ssize = 0;
@@ -421,7 +435,15 @@ function analyze(rom) {
 	}
 }
 
+function analyze(rom) {
+	analyzeInit(rom);
+	while(!analyzeWork()) {}
+	analyzeFinish();
+}
+
 function formatProgram(programSize) {
+	var ret = "";
+
 	// labels beyond rom boundaries
 	// are converted into constants to avoid
 	// introducing additional padding bytes
@@ -430,7 +452,7 @@ function formatProgram(programSize) {
 		for(var a in source) {
 			if (a < 0x200 || a >= 0x200 + programSize) {
 				dest[a] = true;
-				console.log(":const " + names[a] + " " + a);
+				ret += (":const " + names[a] + " " + a + "\n");
 			}
 		}
 	}
@@ -454,7 +476,7 @@ function formatProgram(programSize) {
 	findForwardRefs(labels,      protos, lnames);
 	findForwardRefs(subroutines, protos, snames);
 	for(var x = 0; x < protos.length; x++) {
-		console.log(":proto " + protos[x]);
+		ret += (":proto " + protos[x] + "\n");
 	}
 
 	// emit code/data
@@ -473,10 +495,10 @@ function formatProgram(programSize) {
 
 		// emit labels and find loop heads
 		if (a in subroutines) {
-			console.log("\n: " + snames[a]);
+			ret += ("\n: " + snames[a] + "\n");
 		}
 		if (a in labels) {
-			if (lnames[a] == "main") { console.log(": main"); }
+			if (lnames[a] == "main") { ret += (": main\n"); }
 
 			for(var z = 0; z < labels[a].length; z++) {
 				var u = labels[a][z];
@@ -503,18 +525,18 @@ function formatProgram(programSize) {
 				// loop head identified:
 				labels[a].splice(z--, 1);
 				pendingAgain.push(u);
-				console.log("%sloop", tabs(pendingAgain.length));
+				ret += (tabs(pendingAgain.length) + "loop\n");
 			}
 
 			if (labels[a].length > 0 && lnames[a] != "main") {
-				console.log(": " + lnames[a]);
+				ret += (": " + lnames[a] + "\n");
 			}
 		}
 
 		// emit half-labels
 		if (type[a] == "code" || type[a] == "smc") {
-			if      ((a + 1) in labels     ) { console.log(":next " + lnames[a+1]); }
-			else if ((a + 1) in subroutines) { console.log(":next " + snames[a+1]); }
+			if      ((a + 1) in labels     ) { ret += (":next " + lnames[a+1] + "\n"); }
+			else if ((a + 1) in subroutines) { ret += (":next " + snames[a+1] + "\n"); }
 		}
 
 		// emit instruction/data
@@ -522,47 +544,37 @@ function formatProgram(programSize) {
 		if (pendingAgain.indexOf(a) != -1) {
 			var index = pendingAgain.indexOf(a);
 			pendingAgain.splice(index, 1);
-			console.log("%sagain", tabs(pendingAgain.length + 1));
+			ret += (tabs(pendingAgain.length + 1) + "again\n");
 			x++;
 		}
 		else if (type[a] == "code") {
-			console.log("%s%s", indent, display(program[a], program[a+1]));
+			ret += (indent + formatInstruction(program[a], program[a+1]) + "\n");
 			x++;
 		}
 		else if (type[a] == "data") {
-			console.log("%s%s", indent, hexFormat(program[a]));
+			ret += (indent + hexFormat(program[a]) + "\n");
 		}
 		else if (type[a] == "smc" || type[a+1] == "smc") {
-			console.log("%s%s %s # smc? %s",
-				indent,
-				hexFormat(program[a]),
-				hexFormat(program[a+1]),
-				display(program[a], program[a+1])
-			);
+			ret += indent;
+			ret += hexFormat(program[a]) + " " + hexFormat(program[a+1])
+			ret += " # smc? " + formatInstruction(program[a], program[a+1]) + "\n";
 			x++;
 		}
 		else {
-			console.log("%s%s # unused?", indent, hexFormat(program[a]));
+			ret += (indent + hexFormat(program[a]) + " # unused?\n");
 		}
 
 		// space apart regions of differing types:
 		if (type[a] != type[x+0x201]) {
-			console.log("");
+			ret += "\n";
 		}
 	}
+
+	return ret;
 }
 
-// notes/todos:
-// - simple skips should (ideally) cleave the reaching set into taken/not taken
-//   successor sets based on the values they inspect. The precision of this approach
-//   is unclear to me right now; can we be more aggressive and establish invariants
-//   for variables other than the variables directly tested by branches?
-// - if I modeled dt I could calculate vx := dt using the max value set as an upper bound.
-// - I'm starting to wonder if the original interpreter treated 'sprite' as drawing
-//   a sprite of height n as n+1 pixels tall, achieving 2-16 tall sprites...
-
-var fs = require('fs');
-var buff = fs.readFileSync(process.argv[2]);
-
-analyze(buff);
-formatProgram(buff.length);
+this.analyze       = analyze;
+this.analyzeInit   = analyzeInit;
+this.analyzeWork   = analyzeWork;
+this.analyzeFinish = analyzeFinish;
+this.formatProgram = formatProgram;
