@@ -883,12 +883,7 @@ function decompileRequestLoad() {
 	reader.readAsArrayBuffer(file);
 }
 
-var decompileProgramLength = 0;
-
-function decompileStart() {
-	document.getElementById("decompileModal").style.display = "none";
-	document.getElementById("decompileWork").style.display = "inline";
-
+function getDecompileData() {
 	var inData = document.getElementById("decompileInput").value;
 	inData = inData.replace("[", "");
 	inData = inData.replace("]", "");
@@ -897,6 +892,22 @@ function decompileStart() {
 	for(var z = 0; z < inData.length; z++) {
 		buffer[z] = parse(inData[z]);
 	}
+	return buffer;
+}
+
+function decompileRun() {
+	var buffer = getDecompileData();
+	document.getElementById("decompileModal").style.display = "none";
+	runRom({ rom:buffer, breakpoints:{}, aliases:{}, labels:{} });
+}
+
+var decompileProgramLength = 0;
+
+function decompileStart() {
+	document.getElementById("decompileModal").style.display = "none";
+	document.getElementById("decompileWork").style.display = "inline";
+
+	var buffer = getDecompileData();
 
 	var quirks = {};
 	quirks['shiftQuirks'    ] = SHIFT_QUIRKS;
