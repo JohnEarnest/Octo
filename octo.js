@@ -244,7 +244,7 @@ function tick() {
 			var rowSize = hires ? 128 : 64;
 			for(var a = 0; a < p.length; a += rowSize) {
 				for(var b = rowSize-1; b >= 0; b--) {
-					p[a + b] = (b > 4) ? p[a + b - 1] : 0;
+					p[a + b] = (b > 3) ? p[a + b - 4] : 0;
 				}
 			}
 			return;
@@ -254,7 +254,7 @@ function tick() {
 			var rowSize = hires ? 128 : 64;
 			for(var a = 0; a < p.length; a += rowSize) {
 				for(var b = 0; b < rowSize; b++) {
-					p[a + b] = (b < rowSize - 4) ? p[a + b + 1] : 0;
+					p[a + b] = (b < rowSize - 4) ? p[a + b + 4] : 0;
 				}
 			}
 			return;
