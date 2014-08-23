@@ -170,7 +170,9 @@ function misc(x, rest) {
 			break;
 		case 0x85:
 			flags = JSON.parse(localStorage.getItem("octoFlagRegisters"));
-			while(flags.length < 8) { flags.push(0); }
+			if (typeof flags == "undefined") {
+				flags = [0, 0, 0, 0, 0, 0, 0, 0];
+			}
 			for(var z = 0; z <= x; z++) { v[z] = flags[z]; }
 			break;
 		default: throw "unknown misc op: " + rest;
