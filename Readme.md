@@ -146,6 +146,8 @@ SuperChip or SCHIP is a set of extended Chip8 instructions. Octo can emulate the
 - `saveflags vx` Save v0-vn (n < 8) to flag registers. (Originally, HP-48 flag registers.)
 - `loadflags vx` Restore v0-vn (n < 8) from flag registers.
 
+Flag registers are persisted using browser local storage, so provided no applications blow them away intentionally they can be used to store information between play sessions such as high score information or progress.
+
 Finally, drawing a sprite with height 0 (which would otherwise do nothing) is used by the SuperChip to draw a large 16x16 sprite. The sprite data itself is stored as 16 pairs of bytes representing each row.
 
 Debugging
