@@ -296,8 +296,15 @@ function Compiler(source) {
 		if (label in this.protos) {
 			for(var z = 0; z < this.protos[label].length; z++) {
 				var addr  = this.protos[label][z];
-				this.rom[addr - 0x200] = (this.rom[addr - 0x200] & 0xF0) | ((target >> 8)&0xF);
-				this.rom[addr - 0x1FF] = (target & 0xFF);
+				if ((this.rom[addr - 0x200] & 0xF0) == 0x60) {
+					// :unpack target
+					this.rom[addr - 0x1FF] = (this.rom[addr - 0x1FF] & 0xF0) | ((target >> 8)&0xF);
+					this.rom[addr - 0x1FD] = (target & 0xFF);
+				}
+				else {
+					this.rom[addr - 0x200] = (this.rom[addr - 0x200] & 0xF0) | ((target >> 8)&0xF);
+					this.rom[addr - 0x1FF] = (target & 0xFF);
+				}
 			}
 			delete this.protos[label];
 		}
