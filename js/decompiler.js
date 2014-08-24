@@ -83,8 +83,8 @@ function formatInstruction(a, nn) {
 	if (o == 0xF && nn == 0x33) { return "bcd " + vx; }
 	if (o == 0xF && nn == 0x55) { return "save " + vx; }
 	if (o == 0xF && nn == 0x65) { return "load " + vx; }
-	if (o == 0xF && nn == 0x75) { return "saveflags" + vx; } // schip
-	if (o == 0xF && nn == 0x85) { return "loadflags" + vx; } // schip
+	if (o == 0xF && nn == 0x75) { return "saveflags " + vx; } // schip
+	if (o == 0xF && nn == 0x85) { return "loadflags " + vx; } // schip
 
 	return "0x" + (op.toString(16).toUpperCase()) + " # bad opcode?";
 }
