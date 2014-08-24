@@ -86,7 +86,8 @@ function formatInstruction(a, nn) {
 	if (o == 0xF && nn == 0x75) { return "saveflags " + vx; } // schip
 	if (o == 0xF && nn == 0x85) { return "loadflags " + vx; } // schip
 
-	return "0x" + (op.toString(16).toUpperCase()) + " # bad opcode?";
+	return "0x" + (a .toString(16).toUpperCase()) + " " +
+	       "0x" + (nn.toString(16).toUpperCase()) + " # bad opcode?";
 }
 
 function apply(address) {
@@ -528,6 +529,14 @@ function formatProgram(programSize) {
 						// a contiguous block can't contain non-code
 						foundBreak = true;
 						break;
+					}
+					if((program[scan] & 0xF0) == 0x10) {
+						// a contiguous block can't contain a jump to before the loop head
+						var target = ((program[scan] & 0xF) << 8) | (program[scan+1] & 0xFF);
+						if (target < a) {
+							foundBreak = true;
+							break;
+						}
 					}
 				}
 				if (foundBreak) { continue; }

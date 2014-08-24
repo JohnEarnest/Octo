@@ -24,7 +24,7 @@ function compile(sourceCode) {
 		for(var x = 0; x < comp.pos[1]-1; x++) {
 			if (sourceCode.charAt(x) == '\n') { line++; }
 		}
-		console.log("line %d: %s", line, err);
+		console.error("line %d: %s", line, err);
 		process.exit(1);
 	}
 }
@@ -88,18 +88,17 @@ if (roundTripFlag) {
 	for(var x = 0; x < Math.max(startBinary.length, endBinary.length); x++) {
 		var mishere = (startBinary[x] != endBinary[x]);
 		if (!mishere) { continue; }
-		if (!mismatch) { console.log("round trip mismatch!"); }
+		if (!mismatch) { console.error("round trip mismatch!"); }
 		mismatch |= mishere;
-		console.log("%s: original: %s output: %s",
+		console.error("%s: original: %s output: %s",
 			hexFormat(x + 0x200),
 			hexFormat(startBinary[x]),
 			hexFormat(endBinary[x])
 		);
 	}
 	if (startBinary.length != endBinary.length) {
-		console.log("binary sizes do not match!");
+		console.error("binary sizes do not match!");
 		mismatch = true;
 	}
 	if (mismatch) { process.exit(1); }
-	else { console.log("round trip comparison successful."); }
 }
