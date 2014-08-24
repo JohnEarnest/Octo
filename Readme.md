@@ -16,6 +16,26 @@ While a program is running, you can press escape to return to the editor. The ch
 	 7 8 9 E     a s d f
 	 A 0 B F     z x c v
 
+To learn more about Chip8 programming techniques, have a look at the [documentation](https://github.com/JohnEarnest/Octo/tree/gh-pages/docs) section.
+
+The Octo assembler can also be used as a command-line tool via a [Node.js](http://http://nodejs.org) fontend:
+
+	$ ./octo
+		usage: octo [--decompile] [--roundtrip] [--qshift] [--qloadstore] <source> [<destination>]
+	$ cat simple.8o
+		: main
+			va := 1
+			vb := 2
+	$ ./octo simple.8o simple.ch8
+	$ hexdump simple.ch8
+		0000000 6a 01 6b 02                                    
+		0000004
+
+The `--decompile` option can be used to send an existing Chip8 binary through Octo's general-purpose decompiler.
+
+Octo Assembly Language
+----------------------
+
 Octo syntax is in some ways inspired by Forth- a series of whitespace-delimited tokens. Labels are defined with `:` followed by a name, and simply using a name by itself will perform a call. `;` terminates subroutines with a return. `#` indicates a single-line comment. Numbers can use `0x` or `0b` prefixes to indicate hexadecimal or binary encodings, respectively. Whenever numbers are encountered outside a statement they will be compiled as literal bytes. Names must always be defined before they can be used- programs are written in "reading" order. When forward references are absolutely necessary, the `:proto` statement followed by a name defines that name as a forward prototype, which can then be used as a target for jumps, calls and initializing i. Prototypes must eventually be resolved with a `:` label definition. An entrypoint named `main` must be defined.
 
 Numeric constants can be defined with `:const` followed by a name and then a value, which may be a number, another constant or a (non forward-declared) label. Registers may be given named aliases with `:alias` followed by a name and then a register. The `i` register may not be given an alias, but v registers can be given as many aliases as desired. Here are some examples of constants and aliases:

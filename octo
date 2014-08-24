@@ -1,21 +1,92 @@
 #!/usr/bin/env node
 // simple piped commandline octo compiler
 
-var compiler = require('./compiler');
+var compiler   = require('./js/compiler');
+var decompiler = require('./js/decompiler');
+var fs         = require('fs');
 
-process.stdin.setEncoding('utf8');
+function extractFlag(name) {
+	var index = process.argv.indexOf(name);
+	if (index == -1) { return false; }
+	process.argv.splice(index, 1);
+	return true;
+}
 
-var input = '';
+function compileFile(src, dst) {
+	var programText = fs.readFileSync(src, { encoding:'utf8' });
+	var c = new compiler.Compiler(programText);
+	c.go();
+	var programBinary = new Buffer(c.rom);
+	if (typeof dst == "undefined") { process.stdout.write(programBinary); }
+	else { fs.writeFileSync(dst, programBinary, { encoding:'binary' }); }
+	return programBinary;
+}
 
-process.stdin.on('readable', function() {
-    var chunk = process.stdin.read();
-    if (chunk !== null) {
-        input += chunk;
-    }
-});
+function decompileFile(src, dst) {
+	var buff = fs.readFileSync(src);
+	decompiler.analyze(buff, options);
+	var programText = decompiler.formatProgram(buff.length);
+	if (typeof dst == "undefined") { console.log(programText); }
+	else { fs.writeFileSync(dst, programText); }
+	return programText;
+}
 
-process.stdin.on('end', function() {
-	var comp = new compiler.Compiler(input);
+function printUsage() {
+	console.log("usage: octo [--decompile] [--roundtrip] [--qshift] [--qloadstore] <source> [<destination>]");
+	process.exit(1);
+}
+
+var options = {};
+options['shiftQuirks'    ] = extractFlag("--qshift");
+options['loadStoreQuirks'] = extractFlag("--qloadstore");
+var decompileFlag = extractFlag("--decompile");
+var roundTripFlag = extractFlag("--roundtrip");
+
+if (process.argv.length != 3 && process.argv.length != 4) { printUsage(); }
+var sourceFile = process.argv[2];
+var destFile   = process.argv[3];
+
+var decompiledText = "";
+
+if (decompileFlag) {
+	decompiledText = decompileFile(sourceFile, destFile);
+}
+else if (!roundTripFlag) {
+	compileFile(sourceFile, destFile);
+}
+
+if (roundTripFlag) {
+	var startBinary = fs.readFileSync(sourceFile);
+	if (decompiledText == "") {
+		decompiler.analyze(startBinary, options);
+		decompiledText = decompiler.formatProgram(startBinary.length);
+	}
+	var comp = new compiler.Compiler(decompiledText);
 	comp.go();
-	process.stdout.write(new Buffer(comp.rom));
-});
+	var endBinary = comp.rom;
+
+	function hexFormat(num) {
+		if (typeof num == "undefined") { return "(none)"; }
+		var hex = num.toString(16).toUpperCase();
+		return "0x" + ((hex.length > 1) ? hex : "0" + hex);
+	}
+
+	var mismatch = false;
+	for(var x = 0; x < Math.max(startBinary.length, endBinary.length); x++) {
+		var mishere = (startBinary[x] != endBinary[x]);
+		if (!mishere) { continue; }
+		if (!mismatch) { console.log("round trip mismatch!"); }
+		mismatch |= mishere;
+		console.log("%s: original: %s output: %s",
+			hexFormat(x + 0x200),
+			hexFormat(startBinary[x]),
+			hexFormat(endBinary[x])
+		);
+	}
+	if (startBinary.length != endBinary.length) {
+		console.log("binary sizes do not match!");
+		mismatch = true;
+	}
+	if (mismatch) { process.exit(1); }
+	else { console.log("round trip comparison successful."); }
+}
