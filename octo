@@ -12,11 +12,26 @@ function extractFlag(name) {
 	return true;
 }
 
+function compile(sourceCode) {
+	var comp = new compiler.Compiler(sourceCode);
+	try {
+		var comp = new compiler.Compiler(sourceCode);
+		comp.go();
+		return comp.rom;
+	}
+	catch(err) {
+		var line = 1;
+		for(var x = 0; x < comp.pos[1]-1; x++) {
+			if (sourceCode.charAt(x) == '\n') { line++; }
+		}
+		console.log("line %d: %s", line, err);
+		process.exit(1);
+	}
+}
+
 function compileFile(src, dst) {
 	var programText = fs.readFileSync(src, { encoding:'utf8' });
-	var c = new compiler.Compiler(programText);
-	c.go();
-	var programBinary = new Buffer(c.rom);
+	var programBinary = new Buffer(compile(programText));
 	if (typeof dst == "undefined") { process.stdout.write(programBinary); }
 	else { fs.writeFileSync(dst, programBinary, { encoding:'binary' }); }
 	return programBinary;
@@ -61,9 +76,7 @@ if (roundTripFlag) {
 		decompiler.analyze(startBinary, options);
 		decompiledText = decompiler.formatProgram(startBinary.length);
 	}
-	var comp = new compiler.Compiler(decompiledText);
-	comp.go();
-	var endBinary = comp.rom;
+	var endBinary = compile(decompiledText);
 
 	function hexFormat(num) {
 		if (typeof num == "undefined") { return "(none)"; }
