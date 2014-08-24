@@ -114,7 +114,7 @@ Now that we understand hex and binary, we can explain how the images in the prev
 
 If you squint, you can probably make out the smiley face! Every pixel that is turned on in the image when we draw it is a 1 and every pixel that is turned off is a 0 when we look at the number in binary, and every number is an 8-pixel row of a sprite.
 
-Try making your own sprite images using binary, or use [this tool](http://johnearnest.github.io/Octo/pixel.html) to draw a sprite and get the corresponding hex numbers (or vice versa).
+Try making your own sprite images using binary, or use the sprite editor built into Octo to draw a sprite and get the corresponding hex numbers (or vice versa).
 
 Animation
 ---------
