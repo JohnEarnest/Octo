@@ -162,7 +162,6 @@ function Compiler(source) {
 		if (!nn && (nn != 0)) { nn = this.next(); }
 		if (typeof nn != "number") {
 			if (nn in this.constants) { nn = this.constants[nn]; }
-			else if (nn in this.dict) { nn = this.dict[nn]; }
 			else { throw "Undefined name '"+nn+"'."; }
 		}
 		// silently trim negative numbers, but warn
@@ -294,6 +293,7 @@ function Compiler(source) {
 			this.rom = [];
 			target = 0x200;
 		}
+		if (label in this.dict) { throw "The name '"+label+"' has already been defined."; }
 		this.dict[label] = target;
 
 		if (label in this.protos) {
@@ -325,7 +325,11 @@ function Compiler(source) {
 		else if (token == ":breakpoint") { this.breakpoints[this.here()] = this.next(); }
 		else if (token == ":proto")  { this.next(); } // deprecated.
 		else if (token == ":alias")  { this.aliases[this.next()] = this.register(); }
-		else if (token == ":const")  { this.constants[this.next()] = this.constantValue(); }
+		else if (token == ":const")  {
+			var name = this.next();
+			if (name in this.constants) { throw "The name '"+name+"' has already been defined."; }
+			this.constants[name] = this.constantValue();
+		}
 		else if (token == ";")       { this.inst(0x00, 0xEE); }
 		else if (token == "return")  { this.inst(0x00, 0xEE); }
 		else if (token == "clear")   { this.inst(0x00, 0xE0); }
