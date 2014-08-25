@@ -146,7 +146,10 @@ function Compiler(source) {
 			else if (nnn in this.dict) {
 				nnn = this.dict[nnn];
 			}
-			else { throw "Undefined name '"+nnn+"'."; }
+			else {
+				this.protos[nnn] = [this.here()];
+				nnn = 0;
+			}
 		}
 		if ((typeof nnn != "number") || (nnn < 0) || (nnn > 0xFFF)) {
 			throw "Value '"+nnn+"' cannot fit in 12 bits!";
@@ -320,11 +323,9 @@ function Compiler(source) {
 			this.inst(0x60 | this.aliases["unpack-lo"], a);
 		}
 		else if (token == ":breakpoint") { this.breakpoints[this.here()] = this.next(); }
-		else if (token == ":proto")  { this.protos[this.next()] = []; }
+		else if (token == ":proto")  { this.next(); } // deprecated.
 		else if (token == ":alias")  { this.aliases[this.next()] = this.register(); }
 		else if (token == ":const")  { this.constants[this.next()] = this.constantValue(); }
-		else if (token in this.protos) { this.immediate(0x20, this.wideValue(token)); }
-		else if (token in this.dict) { this.immediate(0x20, this.wideValue(token)); }
 		else if (token == ";")       { this.inst(0x00, 0xEE); }
 		else if (token == "return")  { this.inst(0x00, 0xEE); }
 		else if (token == "clear")   { this.inst(0x00, 0xE0); }
@@ -389,7 +390,7 @@ function Compiler(source) {
 			this.vassign(this.register(token), this.next());
 		}
 		else {
-			throw "Unrecognized token '"+token+"'.";
+			this.immediate(0x20, this.wideValue(token));
 		}
 	}
 
