@@ -17,7 +17,6 @@
 # of a sequence of offsets into the font data:
 
 : display-string
-	:proto string-addr
 	i := string-addr
 	save v1
 	v1 := 2 # character x

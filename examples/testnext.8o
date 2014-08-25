@@ -1,12 +1,9 @@
 # Compiler test program.
 # demonstrates the use of :next
-# and shows it works properly with :proto.
 
-:proto vx 
 : lt  v0 := -1 i := vx save v0 ;
 : rt  v0 :=  1 i := vx save v0 ;
 
-:proto vy
 : up  v0 := -1 i := vy save v0 ;
 : dn  v0 :=  1 i := vy save v0 ;
 

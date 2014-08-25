@@ -373,7 +373,6 @@ If you want to generate an `i :=` instruction pointing to a label known at assem
 
 	: code
 		:unpack 0xA some-label # store address in v0-v1
-		:proto trampoline      # forward reference to destination
 		i := trampoline        # select destination for instruction
 		save v1                # write the instruction
 		: trampoline 0 0       # execute our instruction, setting i.

@@ -471,25 +471,6 @@ function formatProgram(programSize) {
 	findOutside(labels,      outside, lnames);
 	findOutside(subroutines, outside, snames);
 
-	// emit prototypes as necessary
-	function findForwardRefs(source, dest, names) {
-		for(var a in source) {
-			var forwardref = false;
-			for(var x = 0; x < source[a].length; x++) {
-				forwardref |= (source[a][x] < a);
-			}
-			if (!forwardref) { continue; }
-			if (a in outside) { continue; }
-			dest.push(names[a]);
-		}
-	}
-	var protos = [];
-	findForwardRefs(labels,      protos, lnames);
-	findForwardRefs(subroutines, protos, snames);
-	for(var x = 0; x < protos.length; x++) {
-		ret += (":proto " + protos[x] + "\n");
-	}
-
 	// emit code/data
 	function hexFormat(num) {
 		var hex = num.toString(16).toUpperCase();

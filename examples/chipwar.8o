@@ -351,9 +351,6 @@
 	draw-wtotal
 ;
 
-:proto cursor-to-index
-:proto direction-to-index
-
 : defender-wins
 	# set attacker to 1
 	cursor-to-index
@@ -690,9 +687,6 @@
 	draw-cursor
 	mode := MOVE
 ;
-
-:proto ai-move
-:proto restock
 
 : start-ai-turn
 	restock

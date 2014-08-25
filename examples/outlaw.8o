@@ -232,7 +232,6 @@
 	i := bullet
 	sprite leftbx leftby 1
 
-:proto main
 : gameover
 	v0 := 32
 	buzzer := v0

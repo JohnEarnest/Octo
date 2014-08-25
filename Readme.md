@@ -36,7 +36,7 @@ The `--decompile` option can be used to send an existing Chip8 binary through Oc
 Octo Assembly Language
 ----------------------
 
-Octo syntax is in some ways inspired by Forth- a series of whitespace-delimited tokens. Labels are defined with `:` followed by a name, and simply using a name by itself will perform a call. `;` terminates subroutines with a return. `#` indicates a single-line comment. Numbers can use `0x` or `0b` prefixes to indicate hexadecimal or binary encodings, respectively. Whenever numbers are encountered outside a statement they will be compiled as literal bytes. Names must always be defined before they can be used- programs are written in "reading" order. When forward references are absolutely necessary, the `:proto` statement followed by a name defines that name as a forward prototype, which can then be used as a target for jumps, calls and initializing i. Prototypes must eventually be resolved with a `:` label definition. An entrypoint named `main` must be defined.
+Octo syntax is in some ways inspired by Forth- a series of whitespace-delimited tokens. Labels are defined with `:` followed by a name, and simply using a name by itself will perform a call. `;` terminates subroutines with a return. `#` indicates a single-line comment. Numbers can use `0x` or `0b` prefixes to indicate hexadecimal or binary encodings, respectively. Whenever numbers are encountered outside a statement they will be compiled as literal bytes. An entrypoint named `main` must be defined.
 
 Numeric constants can be defined with `:const` followed by a name and then a value, which may be a number, another constant or a (non forward-declared) label. Registers may be given named aliases with `:alias` followed by a name and then a register. The `i` register may not be given an alias, but v registers can be given as many aliases as desired. Here are some examples of constants and aliases:
 
@@ -47,7 +47,7 @@ Numeric constants can be defined with `:const` followed by a name and then a val
 
 Chip8 has 16 general-purpose 8-bit registers named `v0` to `vF`. `vF` is the "flag" register", and some operations will modify it as a side effect. `i` is the memory index register and is used when reading and writing memory via `load`, `save` and `bcd`, and also provides the address of the graphics data drawn by `sprite`. Sprites are drawn by xoring their pixels with the contents of the screen. Drawing a sprite sets `vF` to 0, or to 1 if drawing the sprite toggles any pixels which were previously on.
 
-In the following descriptions, `vx` and `vy` refer to some register name (v0-vF), `l` refers to a (forth-style) identifier and `n` refers to some number.
+In the following descriptions, `vx` and `vy` refer to some register name (v0-vF) and `n` refers to some number.
 
 Statements
 ----------
@@ -149,8 +149,6 @@ Another type of self-modifying code that comes up frequently is overwriting the 
 	v0 := 5
 	save v0
 	init # va will be set to 5 instead of 2.
-
-Note that `:next` can be freely used in combination with `:proto`.
 
 SuperChip
 ---------
