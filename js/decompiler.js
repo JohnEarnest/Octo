@@ -42,7 +42,7 @@ function formatInstruction(a, nn) {
 	var vx = "v" + (x.toString(16).toUpperCase());
 	var vy = "v" + (y.toString(16).toUpperCase());
 
-	if (op == 0x00 && y == 0xC) { return "scroll-down " + n; } // schip
+	if (a  == 0x00 && y == 0xC) { return "scroll-down " + n; } // schip
 	if (op == 0x00E0)           { return "clear"; }
 	if (op == 0x00EE)           { return "return"; }
 	if (op == 0x00FB)           { return "scroll-right"; } // schip
