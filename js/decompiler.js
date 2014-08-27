@@ -87,7 +87,10 @@ function formatInstruction(a, nn) {
 	if (o == 0xF && nn == 0x65) { return "load " + vx; }
 	if (o == 0xF && nn == 0x75) { return "saveflags " + vx; } // schip
 	if (o == 0xF && nn == 0x85) { return "loadflags " + vx; } // schip
-	if (o == 0x0)               { return "native " + nnames[nnn]; }
+
+	if (o == 0x0) {
+		return "native " + ((nnn in nnames) ? nnames[nnn] : "0x" + nnn.toString(16).toUpperCase());
+	}
 
 	return "0x" + (a .toString(16).toUpperCase()) + " " +
 	       "0x" + (nn.toString(16).toUpperCase()) + " # bad opcode?";
@@ -502,7 +505,7 @@ function formatProgram(programSize) {
 			ret += (": " + nnames[a] + "\n");
 		}
 		if (a in labels) {
-			if (lnames[a] == "main") { ret += (": main\n"); }
+			if (lnames[a] == "main" && !(a in subroutines)) { ret += (": main\n"); }
 
 			for(var z = 0; z < labels[a].length; z++) {
 				var u = labels[a][z];
