@@ -26,8 +26,10 @@ var fringe   = []; // addresses left to explore
 var type        = {}; // map<address, {code | data | smc}>
 var labels      = {}; // map<address, list<reference addrs>>
 var subroutines = {}; // map<address, list<caller addrs>>
+var natives     = {}; // map<address, list<native caller addrs>>
 var lnames      = {}; // map<address, name>
 var snames      = {}; // map<address, name>
+var nnames      = {}; // map<address, name>
 
 function formatInstruction(a, nn) {
 	// convert a pair of bytes representing an instruction
@@ -85,6 +87,7 @@ function formatInstruction(a, nn) {
 	if (o == 0xF && nn == 0x65) { return "load " + vx; }
 	if (o == 0xF && nn == 0x75) { return "saveflags " + vx; } // schip
 	if (o == 0xF && nn == 0x85) { return "loadflags " + vx; } // schip
+	if (o == 0x0)               { return "native " + nnames[nnn]; }
 
 	return "0x" + (a .toString(16).toUpperCase()) + " " +
 	       "0x" + (nn.toString(16).toUpperCase()) + " # bad opcode?";
@@ -135,6 +138,10 @@ function apply(address) {
 	if (o == 0x2) {
 		if (typeof subroutines[nnn] == "undefined") { subroutines[nnn] = []; }
 		if (subroutines[nnn].indexOf(address) == -1) { subroutines[nnn].push(address); }
+	}
+	if (o == 0x0 && x != 0x0) {
+		if (typeof natives[nnn] == "undefined") { natives[nnn] = []; }
+		if (natives[nnn].indexOf(address) == -1) { natives[nnn].push(address); }
 	}
 
 	// helper routines:
@@ -429,13 +436,15 @@ function analyzeFinish() {
 	// name all labels and subroutines by order of appearance:
 	var lsize = 0;
 	var ssize = 0;
+	var nsize = 0;
 	if (typeof labels[0x200] == "undefined") { labels[0x200] = [4097]; }
 	lnames[0x200] = "main";
 	snames[0x200] = "main";
 	for(var x = 0; x < 4096; x++) {
 		if (x == 0x200)       { continue; }
-		if (x in labels)      { lnames[x] = "label-" + (lsize++); }
-		if (x in subroutines) { snames[x] = "sub-"   + (ssize++); }
+		if (x in labels)      { lnames[x] = "label-"   + (lsize++); }
+		if (x in subroutines) { snames[x] = "sub-"     + (ssize++); }
+		if (x in natives)     { nnames[x] = "machine-" + (nsize++); }
 	}
 }
 
@@ -488,6 +497,9 @@ function formatProgram(programSize) {
 		// emit labels and find loop heads
 		if (a in subroutines) {
 			ret += ("\n: " + snames[a] + "\n");
+		}
+		if (a in natives) {
+			ret += (": " + nnames[a] + "\n");
 		}
 		if (a in labels) {
 			if (lnames[a] == "main") { ret += (": main\n"); }

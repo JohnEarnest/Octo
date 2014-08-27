@@ -341,6 +341,7 @@ function Compiler(source) {
 		else if (token == "if")      { this.conditional(false); this.expect("then"); }
 		else if (token == "jump0")   { this.immediate(0xB0, this.wideValue()); }
 		else if (token == "jump")    { this.immediate(0x10, this.wideValue()); }
+		else if (token == "native")  { this.immediate(0x00, this.wideValue()); }
 		else if (token == "sprite")  {
 			var r1 = this.register();
 			var r2 = this.register();
