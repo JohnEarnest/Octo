@@ -31,6 +31,11 @@ var lnames      = {}; // map<address, name>
 var snames      = {}; // map<address, name>
 var nnames      = {}; // map<address, name>
 
+function hexFormat(num) {
+	var hex = num.toString(16).toUpperCase();
+	return "0x" + ((hex.length > 1) ? hex : "0" + hex);
+}
+
 function formatInstruction(a, nn) {
 	// convert a pair of bytes representing an instruction
 	// into a string of the equivalent octo statement.
@@ -89,11 +94,120 @@ function formatInstruction(a, nn) {
 	if (o == 0xF && nn == 0x85) { return "loadflags " + vx; } // schip
 
 	if (o == 0x0) {
-		return "native " + ((nnn in nnames) ? nnames[nnn] : "0x" + nnn.toString(16).toUpperCase());
+		return "native " + ((nnn in nnames) ? nnames[nnn] : hexFormat(nnn));
 	}
+	return hexFormat(a) + " " + hexFormat(nn) + " # bad opcode?"
+}
 
-	return "0x" + (a .toString(16).toUpperCase()) + " " +
-	       "0x" + (nn.toString(16).toUpperCase()) + " # bad opcode?";
+function formatNative(addr, prefix) {
+	var r = "";
+	var start = addr;
+
+	while(true) {
+		if (typeof program[addr] == "undefined") { break; }
+		if (typeof    type[addr] != "undefined") { break; }
+		r += prefix;
+
+		var op = program[addr];
+		var o  = (op >> 4) & 0xF;
+		var x  = op & 0xF;
+		var a  = program[addr+1] | 0;
+		var b  = program[addr+2] | 0;
+
+		var end = hexFormat(addr) + " : ";
+		var h1 = hexFormat(op) + "           # " + end;
+		var h2 = hexFormat(op) + " " + hexFormat(a) + "      # " + end;
+		var h3 = hexFormat(op) + " " + hexFormat(a) + " " + hexFormat(b) + " # " + end;
+		var hr = x.toString(16).toUpperCase();
+		var ha = hexFormat(a);
+		var hb = hexFormat((a << 8) | b);
+		var or = x - 1;
+		var ir = x - 7;
+
+		if (o == 0x0 && x == 0)     { addr += 1; r += h1 + "IDL"       ; } // idle
+		if (o == 0x0 && x != 0)     { addr += 1; r += h1 + "LDN  " + hr; } // load via r
+		if (o == 0x1)               { addr += 1; r += h1 + "INC  " + hr; } // increment r
+		if (o == 0x2)               { addr += 1; r += h1 + "DEC  " + hr; } // decrement r
+		if (op == 0x30)             { addr += 2; r += h2 + "BR   " + ha; } // branch always
+		if (op == 0x31)             { addr += 2; r += h2 + "BQ   " + ha; } // branch if q
+		if (op == 0x32)             { addr += 2; r += h2 + "BZ   " + ha; } // branch if zero
+		if (op == 0x33)             { addr += 2; r += h2 + "BDF  " + ha; } // branch if df
+		if (op == 0x34)             { addr += 2; r += h2 + "B1   " + ha; } // branch if flag 1
+		if (op == 0x35)             { addr += 2; r += h2 + "B2   " + ha; } // branch if flag 2
+		if (op == 0x36)             { addr += 2; r += h2 + "B3   " + ha; } // branch if flag 3
+		if (op == 0x37)             { addr += 2; r += h2 + "B4   " + ha; } // branch if flag 4
+		if (op == 0x38)             { addr += 1; r += h1 + "SKP"       ; } // skip 1 byte
+		if (op == 0x39)             { addr += 2; r += h2 + "BNQ  " + ha; } // branch if not q
+		if (op == 0x3A)             { addr += 2; r += h2 + "BNZ  " + ha; } // branch if not zero
+		if (op == 0x3B)             { addr += 2; r += h2 + "BNF  " + ha; } // branch if not df
+		if (op == 0x3C)             { addr += 2; r += h2 + "BN1  " + ha; } // branch if not flag 1
+		if (op == 0x3D)             { addr += 2; r += h2 + "BN2  " + ha; } // branch if not flag 2
+		if (op == 0x3E)             { addr += 2; r += h2 + "BN3  " + ha; } // branch if not flag 3
+		if (op == 0x3F)             { addr += 2; r += h2 + "BN4  " + ha; } // branch if not flag 4
+		if (o == 0x4)               { addr += 1; r += h1 + "LDA  " + hr; } // load and advance
+		if (o == 0x5)               { addr += 1; r += h1 + "STR  " + hr; } // store through r
+		if (op == 0x60)             { addr += 1; r += h1 + "IRX"       ; } // increment r(x)
+		if (o == 0x6 && x>0 && x<8) { addr += 1; r += h1 + "OUT  " + or; } // output r
+		if (o == 0x6 && x>7)        { addr += 1; r += h1 + "INP  " + ir; } // input r
+		if (op == 0x70)             { addr += 1; r += h1 + "RET"       ; } // return
+		if (op == 0x71)             { addr += 1; r += h1 + "DIS"       ; } // disable interrupts
+		if (op == 0x72)             { addr += 1; r += h1 + "LDXA"      ; } // load via r(x)++
+		if (op == 0x73)             { addr += 1; r += h1 + "STXD"      ; } // store via r(x)--
+		if (op == 0x74)             { addr += 1; r += h1 + "ADC"       ; } // add with carry
+		if (op == 0x75)             { addr += 1; r += h1 + "SDB"       ; } // sub from m with borrow
+		if (op == 0x76)             { addr += 1; r += h1 + "SHRC"      ; } // shift right with carry
+		if (op == 0x77)             { addr += 1; r += h1 + "SMB"       ; } // sub m with borrow
+		if (op == 0x78)             { addr += 1; r += h1 + "SAV"       ; } // save t
+		if (op == 0x79)             { addr += 1; r += h1 + "MARK"      ; } // save x/p in t
+		if (op == 0x7A)             { addr += 1; r += h1 + "REQ"       ; } // reset q
+		if (op == 0x7B)             { addr += 1; r += h1 + "SEQ"       ; } // set q
+		if (op == 0x7C)             { addr += 2; r += h2 + "ADCI " + ha; } // add with carry imm
+		if (op == 0x7D)             { addr += 2; r += h2 + "SDBI " + ha; } // sub with borrow imm
+		if (op == 0x7E)             { addr += 1; r += h1 + "SHLC"      ; } // shift left with carry
+		if (op == 0x7F)             { addr += 2; r += h2 + "SMBI " + ha; } // sub m with borrow imm
+		if (o == 0x8)               { addr += 1; r += h1 + "GLO  " + hr; } // get low byte of r
+		if (o == 0x9)               { addr += 1; r += h1 + "GHI  " + hr; } // get high byte of r
+		if (o == 0xA)               { addr += 1; r += h1 + "PLO  " + hr; } // put in low byte of r
+		if (o == 0xB)               { addr += 1; r += h1 + "PHI  " + hr; } // put in high byte of r
+		if (op == 0xC0)             { addr += 3; r += h3 + "LBR  " + hb; } // lbranch always
+		if (op == 0xC1)             { addr += 3; r += h3 + "LBQ  " + hb; } // lbranch if q
+		if (op == 0xC2)             { addr += 3; r += h3 + "LBZ  " + hb; } // lbranch if zero
+		if (op == 0xC3)             { addr += 3; r += h3 + "LBDF " + hb; } // lbranch if df
+		if (op == 0xC4)             { addr += 1; r += h1 + "NOP"       ; } // noop
+		if (op == 0xC5)             { addr += 1; r += h1 + "LSNQ"      ; } // lskip if not q
+		if (op == 0xC6)             { addr += 1; r += h1 + "LSNZ"      ; } // lskip if not zero
+		if (op == 0xC7)             { addr += 1; r += h1 + "LSNF"      ; } // lskip if not df
+		if (op == 0xC8)             { addr += 1; r += h1 + "LSKP"      ; } // lskip always
+		if (op == 0xC9)             { addr += 3; r += h3 + "LBNQ " + hb; } // lbranch if not q
+		if (op == 0xCA)             { addr += 3; r += h3 + "LBNZ " + hb; } // lbranch if not zero
+		if (op == 0xCB)             { addr += 3; r += h3 + "LBNF " + hb; } // lbranch if not df
+		if (op == 0xCC)             { addr += 1; r += h1 + "LSIE"      ; } // lskip if interrupts
+		if (op == 0xCD)             { addr += 1; r += h1 + "LSQ"       ; } // lskip if q
+		if (op == 0xCE)             { addr += 1; r += h1 + "LSZ"       ; } // lskip if zero
+		if (op == 0xCF)             { addr += 1; r += h1 + "LSDF"      ; } // lskip if df
+		if (o == 0xD)               { addr += 1; r += h1 + "SEP  " + hr; } // set p
+		if (o == 0xE)               { addr += 1; r += h1 + "SEX  " + hr; } // set x
+		if (op == 0xF0)             { addr += 1; r += h1 + "LDX"       ; } // load via r(x)
+		if (op == 0xF1)             { addr += 1; r += h1 + "OR"        ; } // or
+		if (op == 0xF2)             { addr += 1; r += h1 + "AND"       ; } // and
+		if (op == 0xF3)             { addr += 1; r += h1 + "XOR"       ; } // xor
+		if (op == 0xF4)             { addr += 1; r += h1 + "ADD"       ; } // add
+		if (op == 0xF5)             { addr += 1; r += h1 + "SD"        ; } // sub from m
+		if (op == 0xF6)             { addr += 1; r += h1 + "SHR"       ; } // shift right
+		if (op == 0xF7)             { addr += 1; r += h1 + "SM"        ; } // sub m
+		if (op == 0xF8)             { addr += 2; r += h2 + "LDI  " + ha; } // load imm
+		if (op == 0xF9)             { addr += 2; r += h2 + "ORI  " + ha; } // or imm
+		if (op == 0xFA)             { addr += 2; r += h2 + "ANI  " + ha; } // and imm
+		if (op == 0xFB)             { addr += 2; r += h2 + "XRI  " + ha; } // xor imm
+		if (op == 0xFC)             { addr += 2; r += h2 + "ADI  " + ha; } // add imm
+		if (op == 0xFD)             { addr += 2; r += h2 + "SDI  " + ha; } // sub from m imm
+		if (op == 0xFE)             { addr += 1; r += h1 + "SHL"       ; } // shift left
+		if (op == 0xFF)             { addr += 2; r += h2 + "SMI  " + ha; } // sub m imm
+
+		r += "\n";
+		if (o == 0xD) { break; } // SEP is a context switch, effectively a return
+	}
+	return [(addr - start), r + "\n"];
 }
 
 function apply(address) {
@@ -484,10 +598,6 @@ function formatProgram(programSize) {
 	findOutside(subroutines, outside, snames);
 
 	// emit code/data
-	function hexFormat(num) {
-		var hex = num.toString(16).toUpperCase();
-		return "0x" + ((hex.length > 1) ? hex : "0" + hex);
-	}
 	function tabs(n) {
 		var r = "";
 		while(n --> 0) { r += "\t"; }
@@ -497,12 +607,20 @@ function formatProgram(programSize) {
 	for(var x = 0; x < programSize; x++) {
 		var a = (x + 0x200);
 
+		// process native code, if applicable:
+		if (a in natives) {
+			ret += (": " + nnames[a] + "\n");
+			var nat = formatNative(a, "\t");
+			ret += nat[1];
+			if (nat[0] > 0) {
+				x += nat[0] - 1;
+				continue;
+			}
+		}
+
 		// emit labels and find loop heads
 		if (a in subroutines) {
 			ret += ("\n: " + snames[a] + "\n");
-		}
-		if (a in natives) {
-			ret += (": " + nnames[a] + "\n");
 		}
 		if (a in labels) {
 			if (lnames[a] == "main" && !(a in subroutines)) { ret += (": main\n"); }
