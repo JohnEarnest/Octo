@@ -420,8 +420,8 @@ function successors(address, prevret) {
 		for(var vx in reaching[address][x]) {
 			if (pass && skip) { break; }
 			for(var vy in reaching[address][y]) {
-				if (predicate(vx, vy, nn)) { skip = true; }
-				else                       { pass = true; }
+				if (predicate(parseInt(vx), parseInt(vy), nn)) { skip = true; }
+				else                                           { pass = true; }
 			}
 		}
 		var ret = [];
@@ -480,8 +480,10 @@ function analyzeInit(rom, quirks) {
 	type        = {};
 	labels      = {};
 	subroutines = {};
+	natives     = {};
 	lnames      = {};
 	snames      = {};
+	nnames      = {};
 
 	SHIFT_QUIRKS      = quirks['shiftQuirks']     | false;
 	LOAD_STORE_QUIRKS = quirks['loadStoreQuirks'] | false;
@@ -519,7 +521,7 @@ function analyzeWork() {
 	if (fringe.length < 1) { return true; }
 
 	var here = fringe.pop();
-	
+
 	// compute successor reaching set
 	var prevret = reaching[here]['rets']; // apply blows this away (!)
 	var output = apply(here);
@@ -587,9 +589,10 @@ function formatProgram(programSize) {
 	// or lost label declarations.
 	function findOutside(source, dest, names) {
 		for(var a in source) {
-			if (a < 0x200 || a >= 0x200 + programSize) {
-				dest[a] = true;
-				ret += (":const " + names[a] + " " + a + "\n");
+			var addr = parseInt(a);
+			if (addr < 0x200 || addr >= 0x200 + programSize) {
+				dest[addr] = true;
+				ret += (":const " + names[addr] + " " + addr + "\n");
 			}
 		}
 	}
@@ -608,7 +611,7 @@ function formatProgram(programSize) {
 		var a = (x + 0x200);
 
 		// process native code, if applicable:
-		if (a in natives) {
+		if (a in natives && a != 0x200) {
 			ret += (": " + nnames[a] + "\n");
 			var nat = formatNative(a, "\t");
 			ret += nat[1];
