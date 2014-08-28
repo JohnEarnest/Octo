@@ -291,9 +291,17 @@ function apply(address) {
 	}
 	function binary(binop) {
 		var r = {};
-		for(var a in ret[x]) {
-			for(var b in ret[y]) {
-				r[(binop(parseInt(a), parseInt(b)) & 0xFF)] = true;
+		if (x == y) {
+			for(var a in ret[x]) {
+				var tmp = parseInt(a);
+				r[(binop(tmp, tmp) & 0xFF)] = true;
+			}
+		}
+		else {
+			for(var a in ret[x]) {
+				for(var b in ret[y]) {
+					r[(binop(parseInt(a), parseInt(b)) & 0xFF)] = true;
+				}
 			}
 		}
 		ret[x] = r;
@@ -318,11 +326,21 @@ function apply(address) {
 	function bincarry(binop) {
 		var r = {};
 		var c = {};
-		for(var a in ret[x]) {
-			for(var b in ret[y]) {
-				var v = binop(parseInt(a), parseInt(b));
+		if (x == y) {
+			for(var a in ret[x]) {
+				var tmp = parseInt(a);
+				var v = binop(tmp, tmp);
 				r[(v[0] & 0xFF) ] = true;
 				c[(v[1] ? 1 : 0)] = true;
+			}
+		}
+		else {
+			for(var a in ret[x]) {
+				for(var b in ret[y]) {
+					var v = binop(parseInt(a), parseInt(b));
+					r[(v[0] & 0xFF) ] = true;
+					c[(v[1] ? 1 : 0)] = true;
+				}
 			}
 		}
 		ret[0xF] = c;
