@@ -210,6 +210,19 @@ function formatNative(addr, prefix) {
 	return [(addr - start), r + "\n"];
 }
 
+function copyReachingSet(source) {
+	var ret = {};
+	for(var z = 0; z < regNames.length; z++) {
+		var register = regNames[z];
+		ret[register] = {};
+		var values = Object.keys(source[register]);
+		for(var vindex = 0; vindex < values.length; vindex++) {
+			ret[register][values[vindex]] = true;
+		}
+	}
+	return ret;
+}
+
 function apply(address) {
 	// apply this instruction to the reaching set
 	// producing a successor reaching set.
@@ -227,15 +240,7 @@ function apply(address) {
 	setType(address + 1, "code");
 
 	// start with a deep copy of the source reaching set:
-	var ret = {};
-	for(var z = 0; z < regNames.length; z++) {
-		var register = regNames[z];
-		ret[register] = {};
-		var values = Object.keys(reaching[address][register]);
-		for(var vindex = 0; vindex < values.length; vindex++) {
-			ret[register][values[vindex]] = true;
-		}
-	}
+	var ret = copyReachingSet(reaching[address]);
 
 	// decode the instruction:
 	var a   = program[address];
@@ -535,7 +540,7 @@ function analyzeWork() {
 
 		if ((typeof reaching[child]) == "undefined") {
 			// always explore fresh nodes:
-			reaching[child] = output;
+			reaching[child] = copyReachingSet(output);
 			if (fringe.lastIndexOf(child) == -1) {
 				fringe.push(child);
 			}
