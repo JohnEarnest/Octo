@@ -344,7 +344,7 @@ function compile() {
 			throw "Rom is too large- " + (c.rom.length-MAX_ROM) + " bytes over!";
 		}
 		output.value = display(c.rom);
-		output.style.display = "initial";
+		output.style.display = "inline";
 		status.innerHTML = ((c.rom.length) + " bytes, " + (MAX_ROM-c.rom.length) + " free.");
 		if (c.schip) { status.innerHTML += " (SuperChip instructions used)"; }
 	}
