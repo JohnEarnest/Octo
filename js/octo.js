@@ -98,6 +98,7 @@ var waitReg = -1;    // destination register of an awaited key
 var halted = false;
 var breakpoint = false;
 var metadata = {};
+var tickCounter = 0;
 
 function init(rom) {
 	var program = rom.rom;
@@ -119,6 +120,7 @@ function init(rom) {
 	waitReg = -1;
 	halted = false;
 	breakpoint = false;
+	tickCounter = 0;
 }
 
 function math(x, y, op) {
@@ -210,6 +212,7 @@ function sprite(x, y, len) {
 
 function tick() {
 	if (halted) { return; }
+	tickCounter++;
 	try {
 		var op  = (m[pc  ] << 8) | m[pc+1];
 		var o   = (m[pc  ] >> 4) & 0x00F;
@@ -824,6 +827,7 @@ function haltBreakpoint(breakName) {
 	regs.style.display = "inline";
 
 	var regdump =
+		"tick count: " + tickCounter + "<br>" +
 		"breakpoint: " + breakName + "<br>" +
 		"pc := " + hexFormat(pc) + getLabel(pc) + "<br>" +
 		"i := " + hexFormat(i) + getLabel(i) + "<br>";
