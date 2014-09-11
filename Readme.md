@@ -18,7 +18,7 @@ While a program is running, you can press escape to return to the editor. The ch
 
 To learn more about Chip8 programming techniques, have a look at the [documentation](https://github.com/JohnEarnest/Octo/tree/gh-pages/docs) section.
 
-The Octo assembler can also be used as a command-line tool via a [Node.js](http://http://nodejs.org) fontend:
+The Octo assembler can also be used as a command-line tool via a [Node.js](http://nodejs.org) fontend:
 
 	$ ./octo
 		usage: octo [--decompile] [--roundtrip] [--qshift] [--qloadstore] <source> [<destination>]
