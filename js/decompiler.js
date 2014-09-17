@@ -310,7 +310,7 @@ function apply(address) {
 		if (LOAD_STORE_QUIRKS) { return; }
 		var s = {};
 		for(var a in ret['i']) {
-			s[(parseInt(a) + delta) & 0xFFF] = true;
+			s[Math.min(parseInt(a) + delta, 0xFFF)] = true;
 		}
 		ret['i'] = s;
 	}
@@ -318,7 +318,7 @@ function apply(address) {
 		var s = {};
 		for(var a in ret['i']) {
 			for(var b in ret[x]) {
-				s[(parseInt(a) + parseInt(b)) & 0xFFF] = true;
+				s[Math.min(parseInt(a) + parseInt(b), 0xFFF)] = true;
 			}
 		}
 		return s;
