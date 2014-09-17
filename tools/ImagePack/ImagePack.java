@@ -14,7 +14,7 @@ public class ImagePack {
 			if (!args.get(x).startsWith("--sprite=")) { continue; }
 			if (args.get(x).length() == "--sprite=".length()) {
 				System.err.format("no size for sprite specified!%n");
-				System.exit(0);
+				System.exit(1);
 			}
 			String dim = args.get(x).split("=")[1];
 			args.remove(x);
@@ -28,7 +28,7 @@ public class ImagePack {
 			}
 			catch(NumberFormatException e) {
 				System.err.format("'%s' is not a valid sprite height!%n", dim);
-				System.exit(0);
+				System.exit(1);
 			}
 			break;
 		}
@@ -37,7 +37,7 @@ public class ImagePack {
 			if (!args.get(x).startsWith("--order=")) { continue; }
 			if (args.get(x).length() == "--order=".length()) {
 				System.err.format("no order string specified!%n");
-				System.exit(0);
+				System.exit(1);
 			}
 			String o = args.get(x).split("=")[1].toLowerCase();
 			args.remove(x);
