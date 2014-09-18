@@ -105,6 +105,9 @@ function formatNative(addr, prefix) {
 	var start = addr;
 
 	while(true) {
+		if (addr in natives) {
+			r += ": " + nnames[addr] + "\n";
+		}
 		if (typeof program[addr] == "undefined") { break; }
 		if (typeof    type[addr] != "undefined") { break; }
 		r += prefix;
@@ -206,6 +209,7 @@ function formatNative(addr, prefix) {
 		if (op == 0xFF)             { addr += 2; r += h2 + "SMI  " + ha; } // sub m imm
 
 		r += "\n";
+
 		if (o == 0xD) { break; } // SEP is a context switch, effectively a return
 	}
 	return [(addr - start), r + "\n"];
@@ -627,6 +631,7 @@ function formatProgram(programSize) {
 	var outside = {};
 	findOutside(labels,      outside, lnames);
 	findOutside(subroutines, outside, snames);
+	findOutside(natives,     outside, nnames);
 
 	// emit code/data
 	function tabs(n) {
@@ -640,7 +645,6 @@ function formatProgram(programSize) {
 
 		// process native code, if applicable:
 		if (a in natives && a != 0x200) {
-			ret += (": " + nnames[a] + "\n");
 			var nat = formatNative(a, "\t");
 			ret += nat[1];
 			if (nat[0] > 0) {
