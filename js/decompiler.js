@@ -21,6 +21,7 @@ var regNames = [
 var program  = []; // chip8 memory
 var reaching = {}; // map<address, map<register, set<int>>>
 var fringe   = []; // addresses left to explore
+var romsize  = 0;  // size of rom in bytes
 
 // analysis:
 var type        = {}; // map<address, {code | data | smc}>
@@ -306,11 +307,14 @@ function apply(address) {
 		}
 		ret[x] = r;
 	}
+	function capi(i) {
+		return Math.min(i, romsize+1+0x200);
+	}
 	function ioffset(delta) {
 		if (LOAD_STORE_QUIRKS) { return; }
 		var s = {};
 		for(var a in ret['i']) {
-			s[Math.min(parseInt(a) + delta, 0xFFF)] = true;
+			s[capi(parseInt(a) + delta)] = true;
 		}
 		ret['i'] = s;
 	}
@@ -318,7 +322,7 @@ function apply(address) {
 		var s = {};
 		for(var a in ret['i']) {
 			for(var b in ret[x]) {
-				s[Math.min(parseInt(a) + parseInt(b), 0xFFF)] = true;
+				s[capi(parseInt(a) + parseInt(b))] = true;
 			}
 		}
 		return s;
@@ -507,6 +511,7 @@ function analyzeInit(rom, quirks) {
 	lnames      = {};
 	snames      = {};
 	nnames      = {};
+	romsize     = rom.length;
 
 	SHIFT_QUIRKS      = quirks['shiftQuirks']     | false;
 	LOAD_STORE_QUIRKS = quirks['loadStoreQuirks'] | false;
