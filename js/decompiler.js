@@ -722,7 +722,7 @@ function formatProgram(programSize) {
 		else if (type[a] == "data") {
 			ret += (indent + hexFormat(program[a]) + "\n");
 		}
-		else if (type[a] == "smc" || type[a+1] == "smc") {
+		else if (type[a] == "smc" && (type[a+1] == "smc" || type[a+1] == "code")) {
 			ret += indent;
 			ret += hexFormat(program[a]) + " " + hexFormat(program[a+1])
 			ret += " # smc? " + formatInstruction(program[a], program[a+1]) + "\n";
