@@ -150,6 +150,8 @@ Another type of self-modifying code that comes up frequently is overwriting the 
 	save v0
 	init # va will be set to 5 instead of 2.
 
+You can also specify an address at which subsequent instructions should be compiled by using `:org` followed by an address. The use of this operative is very brittle, so it should be avoided unless absolutely necessary.
+
 SuperChip
 ---------
 SuperChip or SCHIP is a set of extended Chip8 instructions. Octo can emulate these instructions and will indicate if any such instructions are used in an assembled program. The SuperChip instructions are as follows:

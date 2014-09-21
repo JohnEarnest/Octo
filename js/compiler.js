@@ -62,14 +62,23 @@ function Compiler(source) {
 	this.hasmain = true;
 	this.schip = false;
 	this.breakpoints = {}; // map<address, name>
+	this.hereaddr = 0x200;
 
 	this.pos = null;
+
+	this.data = function(a) {
+		if (typeof this.rom[this.hereaddr-0x200] != "undefined") {
+			throw "Data overlap. Address "+hexFormat(this.hereaddr)+" has already been defined.";
+		}
+		this.rom[this.hereaddr-0x200] = (a & 0xFF);
+		this.hereaddr++;
+	}
 
 	this.tokens = tokenize(source);
 	this.next = function()    { this.pos = this.tokens[0]; this.tokens.splice(0, 1); return this.pos[0]; }
 	this.peek = function()    { return this.tokens[0][0]; }
-	this.here = function()    { return this.rom.length + 0x200; }
-	this.inst = function(a,b) { this.rom.push(a & 0xFF); this.rom.push(b & 0xFF); }
+	this.here = function()    { return this.hereaddr; }
+	this.inst = function(a,b) { this.data(a); this.data(b); }
 
 	this.immediate = function(op, nnn) {
 		this.inst(op | ((nnn >> 8) & 0xF), (nnn & 0xFF));
@@ -125,10 +134,7 @@ function Compiler(source) {
 			}
 			else { throw "Undefined name '"+number+"'."; }
 		}
-		if ((typeof number != "number") || (number < -128) || (number > 0xFFF)) {
-			throw "Constant value '"+number+"' is out of range- must be in [-128, 4095].";
-		}
-		return (number & 0xFFF);
+		return number;
 	}
 
 	this.wideValue = function(nnn) {
@@ -291,7 +297,8 @@ function Compiler(source) {
 		if ((target == 0x202) && (label == "main")) {
 			this.hasmain = false;
 			this.rom = [];
-			target = 0x200;
+			this.hereaddr = 0x200;
+			target = this.here();
 		}
 		if (label in this.dict) { throw "The name '"+label+"' has already been defined."; }
 		this.dict[label] = target;
@@ -330,6 +337,7 @@ function Compiler(source) {
 			if (name in this.constants) { throw "The name '"+name+"' has already been defined."; }
 			this.constants[name] = this.constantValue();
 		}
+		else if (token == ":org")    { this.hereaddr = this.constantValue(); }
 		else if (token == ";")       { this.inst(0x00, 0xEE); }
 		else if (token == "return")  { this.inst(0x00, 0xEE); }
 		else if (token == "clear")   { this.inst(0x00, 0xE0); }
@@ -411,7 +419,7 @@ function Compiler(source) {
 				if (nn < -128 || nn > 255) {
 					throw "Literal value '"+nn+"' does not fit in a byte- must be [-128, 255].";
 				}
-				this.rom.push(nn & 0xFF);
+				this.data(nn);
 			}
 			else {
 				this.instruction(this.next());
@@ -429,6 +437,9 @@ function Compiler(source) {
 		if (this.loops.length > 0) {
 			this.pos = this.loops[0][1];
 			throw "This 'loop' does not have a matching 'again'.";
+		}
+		for(var index = 0; index < this.rom.length; index++) {
+			if (typeof this.rom[index] == "undefined") { this.rom[index] = 0x00; }
 		}
 	}
 }
