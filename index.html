@@ -80,11 +80,21 @@
 			background-color:black;
 			padding:7px;
 		}
+		div.statusbar {
+			text-align:center;
+			background-color:black;
+			color:white;
+			height: 25px;
+			padding:7px;
+			position:fixed;
+			bottom: 0;
+			width: 100%;
+		}
 	</style>
 </head>
 
 <body>
-	<div id="editor">
+	<div id="editor" style="padding-bottom: 40px;">
 		<div class="menubar">
 			<a href="https://github.com/JohnEarnest/Octo"><img src="images/logo.png" style="padding-right: 30px;"></img></a>
 			<button type="button" onClick="run()">Run</button>
@@ -158,9 +168,10 @@
 			</div>
 		</td></tr></table>
 			<textarea id="output" style="display:none" rows="6" cols="80"></textarea><br/>
-			<div id="status"></div>
 		</center>
 	</div>
+
+	<div id="status" class="statusbar"></div>
 
 	<div id="options" style="display:none">
 		<center>

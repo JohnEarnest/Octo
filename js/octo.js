@@ -349,10 +349,12 @@ function compile() {
 		output.value = display(c.rom);
 		output.style.display = "inline";
 		status.innerHTML = ((c.rom.length) + " bytes, " + (MAX_ROM-c.rom.length) + " free.");
+		status.style.backgroundColor = "black";
 		if (c.schip) { status.innerHTML += " (SuperChip instructions used)"; }
 	}
 	catch(error) {
-		status.innerHTML = "<font color='red'>" + error + "</font>";
+		status.style.backgroundColor = "darkred";
+		status.innerHTML = error;
 		if (c.pos != null) {
 			input.focus();
 			input.selectionStart = c.pos[1]-1;
