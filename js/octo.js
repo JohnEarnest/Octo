@@ -378,23 +378,18 @@ function run() {
 function runRom(rom) {
 	if (rom === null) { return; }
 	init(rom);
-	document.getElementById("editor").style.display = "none";
-	document.getElementById("options").style.display = "none";
 	document.getElementById("emulator").style.display = "inline";
+	document.getElementById("emulator").style.backgroundColor = QUIET_COLOR;
 	window.addEventListener("keydown", keyDown, false);
 	window.addEventListener("keyup"  , keyUp  , false);
 	intervalHandle = setInterval(render, 1000/60);
-	document.body.style.backgroundColor = "#000000";
 }
 
 function reset() {
-	document.getElementById("editor").style.display = "inline";
 	document.getElementById("emulator").style.display = "none";
-	document.getElementById("options").style.display = "none";
 	window.removeEventListener("keydown", keyDown, false);
 	window.removeEventListener("keyup"  , keyUp  , false);
 	window.clearInterval(intervalHandle);
-	document.body.style.backgroundColor = "#FFFFFF";
 	clearBreakpoint();
 }
 
@@ -520,7 +515,7 @@ function render() {
 	renderDisplay();
 
 	if (halted) { return; }
-	document.body.style.backgroundColor = (st > 0) ? BUZZ_COLOR : QUIET_COLOR;
+	document.getElementById("emulator").style.backgroundColor = (st > 0) ? BUZZ_COLOR : QUIET_COLOR;
 }
 
 function keyDown(event) {

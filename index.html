@@ -3,8 +3,8 @@
 	<title>Octo</title>
 	<style>
 		textarea {
-		  border:1px solid #999999;
-		  font-family: monospace;
+			border:1px solid #999999;
+			font-family: monospace;
 		}
 		div.canv {
 			position: absolute;
@@ -201,36 +201,40 @@
 		</center>
 	</div>
 
-	<div id="emulator" style="display:none" class="canv">
-		<canvas id="target" width="640" height="320"></canvas>
-		<center id="keypad" style="display:none">
-		<table border="0">
-			<tr>
-				<td class="key" id="0x1">1</td>
-				<td class="key" id="0x2">2</td>
-				<td class="key" id="0x3">3</td>
-				<td class="key" id="0xC">C</td>
-			</tr>
-			<tr>
-				<td class="key" id="0x4">4</td>
-				<td class="key" id="0x5">5</td>
-				<td class="key" id="0x6">6</td>
-				<td class="key" id="0xD">D</td>
-			</tr>
-			<tr>
-				<td class="key" id="0x7">7</td>
-				<td class="key" id="0x8">8</td>
-				<td class="key" id="0x9">9</td>
-				<td class="key" id="0xE">E</td>
-			</tr>
-			<tr>
-				<td class="key" id="0xA">A</td>
-				<td class="key" id="0x0">0</td>
-				<td class="key" id="0xB">B</td>
-				<td class="key" id="0xF">F</td>
-			</tr>
-		</table>
-		</center>
+	<div class="lightbox" id="emulator" style="display:none">
+		<div class="canv">
+			<canvas id="target" width="640" height="320"></canvas>
+
+			<center>
+				<table border="0" id="keypad" style="display:none">
+					<tr>
+						<td class="key" id="0x1">1</td>
+						<td class="key" id="0x2">2</td>
+						<td class="key" id="0x3">3</td>
+						<td class="key" id="0xC">C</td>
+					</tr>
+					<tr>
+						<td class="key" id="0x4">4</td>
+						<td class="key" id="0x5">5</td>
+						<td class="key" id="0x6">6</td>
+						<td class="key" id="0xD">D</td>
+					</tr>
+					<tr>
+						<td class="key" id="0x7">7</td>
+						<td class="key" id="0x8">8</td>
+						<td class="key" id="0x9">9</td>
+						<td class="key" id="0xE">E</td>
+					</tr>
+					<tr>
+						<td class="key" id="0xA">A</td>
+						<td class="key" id="0x0">0</td>
+						<td class="key" id="0xB">B</td>
+						<td class="key" id="0xF">F</td>
+					</tr>
+				</table>
+			</center>
+		</div>
+
 		<div class="buttons">
 			<img
 				title="close"
@@ -251,6 +255,7 @@
 				style="padding-left: 10px; display:none;"
 			></img>
 		</div>
+
 		<div class="debugger" id="registerView" style="display:none">
 			register display.
 		</div>
@@ -274,8 +279,7 @@
 			</p>
 			<center>
 				<b>Enter a JSON-style byte array:</b>
-				<textarea id="decompileInput" rows="6" cols="60">
-[0xD0, 0x15, 0x70, 0x04, 0x40, 0x40, 0x71, 0x05, 0x40, 0x40, 0x60, 0x00, 0x12, 0x00]</textarea><br/>
+				<textarea id="decompileInput" rows="6" cols="60">[0xD0, 0x15, 0x70, 0x04, 0x40, 0x40, 0x71, 0x05, 0x40, 0x40, 0x60, 0x00, 0x12, 0x00]</textarea><br/>
 				<button type="button" onclick="decompileStart()">Disassemble</button>
 				<button type="button" onclick="decompileRun()">Run</button>
 				<button type="button" onclick="decompileFile()">Open File...</button>
