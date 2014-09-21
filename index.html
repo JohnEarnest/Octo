@@ -70,11 +70,42 @@
 			top: 50%;
 			margin: -32px 0 0 -32px;
 		}
+
+		body {
+			margin: 0;
+			padding:0;
+		}
+		div.menubar {
+			text-align:center;
+			background-color:black;
+			padding:7px;
+		}
 	</style>
 </head>
 
 <body>
 	<div id="editor">
+		<div class="menubar">
+			<a href="https://github.com/JohnEarnest/Octo"><img src="images/logo.png" style="padding-right: 30px;"></img></a>
+			<button type="button" onClick="run()">Run</button>
+			<button type="button" onClick="compile()">Compile</button>
+			<button type="button" onClick="share()">Share</button>
+			<button type="button" onClick="decompileShowModal()">Load Binary</button>
+			<button type="button" onClick="save()">Save Binary</button>
+			<select id="framerate" onchange="framerate()">
+				<option value="7">7 Cycles/Frame</option>
+				<option value="15">15 Cycles/Frame</option>
+				<option value="20">20 Cycles/Frame</option>
+				<option value="30">30 Cycles/Frame</option>
+				<option value="100">100 Cycles/Frame</option>
+				<option value="200">200 Cycles/Frame</option>
+				<option value="500">500 Cycles/Frame</option>
+				<option value="1000">1000 Cycles/Frame</option>
+			</select>
+			<button type="button" onClick="toggleOptions();">Options...</button>
+			<button type="button" onClick="toggleSpriteEditor();">Sprite Editor</button>
+		</div>
+
 		<center>
 		<table border="0"><tr><td>
 <textarea id="input"  rows="40" cols="80" spellcheck="false">
@@ -128,25 +159,6 @@
 		</td></tr></table>
 			<textarea id="output" style="display:none" rows="6" cols="80"></textarea><br/>
 			<div id="status"></div>
-			<button type="button" onClick="compile()">Compile</button>
-			<button type="button" onClick="run()">Run</button>
-			<button type="button" onClick="share()">Share</button>
-			<button type="button" onClick="decompileShowModal()">Load Binary</button>
-			<button type="button" onClick="save()">Save Binary</button>
-			<select id="framerate" onchange="framerate()">
-			  <option value="7">7 Cycles/Frame</option>
-			  <option value="15">15 Cycles/Frame</option>
-			  <option value="20">20 Cycles/Frame</option>
-			  <option value="100">100 Cycles/Frame</option>
-			  <option value="200">200 Cycles/Frame</option>
-			  <option value="500">500 Cycles/Frame</option>
-			  <option value="1000">1000 Cycles/Frame</option>
-			</select>
-			<button type="button" onClick="window.open('Readme.html', '_blank');">
-				Manual
-			</button>
-			<button type="button" onClick="toggleOptions();">Options...</button>
-			<button type="button" onClick="toggleSpriteEditor();">Sprite Editor</button>
 		</center>
 	</div>
 
