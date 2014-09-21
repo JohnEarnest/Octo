@@ -173,7 +173,7 @@ function Compiler(source) {
 		// silently trim negative numbers, but warn
 		// about positive numbers which are too large:
 		if ((typeof nn != "number") || (nn < -128) || (nn > 255)) {
-			throw "Argument '"+nn+"' does not fit in a byte- must be in [-128, 255].";
+			throw "Argument '"+nn+"' does not fit in a byte- must be in range [-128, 255].";
 		}
 		return (nn & 0xFF);
 	}
@@ -186,7 +186,7 @@ function Compiler(source) {
 			else { throw "Undefined name '"+n+"'."; }
 		}
 		if ((typeof n != "number") || (n < 0) || (n > 15)) {
-			throw "Invalid argument '"+n+"'; must be in [0,15].";
+			throw "Invalid argument '"+n+"'; must be in range [0,15].";
 		}
 		return (n & 0xF);
 	}
@@ -262,7 +262,7 @@ function Compiler(source) {
 			this.inst(0xF0 | this.register(), 0x1E);
 		}
 		else {
-			throw "The operator '"+token+"' cannot target the I register.";
+			throw "The operator '"+token+"' cannot target the i register.";
 		}
 	}
 
@@ -417,7 +417,7 @@ function Compiler(source) {
 			if (typeof this.peek() == "number") {
 				var nn = this.next();
 				if (nn < -128 || nn > 255) {
-					throw "Literal value '"+nn+"' does not fit in a byte- must be [-128, 255].";
+					throw "Literal value '"+nn+"' does not fit in a byte- must be in range [-128, 255].";
 				}
 				this.data(nn);
 			}
@@ -432,7 +432,7 @@ function Compiler(source) {
 		var keys = [];
 		for (var k in this.protos) { keys.push(k); }
 		if (keys.length > 0) {
-			throw "Unresolved prototypes: " + keys;
+			throw "Undefined names: " + keys;
 		}
 		if (this.loops.length > 0) {
 			this.pos = this.loops[0][1];
