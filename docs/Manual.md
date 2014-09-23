@@ -1,3 +1,7 @@
+---
+title: Octo Assembly Language
+---
+
 Octo Assembly Language
 ----------------------
 
