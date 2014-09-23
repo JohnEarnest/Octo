@@ -291,6 +291,7 @@ function toggleOptions() {
 	var options = document.getElementById("options");
 	if (options.style.display == "none") {
 		options.style.display = "inline";
+		document.getElementById("spriteEditor").style.display = "none";
 		document.getElementById("backEdit").value   = BACK_COLOR;  editBack();
 		document.getElementById("foreEdit").value   = FILL_COLOR;  editFore();
 		document.getElementById("buzzEdit").value   = BUZZ_COLOR;  editBuzz();
@@ -325,6 +326,7 @@ function toggleSpriteEditor() {
 	var editor = document.getElementById("spriteEditor");
 	if (editor.style.display == "none") {
 		editor.style.display = "inline";
+		document.getElementById("options").style.display = "none";
 		showPixels();
 	}
 	else {

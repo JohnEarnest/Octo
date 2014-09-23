@@ -90,35 +90,39 @@
 			bottom: 0;
 			width: 100%;
 		}
+		div.rightpanel {
+			position: absolute;
+		}
 	</style>
 </head>
 
 <body>
-	<div id="editor" style="padding-bottom: 40px;">
-		<div class="menubar">
-			<a href="https://github.com/JohnEarnest/Octo"><img src="images/logo.png" style="padding-right: 30px;"></img></a>
-			<button type="button" onClick="run()">Run</button>
-			<button type="button" onClick="compile()">Compile</button>
-			<button type="button" onClick="share()">Share</button>
-			<button type="button" onClick="decompileShowModal()">Load Binary</button>
-			<button type="button" onClick="save()">Save Binary</button>
-			<select id="framerate" onchange="framerate()">
-				<option value="7">7 Cycles/Frame</option>
-				<option value="15">15 Cycles/Frame</option>
-				<option value="20">20 Cycles/Frame</option>
-				<option value="30">30 Cycles/Frame</option>
-				<option value="100">100 Cycles/Frame</option>
-				<option value="200">200 Cycles/Frame</option>
-				<option value="500">500 Cycles/Frame</option>
-				<option value="1000">1000 Cycles/Frame</option>
-			</select>
-			<button type="button" onClick="toggleOptions();">Options...</button>
-			<button type="button" onClick="toggleSpriteEditor();">Sprite Editor</button>
-		</div>
+	<div class="menubar">
+		<a href="https://github.com/JohnEarnest/Octo"><img src="images/logo.png" style="padding-right: 30px;"></img></a>
+		<button type="button" onClick="run()">Run</button>
+		<button type="button" onClick="compile()">Compile</button>
+		<button type="button" onClick="share()">Share</button>
+		<button type="button" onClick="decompileShowModal()">Load Binary</button>
+		<button type="button" onClick="save()">Save Binary</button>
+		<select id="framerate" onchange="framerate()">
+			<option value="7">7 Cycles/Frame</option>
+			<option value="15">15 Cycles/Frame</option>
+			<option value="20">20 Cycles/Frame</option>
+			<option value="30">30 Cycles/Frame</option>
+			<option value="100">100 Cycles/Frame</option>
+			<option value="200">200 Cycles/Frame</option>
+			<option value="500">500 Cycles/Frame</option>
+			<option value="1000">1000 Cycles/Frame</option>
+		</select>
+		<button type="button" onClick="toggleOptions();">Options...</button>
+		<button type="button" onClick="toggleSpriteEditor();">Sprite Editor</button>
+	</div>
 
+	<div id="status" class="statusbar"></div>
+
+	<div style="padding-bottom: 40px;">
 		<center>
-		<table border="0"><tr><td>
-<textarea id="input"  rows="40" cols="80" spellcheck="false">
+			<textarea id="input"  rows="40" cols="80" spellcheck="false">
 # Chip8 is a virtual machine designed in 1977 for programming video games.
 # Octo is a high level assembler and simulator for Chip8.
 # Here is an example program which draws sprites on the screen
@@ -154,9 +158,9 @@
 	loop
 		body
 	again
-</textarea></td>
-		<td>
-			<div id="spriteEditor" style="display:none">
+
+			</textarea>
+			<div id="spriteEditor" class="rightpanel" style="display:none">
 				<center>
 					<b>Sprite Editor</b><br/>
 					Click and drag to draw.<br/>
@@ -166,49 +170,49 @@
 					<br/><input type="checkbox" id="spriteEditorSize" onchange="setSpriteEditorSize();">16x16 mode</input>
 				</center>
 			</div>
-		</td></tr></table>
-			<textarea id="output" style="display:none" rows="6" cols="80"></textarea><br/>
+			
+			<div id="options" class="rightpanel" style="display:none">
+				<center>
+					<br/><b>Colors:</b>
+					<table border=0>
+						<tr>
+							<td>Background</td>
+							<td><input type="text" size="7" id="backEdit" onchange="editBack();" onkeyup="editBack();"></input></td>
+							<td bgcolor="0xFF0000" id="backSample"  >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+						</tr>
+						<tr>
+							<td>Foreground</td>
+							<td><input type="text" size="7" id="foreEdit" onchange="editFore();" onkeyup="editFore();"></input></td>
+							<td bgcolor="0xFF0000" id="foreSample"  >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+						</tr>
+						<tr>
+							<td>Buzzer</td>
+							<td><input type="text" size="7" id="buzzEdit" onchange="editBuzz();" onkeyup="editBuzz();"></input></td>
+							<td bgcolor="0xFF0000" id="buzzSample"  >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+						</tr>
+						<tr>
+							<td>Silence</td>
+							<td><input type="text" size="7" id="silentEdit" onchange="editSilent();" onkeyup="editSilent();"></input></td>
+							<td bgcolor="0xFF0000" id="silentSample"  >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+						</tr>
+					</table>
+					<br/><b>Compatibility Options:</b>
+					<table>
+						<tr>
+							<td><input type="checkbox" id="shiftQuirks" onchange="setShiftQuirks();"></input></td>
+							<td><tt>&lt;&lt;=</tt> and <tt>&gt;&gt;=</tt> modify <tt>vx</tt> in place and ignore <tt>vy</tt>.</td>
+						</tr>
+						<tr>
+							<td><input type="checkbox" id="loadStoreQuirks" onchange="setLoadStoreQuirks();"></input></td>
+							<td><tt>load</tt> and <tt>store</tt> operations leave <tt>i</tt> unchanged.</td>
+						</tr>
+					</table>
+				</center>
+			</div>
 		</center>
-	</div>
 
-	<div id="status" class="statusbar"></div>
-
-	<div id="options" style="display:none">
 		<center>
-			<br/><b>Colors:</b>
-			<table border=0>
-				<tr>
-					<td>Background</td>
-					<td><textarea id="backEdit" rows="1" cols="7" onchange="editBack();" onkeyup="editBack();"></textarea></td>
-					<td bgcolor="0xFF0000" id="backSample"  >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
-				</tr>
-				<tr>
-					<td>Foreground</td>
-					<td><textarea id="foreEdit" rows="1" cols="7" onchange="editFore();" onkeyup="editFore();"></textarea></td>
-					<td bgcolor="0xFF0000" id="foreSample"  >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
-				</tr>
-				<tr>
-					<td>Buzzer</td>
-					<td><textarea id="buzzEdit" rows="1" cols="7" onchange="editBuzz();" onkeyup="editBuzz();"></textarea></td>
-					<td bgcolor="0xFF0000" id="buzzSample"  >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
-				</tr>
-				<tr>
-					<td>Silence</td>
-					<td><textarea id="silentEdit" rows="1" cols="7" onchange="editSilent();" onkeyup="editSilent();"></textarea></td>
-					<td bgcolor="0xFF0000" id="silentSample"  >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
-				</tr>
-			</table>
-			<br/><b>Compatibility Options:</b>
-			<table>
-				<tr>
-					<td><input type="checkbox" id="shiftQuirks" onchange="setShiftQuirks();"></input></td>
-					<td><tt>&lt;&lt;=</tt> and <tt>&gt;&gt;=</tt> modify <tt>vx</tt> in place and ignore <tt>vy</tt>.</td>
-				</tr>
-				<tr>
-					<td><input type="checkbox" id="loadStoreQuirks" onchange="setLoadStoreQuirks();"></input></td>
-					<td><tt>load</tt> and <tt>store</tt> operations leave <tt>i</tt> unchanged.</td>
-				</tr>
-			</table>
+			<textarea id="output" style="display:none;" rows="6" cols="80"></textarea>
 		</center>
 	</div>
 
