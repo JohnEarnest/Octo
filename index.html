@@ -105,7 +105,7 @@
 
 <body>
 	<div class="menubar">
-		<a href="https://github.com/JohnEarnest/Octo"><img src="images/logo.png" style="padding-right: 30px;vertical-align: middle;"></img></a>
+		<a href="https://github.com/JohnEarnest/Octo"><img src="images/logo.png" style="padding-right: 30px;vertical-align: middle;"/></a>
 		<button type="button" onClick="run()">Run</button>
 		<button type="button" onClick="compile()">Compile</button>
 		<button type="button" onClick="share()">Share</button>
@@ -170,7 +170,9 @@
 				<center>
 					Click and drag to draw.<br/>
 					Right-click and drag to erase.<br/><br/>
-					<input type="checkbox" id="spriteEditorSize" onchange="setSpriteEditorSize();">16x16 mode</input><br/>
+					<input type="checkbox" id="spriteEditorSize" onchange="setSpriteEditorSize();">
+					<label for="spriteEditorSize">16x16 mode</label>
+					<br/>
 					<canvas id="draw" width="200" height="375" style="border:1px solid;"></canvas><br/>
 					<textarea id="spriteData" rows="3" cols="25" onchange="editHex();" onkeyup="editHex();"></textarea>
 				</center>
@@ -181,33 +183,33 @@
 				<table border=0>
 					<tr>
 						<td>Background</td>
-						<td><input type="text" size="7" id="backEdit" onchange="editBack();" onkeyup="editBack();"></input></td>
+						<td><input type="text" size="7" id="backEdit" onchange="editBack();" onkeyup="editBack();"></td>
 						<td bgcolor="0xFF0000" id="backSample"  >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
 					</tr>
 					<tr>
 						<td>Foreground</td>
-						<td><input type="text" size="7" id="foreEdit" onchange="editFore();" onkeyup="editFore();"></input></td>
+						<td><input type="text" size="7" id="foreEdit" onchange="editFore();" onkeyup="editFore();"></td>
 						<td bgcolor="0xFF0000" id="foreSample"  >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
 					</tr>
 					<tr>
 						<td>Buzzer</td>
-						<td><input type="text" size="7" id="buzzEdit" onchange="editBuzz();" onkeyup="editBuzz();"></input></td>
+						<td><input type="text" size="7" id="buzzEdit" onchange="editBuzz();" onkeyup="editBuzz();"></td>
 						<td bgcolor="0xFF0000" id="buzzSample"  >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
 					</tr>
 					<tr>
 						<td>Silence</td>
-						<td><input type="text" size="7" id="silentEdit" onchange="editSilent();" onkeyup="editSilent();"></input></td>
+						<td><input type="text" size="7" id="silentEdit" onchange="editSilent();" onkeyup="editSilent();"></td>
 						<td bgcolor="0xFF0000" id="silentSample"  >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
 					</tr>
 				</table>
 				<h3>Compatibility</h3>
 				<table>
 					<tr>
-						<td><input type="checkbox" id="shiftQuirks" onchange="setShiftQuirks();"></input></td>
+						<td><input type="checkbox" id="shiftQuirks" onchange="setShiftQuirks();"></td>
 						<td><tt>&lt;&lt;=</tt> and <tt>&gt;&gt;=</tt> modify <tt>vx</tt> in place and ignore <tt>vy</tt>.</td>
 					</tr>
 					<tr>
-						<td><input type="checkbox" id="loadStoreQuirks" onchange="setLoadStoreQuirks();"></input></td>
+						<td><input type="checkbox" id="loadStoreQuirks" onchange="setLoadStoreQuirks();"></td>
 						<td><tt>load</tt> and <tt>store</tt> operations leave <tt>i</tt> unchanged.</td>
 					</tr>
 				</table>
@@ -258,20 +260,20 @@
 				title="close"
 				src="images/close.png"
 				onclick="keyUp({keyCode:27})"
-			></img>
+			/>
 			<img
 				title="toggle keypad"
 				src="images/keypad.png"
 				onclick="toggleKeypad()"
 				style="padding-left: 10px;"
-			></img>
+			/>
 			<img
 				id="continueButton"
 				title="continue"
 				src="images/continue.png"
 				onclick="clearBreakpoint()"
 				style="padding-left: 10px; display:none;"
-			></img>
+			/>
 		</div>
 
 		<div class="debugger" id="registerView" style="display:none">
@@ -285,7 +287,7 @@
 				title="close"
 				src="images/close.png"
 				onclick="decompileClose()"
-			></img>
+			/>
 		</div>
 		<div class="decompilebox">
 			<p style="margin: 10px;">
@@ -302,12 +304,12 @@
 				<button type="button" onclick="decompileRun()">Run</button>
 				<button type="button" onclick="decompileFile()">Open File...</button>
 			</center>
-			<input type="file" id="fileinput" onchange="decompileRequestLoad()" style="display:none"></input>
+			<input type="file" id="fileinput" onchange="decompileRequestLoad()" style="display:none">
 		</div>
 	</div>
 
 	<div class="lightbox" style="display:none" id="decompileWork">
-		<img src="images/load.gif" class="centericon"></img>
+		<img src="images/load.gif" class="centericon"/>
 	</div>
 
 	<script src="js/compiler.js"></script>
