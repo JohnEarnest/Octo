@@ -247,6 +247,22 @@ document.getElementById("input").onkeydown = function(event) {
 
 ////////////////////////////////////
 //
+//   Manual
+//
+////////////////////////////////////
+
+function toggleManual() {
+	var manual = document.getElementById("manual");
+	if (manual.style.display == "none") {
+		manual.style.display = "inline";
+	}
+	else {
+		manual.style.display = "none";
+	}
+}
+
+////////////////////////////////////
+//
 //   Configuration options:
 //
 ////////////////////////////////////

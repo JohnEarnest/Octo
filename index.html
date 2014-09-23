@@ -100,6 +100,12 @@
 		div.rightpanel {
 			position: absolute;
 		}
+		div.leftpanel {
+			position: absolute;
+			background-color:white;
+			left: 5px;
+			padding-bottom: 40px;
+		}
 	</style>
 </head>
 
@@ -123,14 +129,18 @@
 			<option value="500">500 Cycles/Frame</option>
 			<option value="1000">1000 Cycles/Frame</option>
 		</select>
+		<button type="button" onClick="toggleManual();">Manual</button>
 		<button type="button" onClick="toggleOptions();">Options</button>
 		<button type="button" onClick="toggleSpriteEditor();">Sprite Editor</button>
 	</div>
 
-	<div id="status" class="statusbar"></div>
-
 	<div style="padding-bottom: 40px;">
 		<center>
+			<div id="manual" class="leftpanel" style="display:none">
+				<h3>Manual</h3>
+				<iframe src="https://johnearnest.github.io/Octo/docs/Manual.html" width="450" height="100%"></iframe>
+			</div>
+
 			<textarea id="input"  rows="40" cols="80" spellcheck="false">
 # Chip8 is a virtual machine designed in 1977 for programming video games.
 # Octo is a high level assembler and simulator for Chip8.
@@ -223,6 +233,8 @@
 			<textarea id="output" style="display:none;" rows="6" cols="80"></textarea>
 		</center>
 	</div>
+
+	<div id="status" class="statusbar"></div>
 
 	<div class="lightbox" id="emulator" style="display:none">
 		<div class="canv">
