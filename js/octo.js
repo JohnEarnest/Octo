@@ -85,16 +85,6 @@ function reset() {
 	clearBreakpoint();
 }
 
-function save() {
-	var bytes = new Uint8Array(compile());
-	var binaryString = "";
-	for(var z = 0; z < bytes.byteLength; z++) {
-		binaryString += String.fromCharCode(bytes[z]);
-	}
-	var dataUri = "data:application/octet-stream;base64," + btoa(binaryString);
-	window.open(dataUri);
-}
-
 function share() {
 	// cribbed from increpare/Puzzlescript/js/toolbar.js
 	var xhr = new XMLHttpRequest();
