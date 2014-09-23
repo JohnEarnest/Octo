@@ -624,3 +624,48 @@ function decompileProcess() {
 		window.setTimeout(decompileProcess, 0);
 	}
 }
+
+
+////////////////////////////////////
+//
+//   Example Gallery:
+//
+////////////////////////////////////
+
+function loadExample() {
+	var v = document.getElementById("examples").value;
+	if (v == "") { return; }
+	var xhr = new XMLHttpRequest();
+	xhr.open("GET", v);
+	xhr.onreadystatechange = function() {
+		if (xhr.readyState != 4 || xhr.status != 200) {
+			return;
+		}
+		var result = JSON.parse(xhr.responseText);
+		var stripped = result["content"].replace(/(?:\r\n|\r|\n)/g, "");
+		var decoded = window.atob(stripped);
+		document.getElementById("input").value = decoded;
+	}
+	xhr.send();
+}
+
+function listExamples() {
+	var xhr = new XMLHttpRequest();
+	var exampledir = "https://api.github.com/repos/JohnEarnest/Octo/contents/examples";
+	xhr.open("GET", exampledir);
+	xhr.onreadystatechange = function() {
+		if (xhr.readyState != 4 || xhr.status != 200) {
+			return;
+		}
+		var result = JSON.parse(xhr.responseText);
+		for(var index = 0; index < result.length; index++) {
+			var option = document.createElement("option");
+			option.text = result[index]["name"];
+			option.value = result[index]["url"];
+			document.getElementById("examples").add(option);
+		}
+	}
+	xhr.send();
+}
+
+listExamples();

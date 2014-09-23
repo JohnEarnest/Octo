@@ -110,6 +110,9 @@
 		<button type="button" onClick="compile()">Compile</button>
 		<button type="button" onClick="share()">Share</button>
 		<button type="button" onClick="decompileShowModal()">Load</button>
+		<select id="examples" onchange="loadExample()">
+			<option value="">Examples...</option>
+		</select>
 		<select id="framerate" onchange="framerate()">
 			<option value="7">7 Cycles/Frame</option>
 			<option value="15">15 Cycles/Frame</option>
