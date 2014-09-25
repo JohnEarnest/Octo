@@ -1,0 +1,116 @@
+###########################################
+#
+#  An Octo implementation of an in-place
+#  heap sort capable of operating on
+#  arrays of a fixed size up to 255 elements.
+#
+###########################################
+
+:const SIZE   16
+:const SIZE-1 15
+:const LIMIT   7 # (SIZE/2)+1
+
+:alias left-val  v0
+:alias right-val v1
+:alias start     v2
+:alias root      v3
+:alias end       v4
+:alias best      v5
+:alias left      v6
+:alias best-val  v7
+:alias root-val  v8
+
+: heap-sort
+	start := LIMIT
+	end   := SIZE
+	loop
+		root := start
+		sift-down
+		start += -1
+		if start != -1 then
+	again
+
+	start := SIZE-1
+	loop
+		# swap data[0] with data[start]:
+		i := data
+		load v0
+		vf := v0
+
+		i := data
+		i += start
+		load v0
+		i := data
+		save v0
+
+		i := data
+		i += start
+		v0 := vf
+		save v0
+
+		start += -1
+		root := 0
+		end := start
+		sift-down
+
+		if start != 0 then
+	again
+;
+
+: assign-best
+	best     := left
+	best-val := left-val
+	jump found-best
+
+: sift-down
+	i := data
+	i += root
+	load v0
+	root-val := v0
+
+	loop
+		left <<= root
+
+		if left > end then return
+
+		i := data
+		i += left
+		load v1
+
+		best := left
+		best += 1
+		best-val := right-val
+
+		if left-val > right-val then jump assign-best
+		if left == end then jump assign-best
+		: found-best
+
+		if root-val >= best-val then return
+
+		i := data
+		i += root
+		v0 := best-val
+		save v0
+
+		i := data
+		i += best
+		v0 := root-val
+		save v0
+
+		root := best
+	again
+
+###########################################
+#
+#  Usage Example
+#
+###########################################
+
+: data  14 5 15 6 1 3 10 7 0 9 11 4 2 13 8 12
+
+: main
+	heap-sort
+	i := data
+	load vf
+	:breakpoint sort-complete
+;

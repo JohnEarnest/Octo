@@ -32,7 +32,7 @@ Statements
 - `clear`           clear the screen.
 - `bcd vx`          decode vx into BCD at I, I+1, I+2.
 - `save vx`         save registers v0-vx to I.
-- `load vy`         load registers v0-vx from I.
+- `load vx`         load registers v0-vx from I.
 - `sprite vx vy n`  draw a sprite at x/y position, n rows tall.
 - `jump n`          jump to address.
 - `jump0 n`         jump to address n + v0.

@@ -1,0 +1,73 @@
+###########################################
+#
+#  An Octo implementation of an in-place
+#  selection sort capable of operating on
+#  arrays of a fixed size up to 256 elements.
+#
+###########################################
+
+:const SIZE   16
+:const SIZE-1 15
+
+:alias  here       v1
+:alias  rest       v2
+:alias  min-index  v3
+:alias  min-value  v4
+:alias  here-value v5
+
+: selection-sort
+	here := 0
+	loop
+		min-index := here
+		i := data
+		i += here
+		load v0
+		min-value  := v0
+		here-value := v0
+
+		rest := here
+		rest += 1
+		i := data
+		i += rest
+		loop
+			load v0
+			if v0 >= min-value then jump no-better
+				min-index := rest
+				min-value := v0
+			: no-better
+
+			rest += 1
+			if rest != SIZE then
+		again
+
+		if min-index == here then jump no-swap
+			v0 := here-value
+			i := data
+			i += min-index
+			save v0
+
+			v0 := min-value
+			i := data
+			i += here
+			save v0
+		: no-swap
+
+		here += 1
+		if here != SIZE-1 then
+	again
+;
+
+###########################################
+#
+#  Usage Example
+#
+###########################################
+
+: data  14 5 15 6 1 3 10 7 0 9 11 4 2 13 8 12
+
+: main
+	selection-sort
+	i := data
+	load vf
+	:breakpoint sort-complete
+;

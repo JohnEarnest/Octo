@@ -1,0 +1,201 @@
+###########################################
+#
+#  An Octo implementation of an unusual
+#  sorting algorithm which combines an
+#  optimal sorting network and a merge pass.
+#  This implementation is designed to sort
+#  exactly 16 items. The 'sort-8' subroutine
+#  can be used alone to sort the values
+#  stored in the bottom 8 registers.
+#
+###########################################
+
+: sort-8
+	# Yes, this is generated code.
+	# I'm crazy, but not THAT crazy.
+
+	if v0 <= v1 then jump l-0
+		vf := v0
+		v0 := v1
+		v1 := vf
+	: l-0
+	if v2 <= v3 then jump l-1
+		vf := v2
+		v2 := v3
+		v3 := vf
+	: l-1
+	if v4 <= v5 then jump l-2
+		vf := v4
+		v4 := v5
+		v5 := vf
+	: l-2
+	if v6 <= v7 then jump l-3
+		vf := v6
+		v6 := v7
+		v7 := vf
+	: l-3
+	if v0 <= v2 then jump l-4
+		vf := v0
+		v0 := v2
+		v2 := vf
+	: l-4
+	if v4 <= v6 then jump l-5
+		vf := v4
+		v4 := v6
+		v6 := vf
+	: l-5
+	if v1 <= v3 then jump l-6
+		vf := v1
+		v1 := v3
+		v3 := vf
+	: l-6
+	if v0 <= v4 then jump l-7
+		vf := v0
+		v0 := v4
+		v4 := vf
+	: l-7
+	if v5 <= v7 then jump l-8
+		vf := v5
+		v5 := v7
+		v7 := vf
+	: l-8
+	if v3 <= v7 then jump l-9
+		vf := v3
+		v3 := v7
+		v7 := vf
+	: l-9
+	if v1 <= v5 then jump l-10
+		vf := v1
+		v1 := v5
+		v5 := vf
+	: l-10
+	if v3 <= v5 then jump l-11
+		vf := v3
+		v3 := v5
+		v5 := vf
+	: l-11
+	if v2 <= v6 then jump l-12
+		vf := v2
+		v2 := v6
+		v6 := vf
+	: l-12
+	if v2 <= v4 then jump l-13
+		vf := v2
+		v2 := v4
+		v4 := vf
+	: l-13
+	if v1 <= v2 then jump l-14
+		vf := v1
+		v1 := v2
+		v2 := vf
+	: l-14
+	if v3 <= v6 then jump l-15
+		vf := v3
+		v3 := v6
+		v6 := vf
+	: l-15
+	if v2 <= v4 then jump l-16
+		vf := v2
+		v2 := v4
+		v4 := vf
+	: l-16
+	if v5 <= v6 then jump l-17
+		vf := v5
+		v5 := v6
+		v6 := vf
+	: l-17
+	if v3 <= v4 then jump l-18
+		vf := v3
+		v3 := v4
+		v4 := vf
+	: l-18
+;
+
+: heap1 0 0 0 0 0 0 0 0
+: heap2 0 0 0 0 0 0 0 0
+
+:alias val1   v8
+:alias val2   v9
+:alias dest   va
+:alias index1 vb
+:alias index2 vc
+
+: fused-sort
+	i := data
+	load v7
+	sort-8
+	val1 := v0
+	i := heap1
+	save v7
+
+	i := data
+	load v7
+	load v7 # cheaper than adding an offset of 8
+	sort-8
+	val2 := v0
+	i := heap2
+	save v7
+
+	index1 := 1
+	index2 := 1
+	dest   := 0
+
+: merge
+	if val1 > val2 then jump merge-2
+	append-1
+	if index1 != 9 then jump merge
+	loop
+		append-2
+		if dest == 16 then return
+	again
+
+: merge-2
+	append-2
+	if index2 != 9 then jump merge
+	loop
+		append-1
+		if dest == 16 then return
+	again
+
+: append-1
+	v0 := val1
+	i := data
+	i += dest
+	save v0
+	dest += 1
+
+	i := heap1
+	i += index1
+	load v0
+	val1 := v0
+	index1 += 1
+;
+
+: append-2
+	v0 := val2
+	i := data
+	i += dest
+	save v0
+	dest += 1
+
+	i := heap2
+	i += index2
+	load v0
+	val2 := v0
+	index2 += 1
+;
+
+###########################################
+#
+#  Usage Example
+#
+###########################################
+
+: data  14 5 15 6 1 3 10 7 0 9 11 4 2 13 8 12
+
+: main
+	fused-sort
+	i := data
+	load vf
+	:breakpoint sort-complete
+;
