@@ -1,0 +1,91 @@
+<html>
+	<head>
+		<title>Octo Embeddable</title>
+	</head>
+	<body style="margin:0px; padding:0px;">
+		<canvas id="target" width="640" height="320"></canvas>
+		<script src="js/compiler.js"></script>
+		<script src="js/emulator.js"></script>
+		<script src="js/shared.js"></script>
+
+		<script>
+			function keyDown(event) {
+				if (!(event.keyCode in emulator.keys)) {
+					emulator.keys[event.keyCode] = true;
+				}
+			}
+
+			function keyUp(event) {
+				if (event.keyCode in emulator.keys) {
+					delete emulator.keys[event.keyCode];
+				}
+				if (emulator.waiting) {
+					for(var z = 0; z < 16; z++) {
+						if (keymap[z] == event.keyCode) {
+							emulator.waiting = false;
+							emulator.v[emulator.waitReg] = z;
+							return;
+						}
+					}
+				}
+			}
+
+			function render() {
+				if (emulator.halted) { return; }
+				for(var z = 0; (z < emulator.ticksPerFrame) && (!emulator.waiting); z++) {
+					emulator.tick();
+				}
+				if (emulator.dt > 0) { emulator.dt--; }
+				if (emulator.st > 0) { emulator.st--; }
+				renderDisplay();
+			}
+
+			function run(code) {
+				var compiler = new Compiler(code);
+				try { compiler.go(); }
+				catch(error) {
+					document.write("Compiler error: " + error);
+					return;
+				}
+				emulator.init({ rom : compiler.rom });
+				emulator.importFlags = function() { return JSON.parse(localStorage.getItem("octoFlagRegisters")); }
+				emulator.exportFlags = function(flags) { localStorage.setItem("octoFlagRegisters", JSON.stringify(flags)); }
+				window.addEventListener("keydown", keyDown, false);
+				window.addEventListener("keyup"  , keyUp  , false);
+				intervalHandle = setInterval(render, 1000/60);
+			}
+
+			function runGist() {
+				var xhr = new XMLHttpRequest();
+				var gistId = location.search.match(/gist=(\w+)/);
+				if (!gistId) { return; }
+				xhr.open('GET', 'https://api.github.com/gists/' + gistId[1]);
+				xhr.onreadystatechange = function() {
+					if (xhr.readyState != 4) { return; }
+					var result = JSON.parse(xhr.responseText);
+					var options = JSON.parse(result.files["options.json"].content);
+					emulator.ticksPerFrame = options["tickrate"];
+					if (options["fillColor"      ]) { emulator.fillColor       = options["fillColor"      ]; }
+					if (options["backgroundColor"]) { emulator.backColor       = options["backgroundColor"]; }
+					if (options["buzzColor"      ]) { emulator.buzzColor       = options["buzzColor"      ]; }
+					if (options["quietColor"     ]) { emulator.quietColor      = options["quietColor"     ]; }
+					if (options["shiftQuirks"    ]) { emulator.shiftQuirks     = options["shiftQuirks"    ]; }
+					if (options["loadStoreQuirks"]) { emulator.loadStoreQuirks = options["loadStoreQuirks"]; }
+					run(result.files["prog.ch8"].content);
+				}
+				xhr.send();
+			}
+
+			function setup() {
+				if (!(location.search.match(/gist=(\w+)/))) {
+					document.write("No gist ID specified.");
+					return;
+				}
+				var scaleArg = location.search.match(/scale=([1-9])/);
+				if (scaleArg) { setRenderTarget(parseInt(scaleArg[1]), "target"); }
+				runGist();
+			}
+			window.onload = setup;
+		</script>
+	</body>
+</html>

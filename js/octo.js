@@ -22,7 +22,6 @@ function display(rom) {
 ////////////////////////////////////
 
 var intervalHandle;
-var emulator = new Emulator();
 
 function run() {
 	runRom(compile());
@@ -160,27 +159,6 @@ function runGist() {
 //   Emulator Execution
 //
 ////////////////////////////////////
-
-function renderDisplay() {
-	var c = document.getElementById("target");
-	var g = c.getContext("2d");
-
-	g.setTransform(1, 0, 0, 1, 0, 0);
-	g.fillStyle = emulator.backColor;
-	g.fillRect(0, 0, 640, 320);
-	g.fillStyle = emulator.fillColor;
-
-	if (emulator.hires) {
-		for(var z = 0; z < 64*128; z++) {
-			if (emulator.p[z]) { g.fillRect(Math.floor(z%128)*5, Math.floor(z/128)*5, 5, 5); }
-		}
-	}
-	else {
-		for(var z = 0; z < 32*64; z++) {
-			if (emulator.p[z]) { g.fillRect(Math.floor(z%64)*10, Math.floor(z/64)*10, 10, 10); }
-		}
-	}
-}
 
 function render() {
 	for(var z = 0; (z < emulator.ticksPerFrame) && (!emulator.waiting); z++) {
