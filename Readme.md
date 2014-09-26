@@ -29,3 +29,21 @@ The Octo assembler can also be used as a command-line tool via a [Node.js](http:
 		0000004
 
 The `--decompile` option can be used to send an existing Chip8 binary through Octo's general-purpose decompiler.
+
+Octo has a `share` feature which stores source code and configuration metadata in Github gists. Following one of these links will run the program and then you can back out into the Octo IDE. Alternatively, you can use these urls to embed a Chip8 emulator in an `iframe` on your websites:
+
+	<iframe
+		src="http://johnearnest.github.io/Octo/embed.html?scale=2&gist=f3685a75817cde6d5c0d"
+		width="256"
+		height="128"
+	></iframe>
+
+<iframe
+	src="http://johnearnest.github.io/Octo/embed.html?scale=2&gist=f3685a75817cde6d5c0d"
+	width="256"
+	height="128"
+></iframe>
+
+(Special thanks to rmmh.)
+
+The `scale` argument is optional and specifies the number of pixels which should make up a high-resolution mode Chip8 pixel. Low-resolution mode pixels will be twice this size.
