@@ -81,7 +81,7 @@
 					document.write("No gist ID specified.");
 					return;
 				}
-				var scaleArg = location.search.match(/scale=([1-9])/);
+				var scaleArg = location.search.match(/scale=([0-9]+)/);
 				if (scaleArg) { setRenderTarget(parseInt(scaleArg[1]), "target"); }
 				runGist();
 			}
