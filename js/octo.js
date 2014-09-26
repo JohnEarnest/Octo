@@ -2,7 +2,7 @@
 
 ////////////////////////////////////
 //
-//   Prettyprinting:
+//   Prettyprinting
 //
 ////////////////////////////////////
 
@@ -17,9 +17,16 @@ function display(rom) {
 
 ////////////////////////////////////
 //
-//   UI Glue:
+//   Emulator Setup
 //
 ////////////////////////////////////
+
+var intervalHandle;
+var emulator = new Emulator();
+
+function run() {
+	runRom(compile());
+}
 
 function compile() {
 	var input  = document.getElementById("input");
@@ -61,17 +68,14 @@ function compile() {
 	};
 }
 
-var intervalHandle;
-
-function run() {
-	runRom(compile());
-}
-
 function runRom(rom) {
 	if (rom === null) { return; }
-	init(rom);
+	emulator.exitVector = reset;
+	emulator.importFlags = function() { return JSON.parse(localStorage.getItem("octoFlagRegisters")); }
+	emulator.exportFlags = function(flags) { localStorage.setItem("octoFlagRegisters", JSON.stringify(flags)); }
+	emulator.init(rom);
 	document.getElementById("emulator").style.display = "inline";
-	document.getElementById("emulator").style.backgroundColor = QUIET_COLOR;
+	document.getElementById("emulator").style.backgroundColor = emulator.quietColor;
 	window.addEventListener("keydown", keyDown, false);
 	window.addEventListener("keyup"  , keyUp  , false);
 	intervalHandle = setInterval(render, 1000/60);
@@ -90,26 +94,27 @@ function share() {
 	var xhr = new XMLHttpRequest();
 	xhr.open('POST', 'https://api.github.com/gists');
 	xhr.onreadystatechange = function() {
-		if(xhr.readyState !== 4)
-			return;
+		if (xhr.readyState !== 4) { return; }
 		var result = JSON.parse(xhr.responseText);
 		if (xhr.status === 403) {
 			alert(result.message);
-		} else if (xhr.status !== 200 && xhr.status !== 201) {
+		}
+		else if (xhr.status !== 200 && xhr.status !== 201) {
 			alert("HTTP Error "+ xhr.status + ' - ' + xhr.statusText);
-		} else {
+		}
+		else {
 			window.location.href = window.location.href.replace(/(index.html|\?gist=.*)*$/, 'index.html?gist=' + result.id);
 		}
 	}
 	var prog = document.getElementById("input").value;
 	var options = JSON.stringify({
-		"tickrate"        : TICKS_PER_FRAME,
-		"backgroundColor" : BACK_COLOR,
-		"fillColor"       : FILL_COLOR,
-		"buzzColor"       : BUZZ_COLOR,
-		"quietColor"      : QUIET_COLOR,
-		"shiftQuirks"     : SHIFT_QUIRKS,
-		"loadStoreQuirks" : LOAD_STORE_QUIRKS
+		"tickrate"        : emulator.ticksPerFrame,
+		"fillColor"       : emulator.fillColor,
+		"backgroundColor" : emulator.backColor,
+		"buzzColor"       : emulator.buzzColor,
+		"quietColor"      : emulator.quietColor,
+		"shiftQuirks"     : emulator.shiftQuirks,
+		"loadStoreQuirks" : emulator.loadStoreQuirks
 	});
 	xhr.send(JSON.stringify({
 		"description" : "Octo Chip8 Program",
@@ -118,8 +123,8 @@ function share() {
 			"readme.txt" : {
 				"content": "Play this game by pasting the program into http://johnearnest.github.io/Octo/"
 			},
-			"prog.ch8" : {"content": prog},
-			"options.json": {"content": options}
+			"prog.ch8" : { "content": prog },
+			"options.json": { "content": options }
 		}
 	}));
 }
@@ -127,8 +132,7 @@ function share() {
 function runGist() {
 	var xhr = new XMLHttpRequest();
 	var gistId = location.search.match(/gist=(\w+)/);
-	if (!gistId)
-		return;
+	if (!gistId) { return; }
 	xhr.open('GET', 'https://api.github.com/gists/' + gistId[1]);
 	xhr.onreadystatechange = function() {
 		if (xhr.readyState == 4 && (xhr.status == 200 || xhr.status !== 201)) {
@@ -138,77 +142,75 @@ function runGist() {
 			var framerateNum = options["tickrate"]|0;
 			var framerateEl = document.getElementById("framerate");
 			framerateEl.value = framerateNum;
-			if (framerateEl.value == "") {
-				TICKS_PER_FRAME = framerateNum;
-			} else {
-				TICKS_PER_FRAME = framerateEl.value;
-			}
-			if (options["backgroundColor"]) { BACK_COLOR  = options["backgroundColor"]; }
-			if (options["fillColor"      ]) { FILL_COLOR  = options["fillColor"      ]; }
-			if (options["buzzColor"      ]) { BUZZ_COLOR  = options["buzzColor"      ]; }
-			if (options["quietColor"     ]) { QUIET_COLOR = options["quietColor"     ]; }
-			if (options["shiftQuirks"    ]) { SHIFT_QUIRKS = options["shiftQuirks"   ]; }
-			if (options["loadStoreQuirks"]) { LOAD_STORE_QUIRKS = options["loadStoreQuirks"]; }
+			emulator.ticksPerFrame = (framerateEl.value == "") ? framerateNum : framerateEl.value;
+			if (options["fillColor"      ]) { emulator.fillColor       = options["fillColor"      ]; }
+			if (options["backgroundColor"]) { emulator.backColor       = options["backgroundColor"]; }
+			if (options["buzzColor"      ]) { emulator.buzzColor       = options["buzzColor"      ]; }
+			if (options["quietColor"     ]) { emulator.quietColor      = options["quietColor"     ]; }
+			if (options["shiftQuirks"    ]) { emulator.shiftQuirks     = options["shiftQuirks"    ]; }
+			if (options["loadStoreQuirks"]) { emulator.loadStoreQuirks = options["loadStoreQuirks"]; }
 			run();
 		}
 	}
 	xhr.send();
 }
 
-function framerate() {
-	TICKS_PER_FRAME = document.getElementById("framerate").value;
-}
+////////////////////////////////////
+//
+//   Emulator Execution
+//
+////////////////////////////////////
 
 function renderDisplay() {
 	var c = document.getElementById("target");
 	var g = c.getContext("2d");
 
 	g.setTransform(1, 0, 0, 1, 0, 0);
-	g.fillStyle = BACK_COLOR;
+	g.fillStyle = emulator.backColor;
 	g.fillRect(0, 0, 640, 320);
-	g.fillStyle = FILL_COLOR;
+	g.fillStyle = emulator.fillColor;
 
-	if (hires) {
+	if (emulator.hires) {
 		for(var z = 0; z < 64*128; z++) {
-			if (p[z]) { g.fillRect(Math.floor(z%128)*5, Math.floor(z/128)*5, 5, 5); }
+			if (emulator.p[z]) { g.fillRect(Math.floor(z%128)*5, Math.floor(z/128)*5, 5, 5); }
 		}
 	}
 	else {
 		for(var z = 0; z < 32*64; z++) {
-			if (p[z]) { g.fillRect(Math.floor(z%64)*10, Math.floor(z/64)*10, 10, 10); }
+			if (emulator.p[z]) { g.fillRect(Math.floor(z%64)*10, Math.floor(z/64)*10, 10, 10); }
 		}
 	}
 }
 
 function render() {
-	for(var z = 0; (z < TICKS_PER_FRAME) && (!waiting); z++) {
-		if (breakpoint != true) {
-			tick();
-			if (pc in metadata.breakpoints) {
-				haltBreakpoint(metadata.breakpoints[pc]);
+	for(var z = 0; (z < emulator.ticksPerFrame) && (!emulator.waiting); z++) {
+		if (emulator.breakpoint != true) {
+			emulator.tick();
+			if (emulator.pc in emulator.metadata.breakpoints) {
+				haltBreakpoint(emulator.metadata.breakpoints[emulator.pc]);
 			}
 		}
 	}
-	if (breakpoint != true) {
-		if (dt > 0) { dt--; }
-		if (st > 0) { st--; }
+	if (emulator.breakpoint != true) {
+		if (emulator.dt > 0) { emulator.dt--; }
+		if (emulator.st > 0) { emulator.st--; }
 	}
-
 	renderDisplay();
-
-	if (halted) { return; }
-	document.getElementById("emulator").style.backgroundColor = (st > 0) ? BUZZ_COLOR : QUIET_COLOR;
+	if (emulator.halted) { return; }
+	document.getElementById("emulator").style.backgroundColor = (emulator.st > 0) ? emulator.buzzColor : emulator.quietColor;
 }
 
 function keyDown(event) {
-	if (!(event.keyCode in keys)) { keys[event.keyCode] = true; }
+	if (!(event.keyCode in emulator.keys)) {
+		emulator.keys[event.keyCode] = true;
+	}
 }
 
 function keyUp(event) {
-	if (event.keyCode in keys) { delete keys[event.keyCode]; }
+	if (event.keyCode in emulator.keys) { delete emulator.keys[event.keyCode]; }
 	if (event.keyCode == 27) { reset(); }
 	if (event.keyCode == 73) { // i
-		if (breakpoint) {
+		if (emulator.breakpoint) {
 			clearBreakpoint();
 		}
 		else {
@@ -216,22 +218,28 @@ function keyUp(event) {
 		}
 	}
 	if (event.keyCode == 79) { // o
-		if (breakpoint) {
-			tick();
+		if (emulator.breakpoint) {
+			emulator.tick();
 			renderDisplay();
 			haltBreakpoint("single stepping");
 		}
 	}
-	if (waiting) {
+	if (emulator.waiting) {
 		for(var z = 0; z < 16; z++) {
-			if (KEYMAP[z] == event.keyCode) {
-				waiting = false;
-				v[waitReg] = z;
+			if (keymap[z] == event.keyCode) {
+				emulator.waiting = false;
+				emulator.v[emulator.waitReg] = z;
 				return;
 			}
 		}
 	}
 }
+
+////////////////////////////////////
+//
+//   Editor
+//
+////////////////////////////////////
 
 document.getElementById("input").onkeydown = function(event) {
 	if (event.keyCode == 9) {
@@ -263,34 +271,48 @@ function toggleManual() {
 
 ////////////////////////////////////
 //
-//   Configuration options:
+//   Options
 //
 ////////////////////////////////////
 
-function editBack() {
-	var val = document.getElementById("backEdit").value;
-	document.getElementById("backSample").bgColor = val;
-	BACK_COLOR = val;
-	showPixels();
+function framerate() {
+	emulator.ticksPerFrame = document.getElementById("framerate").value;
 }
 
 function editFore() {
 	var val = document.getElementById("foreEdit").value;
 	document.getElementById("foreSample").bgColor = val;
-	FILL_COLOR = val;
+	emulator.fillColor = val;
+	showPixels();
+}
+
+function editBack() {
+	var val = document.getElementById("backEdit").value;
+	document.getElementById("backSample").bgColor = val;
+	emulator.backColor = val;
 	showPixels();
 }
 
 function editBuzz() {
 	var val = document.getElementById("buzzEdit").value;
 	document.getElementById("buzzSample").bgColor = val;
-	BUZZ_COLOR = val;
+	emulator.buzzColor = val;
 }
 
 function editSilent() {
 	var val = document.getElementById("silentEdit").value;
 	document.getElementById("silentSample").bgColor = val;
-	QUIET_COLOR = val;
+	emulator.quietColor = val;
+}
+
+function setShiftQuirks() {
+	var check = document.getElementById("shiftQuirks");
+	emulator.shiftQuirks = check.checked;
+}
+
+function setLoadStoreQuirks() {
+	var check = document.getElementById("loadStoreQuirks");
+	emulator.loadStoreQuirks = check.checked;
 }
 
 function toggleOptions() {
@@ -298,28 +320,16 @@ function toggleOptions() {
 	if (options.style.display == "none") {
 		options.style.display = "inline";
 		document.getElementById("spriteEditor").style.display = "none";
-		document.getElementById("backEdit").value   = BACK_COLOR;  editBack();
-		document.getElementById("foreEdit").value   = FILL_COLOR;  editFore();
-		document.getElementById("buzzEdit").value   = BUZZ_COLOR;  editBuzz();
-		document.getElementById("silentEdit").value = QUIET_COLOR; editSilent();
-		document.getElementById("shiftQuirks").checked = SHIFT_QUIRKS;
-		document.getElementById("loadStoreQuirks").checked = LOAD_STORE_QUIRKS;
+		document.getElementById("foreEdit"       ).value   = emulator.fillColor;  editFore();
+		document.getElementById("backEdit"       ).value   = emulator.backColor;  editBack();
+		document.getElementById("buzzEdit"       ).value   = emulator.buzzColor;  editBuzz();
+		document.getElementById("silentEdit"     ).value   = emulator.quietColor; editSilent();
+		document.getElementById("shiftQuirks"    ).checked = emulator.shiftQuirks;
+		document.getElementById("loadStoreQuirks").checked = emulator.loadStoreQuirks;
 	}
 	else {
 		options.style.display = "none";
 	}
-}
-
-function setShiftQuirks() {
-	var check = document.getElementById("shiftQuirks");
-	if (check.checked) { SHIFT_QUIRKS = true;  }
-	else               { SHIFT_QUIRKS = false; }
-}
-
-function setLoadStoreQuirks() {
-	var check = document.getElementById("loadStoreQuirks");
-	if (check.checked) { LOAD_STORE_QUIRKS = true;  }
-	else               { LOAD_STORE_QUIRKS = false; }
 }
 
 ////////////////////////////////////
@@ -371,9 +381,9 @@ function setSpriteEditorSize() {
 function showPixels() {
 	var canvas = document.getElementById("draw");
 	var render = canvas.getContext("2d");
-	render.fillStyle = BACK_COLOR;
+	render.fillStyle = emulator.backColor;
 	render.fillRect(0, 0, canvas.width, canvas.height);
-	render.fillStyle = FILL_COLOR;
+	render.fillStyle = emulator.fillColor;
 	if (largeSprite) {
 		for(var row = 0; row < 16; row++) {
 			for(var col = 0; col < 16; col++) {
@@ -451,16 +461,16 @@ spriteCanvas.addEventListener("mouseout", release, false);
 
 ////////////////////////////////////
 //
-//   Virtual keypad stuff:
+//   Virtual Keypad
 //
 ////////////////////////////////////
 
 function buttonDn(key) {
-	keyDown({ keyCode: KEYMAP[key]});
+	keyDown({ keyCode: keymap[key]});
 }
 function buttonUp(key) {
-	if (KEYMAP[key] in keys) {
-		keyUp({ keyCode: KEYMAP[key]});
+	if (keymap[key] in emulator.keys) {
+		keyUp({ keyCode: keymap[key]});
 	}
 }
 
@@ -488,15 +498,15 @@ function toggleKeypad() {
 
 ////////////////////////////////////
 //
-//   Debugger:
+//   Debugger
 //
 ////////////////////////////////////
 
 function getLabel(address) {
 	var bestname = "hex-font";
 	var besta = 0;
-	for(var key in metadata.labels) {
-		var v = metadata.labels[key];
+	for(var key in emulator.metadata.labels) {
+		var v = emulator.metadata.labels[key];
 		if ((v > besta) && (v <= address)) {
 			bestname = key;
 			besta = v;
@@ -508,8 +518,8 @@ function getLabel(address) {
 
 function formatAliases(id) {
 	var names = [];
-	for(var key in metadata.aliases) {
-		if (metadata.aliases[key] == id) { names.push(key); }
+	for(var key in emulator.metadata.aliases) {
+		if (emulator.metadata.aliases[key] == id) { names.push(key); }
 	}
 	if (names.length == 0) { return ""; }
 	var ret = " (" + names[0];
@@ -524,24 +534,21 @@ function haltBreakpoint(breakName) {
 	var regs   = document.getElementById("registerView");
 	button.style.display = "inline";
 	regs.style.display = "inline";
-
 	var regdump =
-		"tick count: " + tickCounter + "<br>" +
+		"tick count: " + emulator.tickCounter + "<br>" +
 		"breakpoint: " + breakName + "<br>" +
-		"pc := " + hexFormat(pc) + getLabel(pc) + "<br>" +
-		"i := " + hexFormat(i) + getLabel(i) + "<br>";
+		"pc := " + hexFormat(emulator.pc) + getLabel(emulator.pc) + "<br>" +
+		"i := " + hexFormat(emulator.i) + getLabel(emulator.i) + "<br>";
 	for(var k = 0; k <= 0xF; k++) {
 		var hex = k.toString(16).toUpperCase();
-		regdump += "v" + hex + " := " + hexFormat(v[k]) + formatAliases(k) +"<br>";
+		regdump += "v" + hex + " := " + hexFormat(emulator.v[k]) + formatAliases(k) +"<br>";
 	}
-
 	regdump += "<br>inferred stack trace:<br>";
-	for(var x = 0; x < r.length; x++) {
-		regdump += hexFormat(r[x]) + getLabel(r[x]) + "<br>";
+	for(var x = 0; x < emulator.r.length; x++) {
+		regdump += hexFormat(emulator.r[x]) + getLabel(emulator.r[x]) + "<br>";
 	}
-
 	regs.innerHTML = regdump;
-	breakpoint = true;
+	emulator.breakpoint = true;
 }
 
 function clearBreakpoint() {
@@ -549,12 +556,12 @@ function clearBreakpoint() {
 	var regs   = document.getElementById("registerView");
 	button.style.display = "none";
 	regs.style.display = "none";
-	breakpoint = false;
+	emulator.breakpoint = false;
 }
 
 ////////////////////////////////////
 //
-//   Decompiler:
+//   Decompiler
 //
 ////////////////////////////////////
 
@@ -614,12 +621,10 @@ var decompileProgramLength = 0;
 function decompileStart() {
 	document.getElementById("decompileModal").style.display = "none";
 	document.getElementById("decompileWork").style.display = "inline";
-
 	var buffer = getDecompileData();
-
 	var quirks = {};
-	quirks['shiftQuirks'    ] = SHIFT_QUIRKS;
-	quirks['loadStoreQuirks'] = LOAD_STORE_QUIRKS;
+	quirks['shiftQuirks'    ] = emulator.shiftQuirks;
+	quirks['loadStoreQuirks'] = emulator.loadStoreQuirks;
 	analyzeInit(buffer, quirks);
 	decompileProgramLength = buffer.length;
 	window.setTimeout(decompileProcess, 0);
@@ -644,7 +649,7 @@ function decompileProcess() {
 
 ////////////////////////////////////
 //
-//   Example Gallery:
+//   Examples
 //
 ////////////////////////////////////
 
