@@ -38,12 +38,6 @@ Octo has a `share` feature which stores source code and configuration metadata i
 		height="128"
 	></iframe>
 
-<iframe
-	src="http://johnearnest.github.io/Octo/embed.html?scale=2&gist=f3685a75817cde6d5c0d"
-	width="256"
-	height="128"
-></iframe>
-
 (Special thanks to rmmh.)
 
 The `scale` argument is optional and specifies the number of pixels which should make up a high-resolution mode Chip8 pixel. Low-resolution mode pixels will be twice this size.
