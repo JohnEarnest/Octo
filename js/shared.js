@@ -2,14 +2,6 @@
 
 ////////////////////////////////////
 //
-//   Emulator Setup
-//
-////////////////////////////////////
-
-var emulator = new Emulator();
-
-////////////////////////////////////
-//
 //   Emulator Execution
 //
 ////////////////////////////////////
@@ -25,7 +17,7 @@ function setRenderTarget(scale, canvas) {
 	c.height = scaleFactor *  64;
 }
 
-function renderDisplay() {
+function renderDisplay(emulator) {
 	var c = document.getElementById(renderTarget);
 	var g = c.getContext("2d");
 	g.setTransform(1, 0, 0, 1, 0, 0);

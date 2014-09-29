@@ -22,6 +22,7 @@ function display(rom) {
 ////////////////////////////////////
 
 var intervalHandle;
+var emulator = new Emulator();
 
 function run() {
 	runRom(compile());
@@ -173,7 +174,7 @@ function render() {
 		if (emulator.dt > 0) { emulator.dt--; }
 		if (emulator.st > 0) { emulator.st--; }
 	}
-	renderDisplay();
+	renderDisplay(emulator);
 	if (emulator.halted) { return; }
 	document.getElementById("emulator").style.backgroundColor = (emulator.st > 0) ? emulator.buzzColor : emulator.quietColor;
 }

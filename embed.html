@@ -9,6 +9,8 @@
 		<script src="js/shared.js"></script>
 
 		<script>
+			var emulator = new Emulator();
+
 			function keyDown(event) {
 				if (!(event.keyCode in emulator.keys)) {
 					emulator.keys[event.keyCode] = true;
@@ -37,7 +39,7 @@
 				}
 				if (emulator.dt > 0) { emulator.dt--; }
 				if (emulator.st > 0) { emulator.st--; }
-				renderDisplay();
+				renderDisplay(emulator);
 			}
 
 			function run(code) {
