@@ -200,12 +200,12 @@ function Compiler(source) {
 		if (negated) {
 			if      (token == "=="  ) { token = "!="; }
 			else if (token == "!="  ) { token = "=="; }
-			else if (token == "key" ) { token == "-key"; }
-			else if (token == "-key") { token == "key"; }
-			else if (token == "<"   ) { token == ">="; }
-			else if (token == ">"   ) { token == "<="; }
-			else if (token == ">="  ) { token == "<"; }
-			else if (token == "<="  ) { token == ">"; }
+			else if (token == "key" ) { token = "-key"; }
+			else if (token == "-key") { token = "key"; }
+			else if (token == "<"   ) { token = ">="; }
+			else if (token == ">"   ) { token = "<="; }
+			else if (token == ">="  ) { token = "<"; }
+			else if (token == "<="  ) { token = ">"; }
 		}
 		if (token == "==") {
 			if (this.isRegister()) { this.inst(0x90 | reg, this.register() << 4); }
