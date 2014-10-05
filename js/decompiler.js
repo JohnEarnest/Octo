@@ -388,9 +388,9 @@ function apply(address) {
 	if (o == 0x8 && n == 0x2)   { binary  (function(a, b) { return a & b; });    } // vx &= vy
 	if (o == 0x8 && n == 0x3)   { binary  (function(a, b) { return a ^ b; });    } // vx ^= vy
 	if (o == 0x8 && n == 0x4)   { bincarry(function(a, b) { return [a +  b, a + b > 0xFF]; }); }
-	if (o == 0x8 && n == 0x5)   { bincarry(function(a, b) { return [a -  b, a > b];        }); }
+	if (o == 0x8 && n == 0x5)   { bincarry(function(a, b) { return [a -  b, a >= b];       }); }
 	if (o == 0x8 && n == 0x6)   { bincarry(function(a, b) { return [b >> 1, b & 1];        }); }
-	if (o == 0x8 && n == 0x7)   { bincarry(function(a, b) { return [b -  a, b > a];        }); }
+	if (o == 0x8 && n == 0x7)   { bincarry(function(a, b) { return [b -  a, b >= a];       }); }
 	if (o == 0x8 && n == 0xE)   { bincarry(function(a, b) { return [b << 1, b & 128];      }); }
 	if (o == 0xA)               { ret['i'] = single(nnn);        } // i := nnn
 	if (o == 0xC)               { ret[x]   = maskedrand();       } // vx := random nn

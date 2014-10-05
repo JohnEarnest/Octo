@@ -142,12 +142,12 @@ function Emulator() {
 				break;
 			case 0x5:
 				var t = this.v[x]-this.v[y];
-				this.v[0xF] = (this.v[x] > this.v[y]) ?1:0;
+				this.v[0xF] = (this.v[x] >= this.v[y]) ?1:0;
 				this.v[x] = (t & 0xFF);
 				break;
 			case 0x7:
 				var t = this.v[y]-this.v[x];
-				this.v[0xF] = (this.v[y] > this.v[x]) ?1:0;
+				this.v[0xF] = (this.v[y] >= this.v[x]) ?1:0;
 				this.v[x] = (t & 0xFF); break;
 			case 0x6:
 				if (this.shiftQuirks) { y = x; }

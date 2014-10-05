@@ -118,7 +118,7 @@ Try making your own sprite images using binary, or use the sprite editor built i
 
 Animation
 ---------
-We know how to draw sprites on the screen. To make animations we draw one or more sprites on the screen, erase the screen, redraw a slightly different scene and then repeat.
+We know how to draw sprites on the screen. To make animations we draw one or more sprites on the screen, erase some or all of the screen, redraw a slightly different scene and then repeat.
 
 To erase everything on the screen, use the statement `clear`. The statements `loop` and `again` are how we write a program that does something over and over. Normally, statements are carried out one after another, from the top of the program to the bottom. When `again` is encountered, Chip8 will skip back to the matching `loop` and resume from that point. Let's look at an example:
 
@@ -136,7 +136,7 @@ To erase everything on the screen, use the statement `clear`. The statements `lo
 			vb += 1
 		again
 
-Two of the lines in this program have a `#` symbol- this is called a *comment*. The computer ignores the rest of a line after the `#` and anything written there is for a human reader. Comments can be very helpful for explaining the meaning behind parts of your program or leaving yourself reminders for later. You can also "comment out" sections of statements by placing `#` symbols in front of them if you wish to temporarily (an reversibly) remove them from your program.
+Two of the lines in this program have a `#` symbol- this is called a *comment*. The computer ignores the rest of a line after the `#` and anything written there is for a human reader. Comments can be very helpful for explaining the meaning behind parts of your program or leaving yourself reminders for later. You can also "comment out" sections of statements by placing `#` symbols in front of them if you wish to temporarily (and reversibly) remove them from your program.
 
 This program first sets up registers to get ready to draw an arrow at an initial position on the screen (30 pixels over, 5 pixels down). Then we see a `loop` which marks the beginning of the instructions we will carry out repeatedly. `clear` erases the screen, `sprite` draws an arrow and then the number in register `vb` is increased by 1. Then we encounter `again` and we resume with `clear`. Since we change `vb` (the vertical position of the arrow) each time, the arrow appears to move from the top of the screen to the bottom. You'll also notice that as the sprite is drawn off the edge of the screen it automatically "wraps" around to the opposite edge.
 
