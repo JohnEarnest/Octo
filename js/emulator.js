@@ -194,7 +194,7 @@ function Emulator() {
 				break;
 			case 0x85:
 				this.flags = this.importFlags();
-				if (typeof this.flags == "undefined") {
+				if (typeof this.flags == "undefined" || this.flags == null) {
 					this.flags = [0, 0, 0, 0, 0, 0, 0, 0];
 				}
 				for(var z = 0; z <= x; z++) { this.v[z] = this.flags[z]; }
