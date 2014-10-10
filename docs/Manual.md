@@ -30,12 +30,14 @@ Statements
 
 - `return`          return from the current subroutine. (alias for ;)
 - `clear`           clear the screen.
-- `bcd vx`          decode vx into BCD at I, I+1, I+2.
-- `save vx`         save registers v0-vx to I.
-- `load vx`         load registers v0-vx from I.
+- `bcd vx`          decode vx into BCD at i, i+1, i+2.
+- `save vx`         save registers v0-vx to i.
+- `load vx`         load registers v0-vx from i.
 - `sprite vx vy n`  draw a sprite at x/y position, n rows tall.
 - `jump n`          jump to address.
 - `jump0 n`         jump to address n + v0.
+
+The `load` and `save` instructions postincrement `i` by `x`+1. For example, `load v3` will add 4 to `i` after loading 4 bytes of memory into the first 4 `v` registers.
 
 Assignments
 -----------
