@@ -199,7 +199,7 @@ function keyUp(event) {
 	if (event.keyCode == 79) { // o
 		if (emulator.breakpoint) {
 			emulator.tick();
-			renderDisplay();
+			renderDisplay(emulator);
 			haltBreakpoint("single stepping");
 		}
 	}
