@@ -47,13 +47,14 @@ function decompileFile(src, dst) {
 }
 
 function printUsage() {
-	console.log("usage: octo [--decompile] [--roundtrip] [--qshift] [--qloadstore] <source> [<destination>]");
+	console.log("usage: octo [--decompile] [--roundtrip] [--qshift] [--qloadstore] [--qvforder] <source> [<destination>]");
 	process.exit(1);
 }
 
 var options = {};
 options['shiftQuirks'    ] = extractFlag("--qshift");
 options['loadStoreQuirks'] = extractFlag("--qloadstore");
+options['vfOrderQuirks'  ] = extractFlag("--qvforder");
 var decompileFlag = extractFlag("--decompile");
 var roundTripFlag = extractFlag("--roundtrip");
 

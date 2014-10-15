@@ -73,6 +73,7 @@
 					if (options["quietColor"     ]) { emulator.quietColor      = options["quietColor"     ]; }
 					if (options["shiftQuirks"    ]) { emulator.shiftQuirks     = options["shiftQuirks"    ]; }
 					if (options["loadStoreQuirks"]) { emulator.loadStoreQuirks = options["loadStoreQuirks"]; }
+					if (options["vfOrderQuirks"  ]) { emulator.vfOrderQuirks   = options["vfOrderQuirks"  ]; }
 					run(result.files["prog.ch8"].content);
 				}
 				xhr.send();

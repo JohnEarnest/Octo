@@ -41,3 +41,6 @@
 		v1 += 5
 	again
 	: done2
+
+	loop again
+

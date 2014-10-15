@@ -27,3 +27,14 @@
 	i := hex v0
 	vb := 12
 	sprite va vb 5
+
+	# perform an arithmetic operation which stores to vf.
+	# the correct behavior should write the carry flag last, resulting in 0.
+	# quirks mode will print 6.
+	vf := 3
+	vf <<= vf
+	i  := hex vf
+	vb := 19
+	sprite va vb 5
+
+	loop again

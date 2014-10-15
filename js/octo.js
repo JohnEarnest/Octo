@@ -114,7 +114,8 @@ function share() {
 		"buzzColor"       : emulator.buzzColor,
 		"quietColor"      : emulator.quietColor,
 		"shiftQuirks"     : emulator.shiftQuirks,
-		"loadStoreQuirks" : emulator.loadStoreQuirks
+		"loadStoreQuirks" : emulator.loadStoreQuirks,
+		"vfOrderQuirks"   : emulator.vfOrderQuirks
 	});
 	xhr.send(JSON.stringify({
 		"description" : "Octo Chip8 Program",
@@ -149,6 +150,7 @@ function runGist() {
 			if (options["quietColor"     ]) { emulator.quietColor      = options["quietColor"     ]; }
 			if (options["shiftQuirks"    ]) { emulator.shiftQuirks     = options["shiftQuirks"    ]; }
 			if (options["loadStoreQuirks"]) { emulator.loadStoreQuirks = options["loadStoreQuirks"]; }
+			if (options["vfOrderQuirks"  ]) { emulator.vfOrderQuirks   = options["vfOrderQuirks"  ]; }
 			run();
 		}
 	}
@@ -294,6 +296,11 @@ function setLoadStoreQuirks() {
 	emulator.loadStoreQuirks = check.checked;
 }
 
+function setVfOrderQuirks() {
+	var check = document.getElementById("vfOrderQuirks");
+	emulator.vfOrderQuirks = check.checked;
+}
+
 function toggleOptions() {
 	var options = document.getElementById("options");
 	if (options.style.display == "none") {
@@ -305,6 +312,7 @@ function toggleOptions() {
 		document.getElementById("silentEdit"     ).value   = emulator.quietColor; editSilent();
 		document.getElementById("shiftQuirks"    ).checked = emulator.shiftQuirks;
 		document.getElementById("loadStoreQuirks").checked = emulator.loadStoreQuirks;
+		document.getElementById("vfOrderQuirks"  ).checked = emulator.vfOrderQuirks;
 	}
 	else {
 		options.style.display = "none";
@@ -604,6 +612,7 @@ function decompileStart() {
 	var quirks = {};
 	quirks['shiftQuirks'    ] = emulator.shiftQuirks;
 	quirks['loadStoreQuirks'] = emulator.loadStoreQuirks;
+	quirks['vfOrderQuirks'  ] = emulator.vfOrderQuirks;
 	analyzeInit(buffer, quirks);
 	decompileProgramLength = buffer.length;
 	window.setTimeout(decompileProcess, 0);

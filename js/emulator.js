@@ -74,6 +74,7 @@ function Emulator() {
 	this.quietColor      = "#000000";
 	this.shiftQuirks     = false;
 	this.loadStoreQuirks = false;
+	this.vfOrderQuirks   = false;
 
 	// interpreter state
 	this.p  = [];       // pixels
@@ -128,6 +129,14 @@ function Emulator() {
 		this.tickCounter = 0;
 	}
 
+	this.writeCarry = function(dest, value, flag) {
+		this.v[dest] = (value & 0xFF);
+		this.v[0xF] = flag ? 1 : 0;
+		if (this.vfOrderQuirks) {
+			this.v[dest] = (value & 0xFF);
+		}
+	}
+
 	this.math = function(x, y, op) {
 		// basic arithmetic opcodes
 		switch(op) {
@@ -137,29 +146,25 @@ function Emulator() {
 			case 0x3: this.v[x] ^= this.v[y]; break;
 			case 0x4:
 				var t = this.v[x]+this.v[y];
-				this.v[0xF] = (t > 0xFF) ?1:0;
-				this.v[x] = (t & 0xFF);
+				this.writeCarry(x, t, (t > 0xFF));
 				break;
 			case 0x5:
 				var t = this.v[x]-this.v[y];
-				this.v[0xF] = (this.v[x] >= this.v[y]) ?1:0;
-				this.v[x] = (t & 0xFF);
+				this.writeCarry(x, t, (this.v[x] >= this.v[y]));
 				break;
 			case 0x7:
 				var t = this.v[y]-this.v[x];
-				this.v[0xF] = (this.v[y] >= this.v[x]) ?1:0;
-				this.v[x] = (t & 0xFF); break;
+				this.writeCarry(x, t, (this.v[y] >= this.v[x]));
+				break;
 			case 0x6:
 				if (this.shiftQuirks) { y = x; }
 				var t = this.v[y] >> 1;
-				this.v[0xF] = (this.v[y] & 0x1);
-				this.v[x] = (t & 0xFF);
+				this.writeCarry(x, t, (this.v[y] & 0x1));
 				break;
 			case 0xE:
 				if (this.shiftQuirks) { y = x; }
 				var t = this.v[y] << 1;
-				this.v[0xF] = ((this.v[y] >> 7) & 0x1);
-				this.v[x] = (t & 0xFF);
+				this.writeCarry(x, t, ((this.v[y] >> 7) & 0x1));
 				break;
 			default: throw "unknown math op: " + op;
 		}
