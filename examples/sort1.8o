@@ -31,16 +31,16 @@
 		i += rest
 		loop
 			load v0
-			if v0 >= min-value then jump no-better
+			if v0 < min-value begin
 				min-index := rest
 				min-value := v0
-			: no-better
+			end
 
 			rest += 1
 			if rest != SIZE then
 		again
 
-		if min-index == here then jump no-swap
+		if min-index != here begin
 			v0 := here-value
 			i := data
 			i += min-index
@@ -50,7 +50,7 @@
 			i := data
 			i += here
 			save v0
-		: no-swap
+		end
 
 		here += 1
 		if here != SIZE-1 then
