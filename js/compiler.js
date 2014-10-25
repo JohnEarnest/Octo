@@ -419,6 +419,7 @@ function Compiler(source) {
 			while (this.whiles[this.whiles.length - 1] != null) {
 				this.jump(this.whiles.pop(), this.here());
 			}
+			this.whiles.pop();
 		}
 		else if (token == "scroll-down")  { this.schip = true; this.inst(0x00, 0xC0 | this.tinyValue()); }
 		else if (token == "scroll-right") { this.schip = true; this.inst(0x00, 0xFB); }

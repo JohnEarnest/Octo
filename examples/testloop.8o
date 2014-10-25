@@ -1,7 +1,7 @@
 # loop test program.
 # tests boundary conditions using 'if' and 'while' 
 # with simple and compound comparison operators.
-# should draw four vertical strips of 6 boxes.
+# should draw five vertical strips of 6 boxes.
 
 : main
 	# while with pseudo-op
@@ -41,6 +41,22 @@
 		v1 += 5
 	again
 	: done2
+
+	# nested loops with while
+	v0 := 20
+	v1 := 0
+	loop
+		while v1 != 25
+		sprite v0 v1 5
+		v1 += 5
+		v2 := 5
+		loop
+			v2 += -1
+			if v2 != 0 then
+		again
+	again
+	v1 += 5
+	sprite v0 v1 5
 
 	loop again
 
