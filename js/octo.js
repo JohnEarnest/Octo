@@ -21,7 +21,7 @@ function display(rom) {
 //
 ////////////////////////////////////
 
-var intervalHandle;
+var intervalHandle = null;
 var emulator = new Emulator();
 
 function run() {
@@ -70,6 +70,7 @@ function compile() {
 
 function runRom(rom) {
 	if (rom === null) { return; }
+	if (intervalHandle != null) { reset(); }
 	emulator.exitVector = reset;
 	emulator.importFlags = function() { return JSON.parse(localStorage.getItem("octoFlagRegisters")); }
 	emulator.exportFlags = function(flags) { localStorage.setItem("octoFlagRegisters", JSON.stringify(flags)); }
