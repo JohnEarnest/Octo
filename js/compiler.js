@@ -56,6 +56,7 @@ function tokenize(text) {
 function Compiler(source) {
 	this.rom       = []; // list<int>
 	this.loops     = []; // stack<[addr, marker]>
+	this.branches  = []; // stack<[addr, marker, type]>
 	this.whiles    = []; // stack<int>
 	this.dict      = {}; // map<name, addr>
 	this.protos    = {}; // map<name, list<addr>>
@@ -250,6 +251,15 @@ function Compiler(source) {
 		}
 	}
 
+	this.controlToken = function() {
+		// ignore a condition
+		var op = this.tokens[1][0];
+		var index = 3;
+		if (op == "key" || op == "-key") { index = 2; }
+		if (index >= this.tokens.length) { index = this.tokens.length-1; }
+		return this.tokens[index];
+	}
+
 	this.iassign = function(token) {
 		if (token == ":=") {
 			var o = this.next();
@@ -348,7 +358,37 @@ function Compiler(source) {
 		else if (token == "load")    { this.inst(0xF0 | this.register(), 0x65); }
 		else if (token == "delay")   { this.expect(":="); this.inst(0xF0 | this.register(), 0x15); }
 		else if (token == "buzzer")  { this.expect(":="); this.inst(0xF0 | this.register(), 0x18); }
-		else if (token == "if")      { this.conditional(false); this.expect("then"); }
+		else if (token == "if") {
+			var control = this.controlToken();
+			if (control[0] == "then") {
+				this.conditional(false);
+				this.expect("then");
+			}
+			else if (control[0] == "begin") {
+				this.conditional(true);
+				this.expect("begin");
+				this.branches.push([this.here(), this.pos, "begin"]);
+				this.inst(0x00, 0x00);
+			}
+			else {
+				this.pos = control;
+				throw "Expected 'then' or 'begin'.";
+			}
+		}
+		else if (token == "else") {
+			if (this.branches.length < 1) {
+				throw "This 'else' does not have a matching 'begin'.";
+			}
+			this.jump(this.branches.pop()[0], this.here()+2);
+			this.branches.push([this.here(), this.pos, "else"]);
+			this.inst(0x00, 0x00);
+		}
+		else if (token == "end") {
+			if (this.branches.length < 1) {
+				throw "This 'end' does not have a matching 'begin'.";
+			}
+			this.jump(this.branches.pop()[0], this.here());
+		}
 		else if (token == "jump0")   { this.immediate(0xB0, this.wideValue()); }
 		else if (token == "jump")    { this.immediate(0x10, this.wideValue()); }
 		else if (token == "native")  { this.immediate(0x00, this.wideValue()); }
@@ -439,6 +479,10 @@ function Compiler(source) {
 		if (this.loops.length > 0) {
 			this.pos = this.loops[0][1];
 			throw "This 'loop' does not have a matching 'again'.";
+		}
+		if (this.branches.length > 0) {
+			this.pos = this.branches[0][1];
+			throw "This '"+this.branches[0][2]+"' does not have a matching 'end'.";
 		}
 		for(var index = 0; index < this.rom.length; index++) {
 			if (typeof this.rom[index] == "undefined") { this.rom[index] = 0x00; }

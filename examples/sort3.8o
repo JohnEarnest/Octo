@@ -14,101 +14,101 @@
 	# Yes, this is generated code.
 	# I'm crazy, but not THAT crazy.
 
-	if v0 <= v1 then jump l-0
+	if v0 > v1 begin
 		vf := v0
 		v0 := v1
 		v1 := vf
-	: l-0
-	if v2 <= v3 then jump l-1
+	end
+	if v2 > v3 begin
 		vf := v2
 		v2 := v3
 		v3 := vf
-	: l-1
-	if v4 <= v5 then jump l-2
+	end
+	if v4 > v5 begin
 		vf := v4
 		v4 := v5
 		v5 := vf
-	: l-2
-	if v6 <= v7 then jump l-3
+	end
+	if v6 > v7 begin
 		vf := v6
 		v6 := v7
 		v7 := vf
-	: l-3
-	if v0 <= v2 then jump l-4
+	end
+	if v0 > v2 begin
 		vf := v0
 		v0 := v2
 		v2 := vf
-	: l-4
-	if v4 <= v6 then jump l-5
+	end
+	if v4 > v6 begin
 		vf := v4
 		v4 := v6
 		v6 := vf
-	: l-5
-	if v1 <= v3 then jump l-6
+	end
+	if v1 > v3 begin
 		vf := v1
 		v1 := v3
 		v3 := vf
-	: l-6
-	if v0 <= v4 then jump l-7
+	end
+	if v0 > v4 begin
 		vf := v0
 		v0 := v4
 		v4 := vf
-	: l-7
-	if v5 <= v7 then jump l-8
+	end
+	if v5 > v7 begin
 		vf := v5
 		v5 := v7
 		v7 := vf
-	: l-8
-	if v3 <= v7 then jump l-9
+	end
+	if v3 > v7 begin
 		vf := v3
 		v3 := v7
 		v7 := vf
-	: l-9
-	if v1 <= v5 then jump l-10
+	end
+	if v1 > v5 begin
 		vf := v1
 		v1 := v5
 		v5 := vf
-	: l-10
-	if v3 <= v5 then jump l-11
+	end
+	if v3 > v5 begin
 		vf := v3
 		v3 := v5
 		v5 := vf
-	: l-11
-	if v2 <= v6 then jump l-12
+	end
+	if v2 > v6 begin
 		vf := v2
 		v2 := v6
 		v6 := vf
-	: l-12
-	if v2 <= v4 then jump l-13
+	end
+	if v2 > v4 begin
 		vf := v2
 		v2 := v4
 		v4 := vf
-	: l-13
-	if v1 <= v2 then jump l-14
+	end
+	if v1 > v2 begin
 		vf := v1
 		v1 := v2
 		v2 := vf
-	: l-14
-	if v3 <= v6 then jump l-15
+	end
+	if v3 > v6 begin
 		vf := v3
 		v3 := v6
 		v6 := vf
-	: l-15
-	if v2 <= v4 then jump l-16
+	end
+	if v2 > v4 begin
 		vf := v2
 		v2 := v4
 		v4 := vf
-	: l-16
-	if v5 <= v6 then jump l-17
+	end
+	if v5 > v6 begin
 		vf := v5
 		v5 := v6
 		v6 := vf
-	: l-17
-	if v3 <= v4 then jump l-18
+	end
+	if v3 > v4 begin
 		vf := v3
 		v3 := v4
 		v4 := vf
-	: l-18
+	end
 ;
 
 : heap1 0 0 0 0 0 0 0 0

@@ -66,7 +66,7 @@ The various chip8 copy/fetch/arithmetic opcodes have been abstracted to mostly f
 
 Control Flow
 ------------
-The Chip8 conditional opcodes are all conditional skips, so Octo control structures have been designed to map cleanly to this approach. The following conditional expressions can be used with `if...then` or `while`:
+The Chip8 conditional opcodes are all conditional skips, so Octo control structures have been designed to map cleanly to this approach. The following conditional expressions can be used with `if` or `while`:
 
 - `vx == n`
 - `vx != n`
@@ -86,6 +86,20 @@ Octo also provides pseudo-ops for using `<`, `>`, `<=` and `>=` to compare two r
 
 These are implemented by using the subtraction instructions `-=` and `=-` and querying `vf`, and will destroy the contents of a temporary register as well as `vf`. By default this temporary register will be `ve`, but defining an `:alias` named `compare-temp` can reassign it to any register but `vf`. Note that these pseudo-ops produce 3 chip8 instructions each and should be avoided when the simpler direct comparisons are suitable.
 
+If you wish to conditionally execute a group of statements, you can use `if...begin...end` instead of `if...then`. Optionally you may include an `else` clause.
+
+	if v0 > 5 begin
+		v1 := random 0xFF
+		if v1 == 5 begin
+			v2 := v1
+			v3 := v1
+		else
+			delay := v1
+		end
+	end
+
+`if...begin...else...end` will not always be the fastest or most compact way to express your desired conditions. Consider rearranging your logic, using jump tables with `jump0` or factoring the bodies of conditional clauses into subroutines if they are reused elsewhere. `if...begin...end` requires more instructions than a plain `if...then`, so prefer the latter when practical.
+
 `loop...again` is an unconditional infinite loop. `loop` marks the address of the start of the loop and produces no code, while `again` compiles a jump instruction based on the address provided by `loop`. Since `again` is itself a statement, we can use an `if...then` at the end of a loop to skip over the backwards jump and efficiently break out of the loop. The following loop will execute 5 times:
 
 	v0 := 0
@@ -104,7 +118,7 @@ The other way to break out of a loop is `while`. `while` creates a conditional s
 		# do something...
 	again
 
-`loop...again` constructs may be nested as desired and will behave as expected, but note that simply chaining together `if...then` statements (as in `if v0 == 0 then if v1 == 1 then v2 := 4`) does not elicit useful behavior. If complex nested conditionals are desired, the first `if...then` should be combined with a `jump`, `jump0` or subroutine call to subsequent conditionals.
+`loop...again` constructs may be nested as desired and will behave as expected, but note that simply chaining together `if...then` statements (as in `if v0 == 0 then if v1 == 1 then v2 := 4`) does not elicit useful behavior.
 
 Self Modifying Code
 -------------------

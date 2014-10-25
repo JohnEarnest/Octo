@@ -1,0 +1,90 @@
+###########################################
+#
+#  An Octo implementation of a
+#  bucket sort capable of operating on
+#  arrays of a fixed size up to 256 elements,
+#  with values ranging 0-15.
+#  This technique could be generalized
+#  for full-byte values given a larger
+#  bucket array.
+#
+###########################################
+
+:const SIZE    16
+:const MAX_VAL 16
+
+: empty
+	0 0 0 0 0 0 0 0
+
+: buckets
+	0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+
+: bucket-sort
+	# zero bucket array
+	i := empty
+	load v7
+	save v7 # unrolled loop to zero bucket array
+	save v7 # and initialize loop counters for later.
+
+	# bucket the elements
+	# v1 is data index (already 0)
+	loop
+		# load data
+		i := data
+		i += v1
+		load v0
+		vf := v0
+
+		# increment bucket
+		i := buckets
+		i += vf
+		load v0
+		v0 += 1
+		i := buckets
+		i += vf
+		save v0
+
+		v1 += 1
+		if v1 != SIZE then
+	again
+
+	# unpack bucket counts
+	# v1 is temporary count
+	# v2 is data   index (already 0)
+	# v3 is bucket index (already 0)
+	loop
+		i := buckets
+		i += v3
+		load v0
+		if v0 != 0 begin
+			v1 := v0
+			v0 := v3
+			i  := data
+			i  += v2
+			v2 += v1
+			loop
+				save v0
+				v1 += -1
+				if v1 != 0 then
+			again
+		end
+		v3 += 1
+		if v3 != MAX_VAL then
+	again
+;
+
+###########################################
+#
+#  Usage Example
+#
+###########################################
+
+: data  14 5 15 6 1 3 10 7 0 9 11 4 2 13 8 12
+
+: main
+	bucket-sort
+	i := data
+	load vf
+	:breakpoint sort-complete
+;
+

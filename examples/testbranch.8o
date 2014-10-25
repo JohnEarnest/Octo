@@ -1,0 +1,68 @@
+# branch test program.
+# tests the if...begin...else...then control structure
+# should print 51368
+
+: main
+
+	# simple taken branch
+	v0 := 1
+	v1 := 3
+	if v1 == 3 begin
+		v0 := 2
+		v0 += 3
+	end
+	print0
+
+	# simple not taken branch
+	v0 := 1
+	v1 := 3
+	if v1 != 3 begin
+		v0 := 2
+		v0 += 3
+	end
+	print0
+
+	# else taken
+	v0 := 2
+	v1 := 3
+	if v1 != v0 begin
+		v0 := 1
+		v0 += 2
+	else
+		v0 := 2
+		v0 += 4
+	end
+	print0
+
+	# else not taken
+	v0 := 2
+	v1 := 3
+	if v1 < v0 begin
+		v0 := 1
+		v0 += 2
+	else
+		v0 := 2
+		v0 += 4
+	end
+	print0
+
+	# nesting
+	v0 := 1
+	if v0 != 0 begin
+		if v0 != 2 begin
+			v0 := 7
+		else
+			v0 := 3
+		end
+		v0 += 1
+	end
+	print0
+
+	loop again	
+
+
+: print0
+	i := hex v0
+	sprite va vb 5
+	va += 5
+;
