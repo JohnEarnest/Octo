@@ -55,8 +55,6 @@
 			if v2 != 0 then
 		again
 	again
-	v1 += 5
 	sprite v0 v1 5
 
 	loop again
-
