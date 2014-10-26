@@ -14,7 +14,7 @@
 :alias right-val v1
 :alias start     v2
 :alias root      v3
-:alias end       v4
+:alias last      v4
 :alias best      v5
 :alias left      v6
 :alias best-val  v7
@@ -22,7 +22,7 @@
 
 : heap-sort
 	start := LIMIT
-	end   := SIZE
+	last  := SIZE
 	loop
 		root := start
 		sift-down
@@ -50,7 +50,7 @@
 
 		start += -1
 		root := 0
-		end := start
+		last := start
 		sift-down
 
 		if start != 0 then
@@ -71,7 +71,7 @@
 	loop
 		left <<= root
 
-		if left > end then return
+		if left > last then return
 
 		i := data
 		i += left
@@ -82,7 +82,7 @@
 		best-val := right-val
 
 		if left-val > right-val then jump assign-best
-		if left == end then jump assign-best
+		if left == last then jump assign-best
 		: found-best
 
 		if root-val >= best-val then return

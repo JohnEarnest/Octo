@@ -140,6 +140,27 @@ function Compiler(source) {
 		return number;
 	}
 
+	this.reservedNames = {
+		":=":true, "|=":true, "&=":true, "^=":true, "-=":true, "=-":true, "+=":true,
+		">>=":true, "<<=":true, "==":true, "!=":true, "<":true, ">":true,
+		"<=":true, ">=":true, "key":true, "-key":true, "hex":true, "bighex":true,
+		"random":true, "delay":true, ":":true, ":next":true, ":unpack":true,
+		":breakpoint":true, ":proto":true, ":alias":true, ":const":true,
+		":org":true, ";":true, "return":true, "clear":true, "bcd":true,
+		"save":true, "load":true, "buzzer":true, "if":true, "then":true,
+		"begin":true, "else":true, "end":true, "jump":true, "jump0":true,
+		"native":true, "sprite":true, "loop":true, "while":true, "again":true,
+		"scroll-down":true, "scroll-right":true, "scroll-left":true,
+		"lores":true, "hires":true, "loadflags":true, "saveflags":true, "i":true
+	};
+
+	this.checkName = function(name, kind) {
+		if (name in this.reservedNames) {
+			throw "The name '"+name+"' is reserved and cannot be used for a "+kind+".";
+		}
+		return name;
+	}
+
 	this.wideValue = function(nnn) {
 		// can be forward references.
 		// call, jump, jump0, i:=
@@ -156,7 +177,7 @@ function Compiler(source) {
 				nnn = this.dict[nnn];
 			}
 			else {
-				this.protos[nnn] = [this.here()];
+				this.protos[this.checkName(nnn, "label")] = [this.here()];
 				nnn = 0;
 			}
 		}
@@ -305,7 +326,7 @@ function Compiler(source) {
 
 	this.resolveLabel = function(offset) {
 		var target = (this.here() + offset);
-		var label = this.next();
+		var label = this.checkName(this.next(), "label");
 		if ((target == 0x202) && (label == "main")) {
 			this.hasmain = false;
 			this.rom = [];
@@ -343,9 +364,9 @@ function Compiler(source) {
 		}
 		else if (token == ":breakpoint") { this.breakpoints[this.here()] = this.next(); }
 		else if (token == ":proto")  { this.next(); } // deprecated.
-		else if (token == ":alias")  { this.aliases[this.next()] = this.register(); }
+		else if (token == ":alias")  { this.aliases[this.checkName(this.next(), "alias")] = this.register(); }
 		else if (token == ":const")  {
-			var name = this.next();
+			var name = this.checkName(this.next(), "constant");
 			if (name in this.constants) { throw "The name '"+name+"' has already been defined."; }
 			this.constants[name] = this.constantValue();
 		}
