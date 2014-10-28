@@ -9,12 +9,25 @@
 var scaleFactor = 5;
 var renderTarget = "target";
 
+function unpackOptions(emulator, options) {
+	if (options["tickrate"       ]) { emulator.ticksPerFrame   = options["tickrate"       ]; }
+	if (options["fillColor"      ]) { emulator.fillColor       = options["fillColor"      ]; }
+	if (options["backgroundColor"]) { emulator.backColor       = options["backgroundColor"]; }
+	if (options["buzzColor"      ]) { emulator.buzzColor       = options["buzzColor"      ]; }
+	if (options["quietColor"     ]) { emulator.quietColor      = options["quietColor"     ]; }
+	if (options["shiftQuirks"    ]) { emulator.shiftQuirks     = options["shiftQuirks"    ]; }
+	if (options["loadStoreQuirks"]) { emulator.loadStoreQuirks = options["loadStoreQuirks"]; }
+	if (options["vfOrderQuirks"  ]) { emulator.vfOrderQuirks   = options["vfOrderQuirks"  ]; }
+}
+
 function setRenderTarget(scale, canvas) {
 	scaleFactor = scale;
 	renderTarget = canvas;
 	var c = document.getElementById(canvas);
 	c.width  = scaleFactor * 128;
 	c.height = scaleFactor *  64;
+	c.style.marginLeft = (scaleFactor * -64) + "px";
+	c.style.marginTop  = (scaleFactor * -32) + "px";
 }
 
 function renderDisplay(emulator) {

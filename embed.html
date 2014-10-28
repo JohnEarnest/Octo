@@ -3,7 +3,7 @@
 		<title>Octo Embeddable</title>
 	</head>
 	<body style="margin:0px; padding:0px;">
-		<canvas id="target" width="640" height="320"></canvas>
+		<canvas id="target" width="640" height="320" style="position: absolute; left: 50%; top: 50%;"></canvas>
 		<script src="js/compiler.js"></script>
 		<script src="js/emulator.js"></script>
 		<script src="js/shared.js"></script>
@@ -40,6 +40,7 @@
 				if (emulator.dt > 0) { emulator.dt--; }
 				if (emulator.st > 0) { emulator.st--; }
 				renderDisplay(emulator);
+				document.body.style.backgroundColor = (emulator.st > 0) ? emulator.buzzColor : emulator.quietColor;
 			}
 
 			function run(code) {
@@ -65,15 +66,7 @@
 				xhr.onreadystatechange = function() {
 					if (xhr.readyState != 4) { return; }
 					var result = JSON.parse(xhr.responseText);
-					var options = JSON.parse(result.files["options.json"].content);
-					emulator.ticksPerFrame = options["tickrate"];
-					if (options["fillColor"      ]) { emulator.fillColor       = options["fillColor"      ]; }
-					if (options["backgroundColor"]) { emulator.backColor       = options["backgroundColor"]; }
-					if (options["buzzColor"      ]) { emulator.buzzColor       = options["buzzColor"      ]; }
-					if (options["quietColor"     ]) { emulator.quietColor      = options["quietColor"     ]; }
-					if (options["shiftQuirks"    ]) { emulator.shiftQuirks     = options["shiftQuirks"    ]; }
-					if (options["loadStoreQuirks"]) { emulator.loadStoreQuirks = options["loadStoreQuirks"]; }
-					if (options["vfOrderQuirks"  ]) { emulator.vfOrderQuirks   = options["vfOrderQuirks"  ]; }
+					unpackOptions(emulator, JSON.parse(result.files["options.json"].content));
 					run(result.files["prog.ch8"].content);
 				}
 				xhr.send();
@@ -85,7 +78,8 @@
 					return;
 				}
 				var scaleArg = location.search.match(/scale=([0-9]+)/);
-				if (scaleArg) { setRenderTarget(parseInt(scaleArg[1]), "target"); }
+				if (!scaleArg) { scaleArg = {1:"5"}; }
+				setRenderTarget(parseInt(scaleArg[1]), "target");
 				runGist();
 			}
 			window.onload = setup;

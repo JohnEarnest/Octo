@@ -145,13 +145,7 @@ function runGist() {
 			var framerateEl = document.getElementById("framerate");
 			framerateEl.value = framerateNum;
 			emulator.ticksPerFrame = (framerateEl.value == "") ? framerateNum : framerateEl.value;
-			if (options["fillColor"      ]) { emulator.fillColor       = options["fillColor"      ]; }
-			if (options["backgroundColor"]) { emulator.backColor       = options["backgroundColor"]; }
-			if (options["buzzColor"      ]) { emulator.buzzColor       = options["buzzColor"      ]; }
-			if (options["quietColor"     ]) { emulator.quietColor      = options["quietColor"     ]; }
-			if (options["shiftQuirks"    ]) { emulator.shiftQuirks     = options["shiftQuirks"    ]; }
-			if (options["loadStoreQuirks"]) { emulator.loadStoreQuirks = options["loadStoreQuirks"]; }
-			if (options["vfOrderQuirks"  ]) { emulator.vfOrderQuirks   = options["vfOrderQuirks"  ]; }
+			unpackOptions(emulator, options);
 			run();
 		}
 	}
