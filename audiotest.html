@@ -87,7 +87,7 @@ function drawHex() {
 	var buffer = parseHex();
 	for(var z = 0; z < 8 * SAMPLES; z++) {
 		var a = Math.floor(z / 8);
-		var b = Math.floor(z % 8);
+		var b = 7 - Math.floor(z % 8);
 		if (((buffer[a] >> b) & 1) == 0) { continue; }
 		render.fillRect(z * 4, 0, 4, 32);
 	}
@@ -136,7 +136,7 @@ function play() {
 	for(var z = 0; z < sampleCount;) {
 		var bit   = Math.floor(z / sampleMult) % (8*SAMPLES); // index into pattern bits
 		var cell  = Math.floor(bit / 8);                      // index into pattern bytes
-		var shift = (bit % 8);                                // index into byte bits
+		var shift = 7 - (bit % 8);                            // index into byte bits
 		var value = ((buffer[cell] >> shift) & 1) == 1;       // on or off
 
 		// unroll sampleMult copies of this sample:
