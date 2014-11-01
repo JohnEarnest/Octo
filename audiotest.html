@@ -57,6 +57,7 @@ function randomAudio() {
 		ret += hexFormat(Math.floor(Math.random() * 255)) + " ";
 	}
 	document.getElementById("pattern").value = ret;
+	drawHex();
 }
 
 function parseHex() {
