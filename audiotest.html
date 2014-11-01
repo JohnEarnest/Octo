@@ -11,9 +11,12 @@
 
 <div align="center">
 Enter a pattern of bytes. You can use octo-style hex or binary prefixes.<br>
-<textarea id="pattern" rows="4" cols="80" spellcheck="false"></textarea><br>
+<canvas id="draw" width="512" height="32" onkeyup="drawHex();"></canvas></br>
+<textarea id="pattern" rows="4" cols="80" spellcheck="false">
+0xFF 0xFF 0xFF 0xFF 0xFF 0xFF 0xFF 0xFF 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00
+</textarea><br>
 Preset Patterns:
-<select id="presets" onchange="document.getElementById('pattern').value = document.getElementById('presets').value;">
+<select id="presets" onchange="document.getElementById('pattern').value = document.getElementById('presets').value; drawHex();">
 	<option value="0xFF 0xFF 0xFF 0xFF 0xFF 0xFF 0xFF 0xFF 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00">1/2 Duty Square Wave</option>
 	<option value="0xFF 0xFF 0xFF 0xFF 0x00 0x00 0x00 0x00 0xFF 0xFF 0xFF 0xFF 0x00 0x00 0x00 0x00">1/4 Duty Square Wave</option>
 	<option value="0xFF 0xFF 0x00 0x00 0xFF 0xFF 0x00 0x00 0xFF 0xFF 0x00 0x00 0xFF 0xFF 0x00 0x00">1/8 Duty Square Wave</option>
@@ -25,6 +28,7 @@ Preset Patterns:
 	<option value="0xAA 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0xAA 0x00 0x00 0x00 0x00 0x00 0x00 0x00">Medium Grind</option>
 	<option value="0xFF 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0xFF 0x00 0x00 0x00 0x00 0x00 0x00 0x00">Low Grind</option>
 	<option value="0xF0 0xF0 0xF0 0xF0 0xcc 0xcc 0xcc 0xcc 0xF0 0xF0 0xF0 0xF0 0xcc 0xcc 0xcc 0xcc">Doorbell</option>
+	<option value="0x55 0xAA 0x55 0xAA 0x55 0xAA 0x55 0xAA 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00">Gurgle</option>
 </select>
 <button onclick="randomAudio();">Random</button>
 <br>
@@ -34,15 +38,67 @@ Duration (1/60ths of a second): <input id="time" type="text" size="4" value="30"
 </div>
 
 <script>
+////////////////////////////////////
+//
+//   Frontend plumbing
+//
+////////////////////////////////////
+
+var SAMPLES = 16;
+
+function hexFormat(num) {
+	var hex = num.toString(16).toUpperCase();
+	return "0x" + ((hex.length > 1) ? hex : "0" + hex);
+}
+
 function randomAudio() {
 	var ret = "";
 	for(var z = 0; z < SAMPLES; z++) {
-		ret += Math.floor(Math.random() * 255) + " ";
+		ret += hexFormat(Math.floor(Math.random() * 255)) + " ";
 	}
 	document.getElementById("pattern").value = ret;
 }
 
-var SAMPLES = 16;
+function parseHex() {
+	function parse(token) {
+		var num = (token.slice(0, 2) == "0b") ? parseInt(token.slice(2),2) : parseInt(token);
+		return isNaN(num) ? token : num;
+	}
+	var pattern = document.getElementById("pattern").value;
+	pattern = pattern.replace("[", "");
+	pattern = pattern.replace("]", "");
+	pattern = pattern.split(/\s+/);
+	var buffer = [];
+	for(var z = 0; z < SAMPLES; z++) { buffer[z] = 0; }
+	for(var z = 0; z < Math.min(pattern.length, SAMPLES); z++) {
+		buffer[z] = parse(pattern[z]);
+	}
+	return buffer;
+}
+
+function drawHex() {
+	var canvas = document.getElementById("draw");
+	var render = canvas.getContext("2d");
+	render.fillStyle = "#006600";
+	render.fillRect(0, 0, canvas.width, canvas.height);
+	render.fillStyle = "#33DD00";
+
+	var buffer = parseHex();
+	for(var z = 0; z < 8 * SAMPLES; z++) {
+		var a = Math.floor(z / 8);
+		var b = Math.floor(z % 8);
+		if (((buffer[a] >> b) & 1) == 0) { continue; }
+		render.fillRect(z * 4, 0, 4, 32);
+	}
+}
+drawHex();
+
+////////////////////////////////////
+//
+//   Actual Audio Junk
+//
+////////////////////////////////////
+
 var audio;
 function audioSetup() {
 	if (typeof webkitAudioContext !== 'undefined') {
@@ -69,19 +125,7 @@ function play() {
 	}
 
 	// parse the input string into a byte array, padding with zeros if necessary:
-	function parse(token) {
-		var num = (token.slice(0, 2) == "0b") ? parseInt(token.slice(2),2) : parseInt(token);
-		return isNaN(num) ? token : num;
-	}
-	var pattern = document.getElementById("pattern").value;
-	pattern = pattern.replace("[", "");
-	pattern = pattern.replace("]", "");
-	pattern = pattern.split(/\s+/);
-	var buffer = [];
-	for(var z = 0; z < SAMPLES; z++) { buffer[z] = 0; }
-	for(var z = 0; z < Math.min(pattern.length, SAMPLES); z++) {
-		buffer[z] = parse(pattern[z]);
-	}
+	var buffer = parseHex();
 
 	// construct an audio buffer from the pattern buffer
 	var sampleCount = Math.floor((audio.sampleRate / 60) * soundLength);
