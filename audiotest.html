@@ -7,22 +7,24 @@
 
 <center><h2>Audio Test</h2></center>
 
-<p>This is a test implementation of a proposed audio system for Octo. Chip8 is provided with an 8-byte "pattern buffer" which, when the buzzer is played, is treated as a series of 1-bit looped samples which control noise made by the buffer. By loading different patterns into the pattern buffer it is possible to create various square wave tones with different duty cycles as well as percussive noise. This approach is inspired by descriptions of a similar system used in some old arcade games.</p>
+<p>This is a test implementation of a proposed audio system for Octo. Chip8 is provided with an 16-byte "pattern buffer" which, when the buzzer is played, is treated as a series of 1-bit looped samples which control noise made by the buffer. By loading different patterns into the pattern buffer it is possible to create various square wave tones with different duty cycles as well as percussive noise. This approach is inspired by descriptions of a similar system used in some old arcade games.</p>
 
 <div align="center">
 Enter a pattern of bytes. You can use octo-style hex or binary prefixes.<br>
 <textarea id="pattern" rows="4" cols="80" spellcheck="false"></textarea><br>
 Preset Patterns:
 <select id="presets" onchange="document.getElementById('pattern').value = document.getElementById('presets').value;">
-	<option value="0xFF 0xFF 0xFF 0xFF 0x00 0x00 0x00 0x00">1/2 Duty Square Wave</option>
-	<option value="0xFF 0xFF 0x00 0x00 0xFF 0xFF 0x00 0x00">1/4 Duty Square Wave</option>
-	<option value="0xFF 0x00 0xFF 0x00 0xFF 0x00 0xFF 0x00">1/8 Duty Square Wave</option>
-	<option value="0xF0 0xF0 0xF0 0xF0 0xF0 0xF0 0xF0 0xF0">1/16 Duty Square Wave</option>
-	<option value="0xCC 0xCC 0xCC 0xCC 0xCC 0xCC 0xCC 0xCC">1/32 Duty Square Wave</option>
-	<option value="0xAA 0xAA 0xAA 0xAA 0xAA 0xAA 0xAA 0xAA">1/64 Duty Square Wave</option>
-	<option value="0x10 0x00 0x00 0x00 0x00 0x00 0x00 0x00">High Grind</option>
-	<option value="0xAA 0x00 0x00 0x00 0x00 0x00 0x00 0x00">Medium Grind</option>
-	<option value="0xFF 0x00 0x00 0x00 0x00 0x00 0x00 0x00">Low Grind</option>
+	<option value="0xFF 0xFF 0xFF 0xFF 0xFF 0xFF 0xFF 0xFF 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00">1/2 Duty Square Wave</option>
+	<option value="0xFF 0xFF 0xFF 0xFF 0x00 0x00 0x00 0x00 0xFF 0xFF 0xFF 0xFF 0x00 0x00 0x00 0x00">1/4 Duty Square Wave</option>
+	<option value="0xFF 0xFF 0x00 0x00 0xFF 0xFF 0x00 0x00 0xFF 0xFF 0x00 0x00 0xFF 0xFF 0x00 0x00">1/8 Duty Square Wave</option>
+	<option value="0xFF 0x00 0xFF 0x00 0xFF 0x00 0xFF 0x00 0xFF 0x00 0xFF 0x00 0xFF 0x00 0xFF 0x00">1/16 Duty Square Wave</option>
+	<option value="0xF0 0xF0 0xF0 0xF0 0xF0 0xF0 0xF0 0xF0 0xF0 0xF0 0xF0 0xF0 0xF0 0xF0 0xF0 0xF0">1/32 Duty Square Wave</option>
+	<option value="0xCC 0xCC 0xCC 0xCC 0xCC 0xCC 0xCC 0xCC 0xCC 0xCC 0xCC 0xCC 0xCC 0xCC 0xCC 0xCC">1/64 Duty Square Wave</option>
+	<option value="0xAA 0xAA 0xAA 0xAA 0xAA 0xAA 0xAA 0xAA 0xAA 0xAA 0xAA 0xAA 0xAA 0xAA 0xAA 0xAA">1/128 Duty Square Wave</option>
+	<option value="0x10 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x10 0x00 0x00 0x00 0x00 0x00 0x00 0x00">High Grind</option>
+	<option value="0xAA 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0xAA 0x00 0x00 0x00 0x00 0x00 0x00 0x00">Medium Grind</option>
+	<option value="0xFF 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0xFF 0x00 0x00 0x00 0x00 0x00 0x00 0x00">Low Grind</option>
+	<option value="0xF0 0xF0 0xF0 0xF0 0xcc 0xcc 0xcc 0xcc 0xF0 0xF0 0xF0 0xF0 0xcc 0xcc 0xcc 0xcc">Doorbell</option>
 </select>
 <button onclick="randomAudio();">Random</button>
 <br>
@@ -34,12 +36,13 @@ Duration (1/60ths of a second): <input id="time" type="text" size="4" value="30"
 <script>
 function randomAudio() {
 	var ret = "";
-	for(var z = 0; z < 8; z++) {
+	for(var z = 0; z < SAMPLES; z++) {
 		ret += Math.floor(Math.random() * 255) + " ";
 	}
 	document.getElementById("pattern").value = ret;
 }
 
+var SAMPLES = 16;
 var audio;
 function audioSetup() {
 	if (typeof webkitAudioContext !== 'undefined') {
@@ -65,7 +68,7 @@ function play() {
 		return;
 	}
 
-	// parse the input string into an 8-byte array, padding with zeros if necessary:
+	// parse the input string into a byte array, padding with zeros if necessary:
 	function parse(token) {
 		var num = (token.slice(0, 2) == "0b") ? parseInt(token.slice(2),2) : parseInt(token);
 		return isNaN(num) ? token : num;
@@ -74,21 +77,22 @@ function play() {
 	pattern = pattern.replace("[", "");
 	pattern = pattern.replace("]", "");
 	pattern = pattern.split(/\s+/);
-	var buffer = [0, 0, 0, 0, 0, 0, 0, 0];
-	for(var z = 0; z < Math.min(pattern.length, 8); z++) {
+	var buffer = [];
+	for(var z = 0; z < SAMPLES; z++) { buffer[z] = 0; }
+	for(var z = 0; z < Math.min(pattern.length, SAMPLES); z++) {
 		buffer[z] = parse(pattern[z]);
 	}
 
 	// construct an audio buffer from the pattern buffer
 	var sampleCount = Math.floor((audio.sampleRate / 60) * soundLength);
-	var sampleMult  = Math.floor(audio.sampleRate / 30 / 64); // 64 'samples' per 1/30th sec.
+	var sampleMult  = Math.floor(audio.sampleRate / 30 / (8*SAMPLES)); // per 1/30th sec.
 	var soundBuffer = audio.createBuffer(1, sampleCount, audio.sampleRate);
 	var sound = soundBuffer.getChannelData(0);
 	for(var z = 0; z < sampleCount;) {
-		var bit   = Math.floor(z / sampleMult) % 64;    // index into pattern bits
-		var cell  = Math.floor(bit / 8);                // index into pattern bytes
-		var shift = (bit % 8);                          // index into byte bits
-		var value = ((buffer[cell] >> shift) & 1) == 1; // on or off
+		var bit   = Math.floor(z / sampleMult) % (8*SAMPLES); // index into pattern bits
+		var cell  = Math.floor(bit / 8);                      // index into pattern bytes
+		var shift = (bit % 8);                                // index into byte bits
+		var value = ((buffer[cell] >> shift) & 1) == 1;       // on or off
 
 		// unroll sampleMult copies of this sample:
 		for(var repeats = 0; repeats < sampleMult; repeats++) {
