@@ -318,6 +318,13 @@ function Emulator() {
 			return;
 		}
 
+		if (o == 0x5 && n != 0) {
+			throw "unknown op: " + op;
+		}
+		if (o == 0x9 && n != 0) {
+			throw "unknown op: " + op;
+		}
+
 		// dispatch complex opcodes
 		switch(o) {
 			case 0x0: throw "machinecode not supported.";
