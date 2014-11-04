@@ -301,6 +301,7 @@ function toggleOptions() {
 	if (options.style.display == "none") {
 		options.style.display = "inline";
 		document.getElementById("spriteEditor").style.display = "none";
+		document.getElementById("bintools").style.display = "none";
 		document.getElementById("foreEdit"       ).value   = emulator.fillColor;  editFore();
 		document.getElementById("backEdit"       ).value   = emulator.backColor;  editBack();
 		document.getElementById("buzzEdit"       ).value   = emulator.buzzColor;  editBuzz();
@@ -325,6 +326,7 @@ function toggleSpriteEditor() {
 	if (editor.style.display == "none") {
 		editor.style.display = "inline";
 		document.getElementById("options").style.display = "none";
+		document.getElementById("bintools").style.display = "none";
 		showPixels();
 	}
 	else {
@@ -547,12 +549,16 @@ function clearBreakpoint() {
 //
 ////////////////////////////////////
 
-function decompileShowModal() {
-	document.getElementById("decompileModal").style.display = "inline";
-}
-
-function decompileClose() {
-	document.getElementById("decompileModal").style.display = "none";
+function toggleBinaryTools() {
+	var tools = document.getElementById("bintools");
+	if (tools.style.display == "none") {
+		tools.style.display = "inline";
+		document.getElementById("options").style.display = "none";
+		document.getElementById("spriteEditor").style.display = "none";
+	}
+	else {
+		tools.style.display = "none";
+	}
 }
 
 function decompileFile() {
@@ -594,14 +600,12 @@ function getDecompileData() {
 
 function decompileRun() {
 	var buffer = getDecompileData();
-	document.getElementById("decompileModal").style.display = "none";
 	runRom({ rom:buffer, breakpoints:{}, aliases:{}, labels:{} });
 }
 
 var decompileProgramLength = 0;
 
 function decompileStart() {
-	document.getElementById("decompileModal").style.display = "none";
 	document.getElementById("decompileWork").style.display = "inline";
 	var buffer = getDecompileData();
 	var quirks = {};
