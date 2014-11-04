@@ -736,9 +736,9 @@ function parseAudio() {
 function drawAudio() {
 	var canvas = document.getElementById("drawAudio");
 	var render = canvas.getContext("2d");
-	render.fillStyle = "#006600";
+	render.fillStyle = emulator.backColor;
 	render.fillRect(0, 0, canvas.width, canvas.height);
-	render.fillStyle = "#33DD00";
+	render.fillStyle = emulator.fillColor;
 
 	var buffer = parseAudio();
 	for(var z = 0; z < 8 * 16; z++) {
