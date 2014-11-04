@@ -727,7 +727,7 @@ function parseAudio() {
 	pattern = pattern.split(/\s+/);
 	var buffer = [];
 	for(var z = 0; z < 16; z++) { buffer[z] = 0; }
-	for(var z = 0; z < Math.min(pattern.length, SAMPLES); z++) {
+	for(var z = 0; z < Math.min(pattern.length, 16); z++) {
 		buffer[z] = parse(pattern[z]);
 	}
 	return buffer;
