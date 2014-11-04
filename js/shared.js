@@ -51,3 +51,53 @@ function renderDisplay(emulator) {
 		);
 	}
 }
+
+////////////////////////////////////
+//
+//   Audio Playback
+//
+////////////////////////////////////
+
+var audio;
+function audioSetup() {
+	if (typeof webkitAudioContext !== 'undefined') {
+		audio = new webkitAudioContext();
+		return true;
+	}
+	else if (typeof AudioContext !== 'undefined') {
+		audio = new AudioContext();
+		return true;
+	}
+	return false;
+}
+
+var SAMPLES = 16;
+var VOLUME = 0.25;
+function playPattern(soundLength, buffer) {
+	if (!audio) { return; }
+
+	// construct an audio buffer from the pattern buffer
+	var sampleCount = Math.floor((audio.sampleRate / 120) * soundLength);
+	var sampleMult  = Math.floor(audio.sampleRate / 30 / (8*SAMPLES));
+	var soundBuffer = audio.createBuffer(1, sampleCount, audio.sampleRate);
+	var sound = soundBuffer.getChannelData(0);
+	for(var z = 0; z < sampleCount;) {
+		var bit   = Math.floor(z / sampleMult) % (8*SAMPLES); // index into pattern bits
+		var cell  = Math.floor(bit / 8);                      // index into pattern bytes
+		var shift = 7 - (bit % 8);                            // index into byte bits
+		var value = ((buffer[cell] >> shift) & 1) == 1;       // on or off
+
+		// unroll sampleMult copies of this sample:
+		for(var repeats = 0; repeats < sampleMult; repeats++) {
+			sound[z] = value ? VOLUME : 0;
+			z++;
+		}
+	}
+
+	// play the sound
+	var soundSource = audio.createBufferSource();
+	soundSource.buffer = soundBuffer;
+	soundSource.connect(audio.destination);
+	soundSource.loop = false;
+	soundSource.start(0);
+}

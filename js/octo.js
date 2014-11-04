@@ -302,6 +302,7 @@ function toggleOptions() {
 		options.style.display = "inline";
 		document.getElementById("spriteEditor").style.display = "none";
 		document.getElementById("bintools").style.display = "none";
+		document.getElementById("audiotools").style.display = "none";
 		document.getElementById("foreEdit"       ).value   = emulator.fillColor;  editFore();
 		document.getElementById("backEdit"       ).value   = emulator.backColor;  editBack();
 		document.getElementById("buzzEdit"       ).value   = emulator.buzzColor;  editBuzz();
@@ -327,6 +328,7 @@ function toggleSpriteEditor() {
 		editor.style.display = "inline";
 		document.getElementById("options").style.display = "none";
 		document.getElementById("bintools").style.display = "none";
+		document.getElementById("audiotools").style.display = "none";
 		showPixels();
 	}
 	else {
@@ -555,6 +557,7 @@ function toggleBinaryTools() {
 		tools.style.display = "inline";
 		document.getElementById("options").style.display = "none";
 		document.getElementById("spriteEditor").style.display = "none";
+		document.getElementById("audiotools").style.display = "none";
 	}
 	else {
 		tools.style.display = "none";
@@ -677,3 +680,91 @@ function listExamples() {
 }
 
 listExamples();
+
+
+////////////////////////////////////
+//
+//   Audio Editor UI
+//
+////////////////////////////////////
+
+function toggleAudioEditor() {
+	var audio = document.getElementById("audiotools");
+	if (audio.style.display == "none") {
+		document.getElementById("options").style.display = "none";
+		document.getElementById("spriteEditor").style.display = "none";
+		document.getElementById("bintools").style.display = "none";
+		audio.style.display = "inline";
+		drawAudio();
+	}
+	else {
+		audio.style.display = "none";
+	}
+}
+
+function presetAudio() {
+	document.getElementById("audioPattern").value = document.getElementById("audioPreset").value;
+	drawAudio();
+}
+
+function randomAudio() {
+	var ret = "";
+	for(var z = 0; z < 16; z++) {
+		ret += hexFormat(Math.floor(Math.random() * 255)) + " ";
+	}
+	document.getElementById("audioPattern").value = ret;
+	drawAudio();
+}
+
+function parseAudio() {
+	function parse(token) {
+		var num = (token.slice(0, 2) == "0b") ? parseInt(token.slice(2),2) : parseInt(token);
+		return isNaN(num) ? token : num;
+	}
+	var pattern = document.getElementById("audioPattern").value;
+	pattern = pattern.replace("[", "");
+	pattern = pattern.replace("]", "");
+	pattern = pattern.split(/\s+/);
+	var buffer = [];
+	for(var z = 0; z < 16; z++) { buffer[z] = 0; }
+	for(var z = 0; z < Math.min(pattern.length, SAMPLES); z++) {
+		buffer[z] = parse(pattern[z]);
+	}
+	return buffer;
+}
+
+function drawAudio() {
+	var canvas = document.getElementById("drawAudio");
+	var render = canvas.getContext("2d");
+	render.fillStyle = "#006600";
+	render.fillRect(0, 0, canvas.width, canvas.height);
+	render.fillStyle = "#33DD00";
+
+	var buffer = parseAudio();
+	for(var z = 0; z < 8 * 16; z++) {
+		var a = Math.floor(z / 8);
+		var b = 7 - Math.floor(z % 8);
+		if (((buffer[a] >> b) & 1) == 0) { continue; }
+		render.fillRect(z * 2, 0, 2, 32);
+	}
+}
+
+function playAudio() {
+	// initialize sound if necessary
+	if (!audio && !audioSetup()) {
+		document.getElementById("audioError").innerHTML = "Your browser doesn't support HTML5 Audio!";
+		return;
+	}
+	
+	// parse the sound length
+	var soundLength = parseInt(document.getElementById("time").value);
+	if (typeof soundLength != "number" || isNaN(soundLength)) {
+		document.getElementById("error").innerHTML = "Invalid Duration.";
+		return;
+	}
+
+	// parse the input string into a byte array, padding with zeros if necessary:
+	var buffer = parseAudio();
+
+	playPattern(soundLength, buffer);
+}
