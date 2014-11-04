@@ -361,6 +361,67 @@ function toggleSpriteEditor() {
 	}
 }
 
+function getColor(id) {
+	switch(id) {
+		case 0: return emulator.backColor;
+		case 1: return emulator.fillColor;
+		case 2: return emulator.fillColor2;
+		case 3: return emulator.blendColor;
+	}
+}
+
+function drawPalette() {
+	var palette = document.getElementById("spriteEditorPalette");
+	var render = palette.getContext("2d");
+	render.clearRect(0, 0, palette.width, palette.height);
+	for(var z = 0; z < 4; z++) {
+		render.fillStyle = getColor(z);
+		render.fillRect(z * 50, 0, 50, 25);
+		
+		render.fillStyle = "#000000";
+		render.lineWidth = 0;
+		// note: line drawing must occur at coordinates between pixels
+		// to render accurate, crisp lines. This is ridiculous.
+		if (z > 0) {
+			render.beginPath();
+			render.moveTo(z * 50 + 0.5, 0);
+			render.lineTo(z * 50 + 0.5, 25);
+			render.stroke();
+		}
+		if (z == selectedColor) {
+			render.beginPath();
+			if (z == 0) { render.rect(z * 50 + 1.5, 1.5, 47, 22); }
+			else        { render.rect(z * 50 + 2.5, 1.5, 46, 22); }
+			render.stroke();
+		}
+	}
+}
+
+function clickPalette(event) {
+	var rect = document.getElementById("spriteEditorPalette").getBoundingClientRect();
+	var mx = Math.floor((event.clientX - rect.left)/50);
+	selectedColor = Math.max(0, Math.min(mx, 3));
+	drawPalette();
+}
+
+function setSpriteEditorColor() {
+	var check = document.getElementById("spriteEditorColor");
+	var palette = document.getElementById("spriteEditorPalette");
+	enableColor = check.checked;
+	if (check.checked) {
+		palette.style.display = "inline";
+		drawPalette();
+	}
+	else {
+		selectedColor = 1;
+		palette.style.display = "none";
+		var maxBytes = largeSprite ? 32 : 15;
+		for(var z = maxBytes; z < 64; z++) { pixel[z] = 0; }
+	}
+	showPixels();
+	showHex();
+}
+
 function setSpriteEditorSize() {
 	var check = document.getElementById("spriteEditorSize");
 	var canvas = document.getElementById("draw");
@@ -369,7 +430,7 @@ function setSpriteEditorSize() {
 		canvas.width  = 25 * 16;
 		canvas.height = 25 * 16;
 		var newpixels = [];
-		for(var z = 0; z < 32; z++) { newpixels[z] = 0; }
+		for(var z = 0; z < 64; z++) { newpixels[z] = 0; }
 		for(var z = 0; z < pixel.length; z++) {
 			newpixels[z * 2] = pixel[z];
 		}
@@ -380,8 +441,14 @@ function setSpriteEditorSize() {
 		canvas.width  = 25 * 8;
 		canvas.height = 25 * 15;
 		var newpixels = [];
+		for(var z = 0; z < 64; z++) { newpixels[z] = 0; }
 		for(var z = 0; z < 15; z++) {
 			newpixels[z] = pixel[z*2];
+		}
+		if (enableColor) {
+			for(var z = 15; z < 30; z++) {
+				newpixels[z] = pixel[z*2 + 32];
+			}
 		}
 		pixel = newpixels;
 	}
@@ -394,22 +461,28 @@ function showPixels() {
 	var render = canvas.getContext("2d");
 	render.fillStyle = emulator.backColor;
 	render.fillRect(0, 0, canvas.width, canvas.height);
-	render.fillStyle = emulator.fillColor;
 	if (largeSprite) {
 		for(var row = 0; row < 16; row++) {
 			for(var col = 0; col < 16; col++) {
-				if (pixel[row*2 + (col > 7 ? 1:0)] & (1 << (7-(col%8)))) {
-					render.fillRect(col * 25, row * 25, 25, 25);
-				}
+				var index = row*2 + (col > 7 ? 1:0);
+				var mask  = (1 << (7-(col%8)));
+				var set1 = (pixel[index     ] & mask) != 0;
+				var set2 = (pixel[index + 32] & mask) != 0;
+				if (!enableColor) { set2 = 0; }
+				render.fillStyle = getColor(set1 + (2*set2));
+				render.fillRect(col * 25, row * 25, 25, 25);
 			}
 		}
 	}
 	else {
 		for(var row = 0; row < 15; row++) {
 			for(var col = 0; col < 8; col++) {
-				if (pixel[row] & (1 << (7-col))) {
-					render.fillRect(col * 25, row * 25, 25, 25);
-				}
+				var mask = (1 << (7-col));
+				var set1 = (pixel[row     ] & mask) != 0;
+				var set2 = (pixel[row + 15] & mask) != 0;
+				if (!enableColor) { set2 = 0; }
+				render.fillStyle = getColor(set1 + (2*set2));
+				render.fillRect(col * 25, row * 25, 25, 25);
 			}
 		}
 	}
@@ -418,7 +491,9 @@ function showPixels() {
 function showHex() {
 	var output = document.getElementById("spriteData");
 	var hex = "";
-	for(var z = 0; z < pixel.length; z++) {
+	var maxBytes = largeSprite ? 32 : 15;
+	if (enableColor) { maxBytes *= 2; }
+	for(var z = 0; z < maxBytes; z++) {
 		var digits = pixel[z].toString(16).toUpperCase();
 		hex += "0x" + (digits.length == 1 ? "0"+digits : digits) + " ";
 	}
@@ -429,6 +504,7 @@ function editHex() {
 	var output = document.getElementById("spriteData");
 	var bytes = output.value.trim().split(new RegExp("\\s+"));
 	var maxBytes = largeSprite ? 32 : 15;
+	if (enableColor) { maxBytes *= 2; }
 	for(var z = 0; z < maxBytes; z++) {
 		if (z < bytes.length) {
 			var tok = bytes[z].trim();
@@ -445,12 +521,22 @@ function editHex() {
 function drag(event) {
 	if (mode == 0) { return; }
 	var rect = document.getElementById("draw").getBoundingClientRect();
-	var mx   = Math.floor((event.clientX - rect.left)/25);
-	var my   = Math.floor((event.clientY - rect.top )/25);
-	var dest = largeSprite ? (my*2 + (mx > 7 ? 1:0)) : my;
-	var src  = (128 >> (mx % 8));
-	if (mode == 1) { pixel[dest] |=  src; } // draw
-	else           { pixel[dest] &= ~src; } // erase
+	var mx     = Math.floor((event.clientX - rect.left)/25);
+	var my     = Math.floor((event.clientY - rect.top )/25);
+	var dest   = largeSprite ? (my*2 + (mx > 7 ? 1:0)) : my;
+	var stride = largeSprite ? 32 : 15;
+	var src    = (128 >> (mx % 8));
+	if (mode == 1) {
+		// draw
+		if ((selectedColor & 1) != 0) { pixel[dest]          |=  src; }
+		else                          { pixel[dest]          &= ~src; }
+		if ((selectedColor & 2) != 0) { pixel[dest + stride] |=  src; }
+		else                          { pixel[dest + stride] &= ~src; }
+	}
+	else {
+		pixel[dest]          &= ~src; // erase
+		pixel[dest + stride] &= ~src;
+	}
 	showHex();
 	showPixels();
 }
@@ -460,8 +546,10 @@ function pressDraw(event)  { if (event.button == 2) {mode = 2;} else {mode = 1;}
 
 var largeSprite = false;
 var mode = 0;
+var enableColor = false;
+var selectedColor = 1;
 var pixel = [];
-for(var z = 0; z < 15; z++) { pixel[z] = 0; }
+for(var z = 0; z < 64; z++) { pixel[z] = 0; }
 
 var spriteCanvas = document.getElementById("draw");
 spriteCanvas.addEventListener("mousemove", drag, false);
@@ -469,6 +557,8 @@ spriteCanvas.addEventListener("mousedown", pressDraw, false);
 spriteCanvas.addEventListener("mouseup"  , release, false);
 spriteCanvas.oncontextmenu = function(event) { drag(event); return false; };
 spriteCanvas.addEventListener("mouseout", release, false);
+var spriteEditorPalette = document.getElementById("spriteEditorPalette");
+spriteEditorPalette.addEventListener("click", clickPalette, false);
 
 ////////////////////////////////////
 //
