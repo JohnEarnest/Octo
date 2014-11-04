@@ -12,12 +12,15 @@ var renderTarget = "target";
 function unpackOptions(emulator, options) {
 	if (options["tickrate"       ]) { emulator.ticksPerFrame   = options["tickrate"       ]; }
 	if (options["fillColor"      ]) { emulator.fillColor       = options["fillColor"      ]; }
+	if (options["fillColor2"     ]) { emulator.fillColor2      = options["fillColor2"     ]; }
+	if (options["blendColor"     ]) { emulator.blendColor      = options["blendColor"     ]; }
 	if (options["backgroundColor"]) { emulator.backColor       = options["backgroundColor"]; }
 	if (options["buzzColor"      ]) { emulator.buzzColor       = options["buzzColor"      ]; }
 	if (options["quietColor"     ]) { emulator.quietColor      = options["quietColor"     ]; }
 	if (options["shiftQuirks"    ]) { emulator.shiftQuirks     = options["shiftQuirks"    ]; }
 	if (options["loadStoreQuirks"]) { emulator.loadStoreQuirks = options["loadStoreQuirks"]; }
 	if (options["vfOrderQuirks"  ]) { emulator.vfOrderQuirks   = options["vfOrderQuirks"  ]; }
+	if (options["enableXO"       ]) { emulator.enableXO        = options["enableXO"       ]; }
 }
 
 function setRenderTarget(scale, canvas) {

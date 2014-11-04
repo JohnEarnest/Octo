@@ -191,9 +191,19 @@
 						<td bgcolor="0xFF0000" id="backSample"  >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
 					</tr>
 					<tr>
-						<td>Foreground</td>
-						<td><input type="text" size="7" id="foreEdit" onchange="editFore();" onkeyup="editFore();"></td>
-						<td bgcolor="0xFF0000" id="foreSample"  >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+						<td>Foreground 1</td>
+						<td><input type="text" size="7" id="foreEdit1" onchange="editFore1();" onkeyup="editFore1();"></td>
+						<td bgcolor="0xFF0000" id="foreSample1"  >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+					</tr>
+					<tr>
+						<td>Foreground 2 (XO-Chip)</td>
+						<td><input type="text" size="7" id="foreEdit2" onchange="editFore2();" onkeyup="editFore2();"></td>
+						<td bgcolor="0xFF0000" id="foreSample2"  >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
+					</tr>
+					<tr>
+						<td>Blended (XO-Chip)</td>
+						<td><input type="text" size="7" id="blendEdit" onchange="editBlend();" onkeyup="editBlend();"></td>
+						<td bgcolor="0xFF0000" id="blendSample"  >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
 					</tr>
 					<tr>
 						<td>Buzzer</td>
@@ -219,6 +229,10 @@
 					<tr>
 						<td><input type="checkbox" id="vfOrderQuirks" onchange="setVfOrderQuirks();"></td>
 						<td>arithmetic results write to <tt>vf</tt> after status flag.</td>
+					</tr>
+					<tr>
+						<td><input type="checkbox" id="enableXO" onchange="setEnableXO();"></td>
+						<td>enable XO-Chip extended instruction set.</td>
 					</tr>
 				</table>
 			</div>

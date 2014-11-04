@@ -111,12 +111,15 @@ function share() {
 	var options = JSON.stringify({
 		"tickrate"        : emulator.ticksPerFrame,
 		"fillColor"       : emulator.fillColor,
+		"fillColor2"      : emulator.fillColor2,
+		"blendColor"      : emulator.blendColor,
 		"backgroundColor" : emulator.backColor,
 		"buzzColor"       : emulator.buzzColor,
 		"quietColor"      : emulator.quietColor,
 		"shiftQuirks"     : emulator.shiftQuirks,
 		"loadStoreQuirks" : emulator.loadStoreQuirks,
-		"vfOrderQuirks"   : emulator.vfOrderQuirks
+		"vfOrderQuirks"   : emulator.vfOrderQuirks,
+		"enableXO"        : emulator.enableXO
 	});
 	xhr.send(JSON.stringify({
 		"description" : "Octo Chip8 Program",
@@ -255,10 +258,24 @@ function framerate() {
 	emulator.ticksPerFrame = document.getElementById("framerate").value;
 }
 
-function editFore() {
-	var val = document.getElementById("foreEdit").value;
-	document.getElementById("foreSample").bgColor = val;
+function editFore1() {
+	var val = document.getElementById("foreEdit1").value;
+	document.getElementById("foreSample1").bgColor = val;
 	emulator.fillColor = val;
+	showPixels();
+}
+
+function editFore2() {
+	var val = document.getElementById("foreEdit2").value;
+	document.getElementById("foreSample2").bgColor = val;
+	emulator.fillColor2 = val;
+	showPixels();
+}
+
+function editBlend() {
+	var val = document.getElementById("blendEdit").value;
+	document.getElementById("blendSample").bgColor = val;
+	emulator.blendColor = val;
 	showPixels();
 }
 
@@ -296,6 +313,11 @@ function setVfOrderQuirks() {
 	emulator.vfOrderQuirks = check.checked;
 }
 
+function setEnableXO() {
+	var check = document.getElementById("enableXO");
+	emulator.enableXO = check.checked;
+}
+
 function toggleOptions() {
 	var options = document.getElementById("options");
 	if (options.style.display == "none") {
@@ -303,13 +325,16 @@ function toggleOptions() {
 		document.getElementById("spriteEditor").style.display = "none";
 		document.getElementById("bintools").style.display = "none";
 		document.getElementById("audiotools").style.display = "none";
-		document.getElementById("foreEdit"       ).value   = emulator.fillColor;  editFore();
+		document.getElementById("foreEdit1"      ).value   = emulator.fillColor;  editFore1();
+		document.getElementById("foreEdit2"      ).value   = emulator.fillColor2; editFore2();
+		document.getElementById("blendEdit"      ).value   = emulator.blendColor; editBlend();
 		document.getElementById("backEdit"       ).value   = emulator.backColor;  editBack();
 		document.getElementById("buzzEdit"       ).value   = emulator.buzzColor;  editBuzz();
 		document.getElementById("silentEdit"     ).value   = emulator.quietColor; editSilent();
 		document.getElementById("shiftQuirks"    ).checked = emulator.shiftQuirks;
 		document.getElementById("loadStoreQuirks").checked = emulator.loadStoreQuirks;
 		document.getElementById("vfOrderQuirks"  ).checked = emulator.vfOrderQuirks;
+		document.getElementById("enableXO"       ).checked = emulator.enableXO;
 	}
 	else {
 		options.style.display = "none";
