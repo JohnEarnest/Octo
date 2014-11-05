@@ -52,6 +52,7 @@ function formatInstruction(a, nn) {
 	var vy = "v" + (y.toString(16).toUpperCase());
 
 	if (a  == 0x00 && y == 0xC) { return "scroll-down " + n; } // schip
+	if (a  == 0x00 && y == 0xD) { return "scroll-up " + n; } // xo-chip
 	if (op == 0x00E0)           { return "clear"; }
 	if (op == 0x00EE)           { return "return"; }
 	if (op == 0x00FB)           { return "scroll-right"; } // schip
@@ -64,6 +65,8 @@ function formatInstruction(a, nn) {
 	if (o == 0x3)               { return "if " + vx + " != " + nn + " then"; }
 	if (o == 0x4)               { return "if " + vx + " == " + nn + " then"; }
 	if (o == 0x5 && n == 0x0)   { return "if " + vx + " != " + vy + " then"; }
+	if (o == 0x5 && n == 0x2)   { return "save " + vx + " - " + vy; } // xo-chip
+	if (o == 0x5 && n == 0x3)   { return "load " + vx + " - " + vy; } // xo-chip
 	if (o == 0x6)               { return vx + " := " + nn; }
 	if (o == 0x7)               { return vx + " += " + nn; }
 	if (o == 0x8 && n == 0x0)   { return vx + " := " + vy; }
@@ -82,6 +85,9 @@ function formatInstruction(a, nn) {
 	if (o == 0xD)               { return "sprite " + vx + " " + vy + " " + n; }
 	if (o == 0xE && nn == 0x9E) { return "if " + vx + " -key then"; }
 	if (o == 0xE && nn == 0xA1) { return "if " + vx + " key then"; }
+	if (o == 0xF && nn == 0x00) { return "bank " + x; }
+	if (o == 0xF && nn == 0x01) { return "plane " + x; }
+	if (op == 0xF002)           { return "audio := i"; }
 	if (o == 0xF && nn == 0x07) { return vx + " := delay"; }
 	if (o == 0xF && nn == 0x0A) { return vx + " := key"; }
 	if (o == 0xF && nn == 0x15) { return "delay := " + vx; }
