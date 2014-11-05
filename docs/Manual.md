@@ -162,6 +162,19 @@ Flag registers are persisted using browser local storage, so provided no applica
 
 Finally, drawing a sprite with height 0 (which would otherwise do nothing) is used by the SuperChip to draw a large 16x16 sprite. The sprite data itself is stored as 16 pairs of bytes representing each row.
 
+XO-Chip
+-------
+Beyond SuperChip, Octo provides a set of unique extended instructions called XO-Chip. These instructions provide a 4-color display, improved scrolling functionality, a flexible audio generator, expanded ram and instructions which make memory manipulation more convenient. Since XO-Chip introduces a few minor changes to the behavior of Octo, these features must be explicitly enabled in the Options panel.
+
+- `save vx - vy` save an inclusive range of registers to memory starting at `i`.
+- `load vx - vy` load an inclusive range of registers from memory starting at `i`.
+- `bank n` select a 4k memory bank used by `i` for all operations (0 <= n <= 1).
+- `plane n` select zero or more drawing planes by bitmask (0 <= n <= 3).
+- `audio := i` store 16 bytes starting at `i` in the audio pattern buffer.
+- `scroll-up n` scroll the contents of the display up by 0-15 pixels.
+
+For more details, consult the XO-Chip specification in Octo's documentation directory. At time of writing Octo is the only Chip8 interpreter which supports these instructions, but authors are encouraged to provide them in their own interpreters.
+
 Debugging
 ---------
 Octo provides basic debugging facilities for Chip8 programs. While a program is running, pressing the "i" key will interrupt execution and display the contents of the `v` registers, `i` and the program counter. Any register aliases and (guessed) labels will be indicated next to the raw register contents. When interrupted, pressing "i" again or clicking the "continue" icon will resume execution, while pressing "o" will single-step through the program. Note that while single-stepping the Chip8 timers will not count down.

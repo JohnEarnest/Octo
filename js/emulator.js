@@ -80,7 +80,7 @@ function Emulator() {
 	this.enableXO        = false;
 
 	// interpreter state
-	this.p  = [];       // pixels
+	this.p  = [[],[]];  // pixels
 	this.m  = [];       // memory (bytes)
 	this.r  = [];       // return stack
 	this.v  = [];       // registers
@@ -89,7 +89,9 @@ function Emulator() {
 	this.dt = 0;        // delay timer
 	this.st = 0;        // sound timer
 	this.hires = false; // are we in SuperChip high res mode?
-	this.flags = []     // semi-persistent hp48 flag vars
+	this.flags = [];    // semi-persistent hp48 flag vars
+	this.pattern = [];  // audio pattern buffer
+	this.plane = 1;     // graphics plane
 
 	// control/debug state
 	this.keys = {};       // track keys which are pressed
@@ -104,15 +106,17 @@ function Emulator() {
 	this.exitVector  = function() {}                                   // fired by 'exit'
 	this.importFlags = function() { return [0, 0, 0, 0, 0, 0, 0, 0]; } // load persistent flags
 	this.exportFlags = function(flags) {}                              // save persistent flags
+	this.buzzTrigger = function(ticks) {}                              // fired when buzzer played
 
 	this.init = function(rom) {
 		// initialize memory
-		for(var z = 0; z < 32*64;          z++) { this.p[z] = false; }
-		for(var z = 0; z < 4096;           z++) { this.m[z] = 0; }
+		for(var z = 0; z < 32*64;          z++) { this.p[0][z] = 0; this.p[1][z] = 0; }
+		for(var z = 0; z < 4096 * 2;       z++) { this.m[z] = 0; }
 		for(var z = 0; z < font.length;    z++) { this.m[z] = font[z]; }
 		for(var z = 0; z < bigfont.length; z++) { this.m[z + font.length] = bigfont[z]; }
 		for(var z = 0; z < rom.rom.length; z++) { this.m[0x200+z] = rom.rom[z]; }
 		for(var z = 0; z < 16;             z++) { this.v[z] = 0; }
+		for(var z = 0; z < 16;             z++) { this.pattern[z] = 0; }
 
 		// initialize interpreter state
 		this.r = [];
@@ -121,6 +125,7 @@ function Emulator() {
 		this.dt = 0;
 		this.st = 0;
 		this.hires = false;
+		this.plane = 1;
 
 		// initialize control/debug state
 		this.keys = {};
@@ -176,11 +181,23 @@ function Emulator() {
 	this.misc = function(x, rest) {
 		// miscellaneous opcodes
 		switch(rest) {
+			case 0x00:
+				this.i &= 0x0FFF;
+				this.i |= x ? 0x1000 : 0x0000;
+				break;
+			case 0x01:
+				this.plane = (x & 0x3);
+				break;
+			case 0x02:
+				for(var z = 0; z < 16; z++) {
+					this.pattern[z] = this.m[this.i+z];
+				}
+				break;
 			case 0x07: this.v[x] = this.dt; break;
 			case 0x0A: this.waiting = true; this.waitReg = x; break;
 			case 0x15: this.dt = this.v[x]; break;
-			case 0x18: this.st = this.v[x]; break;
-			case 0x1E: this.i = (this.i + this.v[x]) & 0xFFF; break;
+			case 0x18: this.st = this.v[x]; this.buzzTrigger(this.v[x]); break;
+			case 0x1E: this.i = (this.i & 0xF000) | ((this.i + this.v[x]) & 0xFFF); break;
 			case 0x29: this.i = ((this.v[x] & 0xF) * 5); break;
 			case 0x30: this.i = ((this.v[x] & 0xF) * 10 + font.length); break;
 			case 0x33:
@@ -190,11 +207,11 @@ function Emulator() {
 				break;
 			case 0x55:
 				for(var z = 0; z <= x; z++) { this.m[this.i+z] = this.v[z]; }
-				if (!this.loadStoreQuirks) { this.i = (this.i+x+1)&0xFFF; }
+				if (!this.loadStoreQuirks) { this.i = (this.i & 0xF000) | ((this.i+x+1)&0xFFF); }
 				break;
 			case 0x65:
 				for(var z = 0; z <= x; z++) { this.v[z] = this.m[this.i+z]; }
-				if (!this.loadStoreQuirks) { this.i = (this.i+x+1)&0xFFF; }
+				if (!this.loadStoreQuirks) { this.i = (this.i & 0xF000) | ((this.i+x+1)&0xFFF); }
 				break;
 			case 0x75:
 				for(var z = 0; z <= x; z++) { this.flags[z] = this.v[z]; }
@@ -215,27 +232,34 @@ function Emulator() {
 		this.v[0xF] = 0x0;
 		var rowSize = this.hires ? 128 : 64;
 		var colSize = this.hires ?  64 : 32;
-		if (len == 0) {
-			// draw a SuperChip 16x16 sprite
-			for(var a = 0; a < 16; a++) {
-				for(var b = 0; b < 16; b++) {
-					var target = ((x+b) % rowSize) + ((y+a) % colSize)*rowSize;
-					var source = ((this.m[this.i+(a*2)+(b > 7 ? 1:0)] >> (7-(b%8))) & 0x1) != 0;
-					if (!source) { continue; }
-					if (this.p[target]) { this.p[target] = false; this.v[0xF] = 0x1; }
-					else { this.p[target] = true; }
+		var i = this.i;
+		for(var layer = 0; layer < 2; layer++) {
+			if ((this.plane & (layer+1)) == 0) { continue; }
+			if (len == 0) {
+				// draw a SuperChip 16x16 sprite
+				for(var a = 0; a < 16; a++) {
+					for(var b = 0; b < 16; b++) {
+						var target = ((x+b) % rowSize) + ((y+a) % colSize)*rowSize;
+						var source = ((this.m[i+(a*2)+(b > 7 ? 1:0)] >> (7-(b%8))) & 0x1) != 0;
+						if (!source) { continue; }
+						if (this.p[layer][target]) { this.p[layer][target] = 0; this.v[0xF] = 0x1; }
+						else { this.p[layer][target] = 1; }
+					}
 				}
+				i += 32;
 			}
-			return;
-		}
-		// draw a Chip8 8xN sprite
-		for(var a = 0; a < len; a++) {
-			for(var b = 0; b < 8; b++) {
-				var target = ((x+b) % rowSize) + ((y+a) % colSize)*rowSize;
-				var source = ((this.m[this.i+a] >> (7-b)) & 0x1) != 0;
-				if (!source) { continue; }
-				if (this.p[target]) { this.p[target] = false; this.v[0xF] = 0x1; }
-				else { this.p[target] = true; }
+			else {
+				// draw a Chip8 8xN sprite
+				for(var a = 0; a < len; a++) {
+					for(var b = 0; b < 8; b++) {
+						var target = ((x+b) % rowSize) + ((y+a) % colSize)*rowSize;
+						var source = ((this.m[i+a] >> (7-b)) & 0x1) != 0;
+						if (!source) { continue; }
+						if (this.p[layer][target]) { this.p[layer][target] = 0; this.v[0xF] = 0x1; }
+						else { this.p[layer][target] = 1; }
+					}
+				}
+				i += len;
 			}
 		}
 	}
@@ -254,7 +278,12 @@ function Emulator() {
 		// execute a simple opcode
 		if (op == 0x00E0) {
 			// clear
-			for(var z = 0; z < this.p.length; z++) { this.p[z] = false; }
+			for(var layer = 0; layer < 2; layer++) {
+				if ((this.plane & (layer+1)) == 0) { continue; }
+				for(var z = 0; z < this.p[layer].length; z++) {
+					this.p[layer][z] = 0;
+				}
+			}
 			return;
 		}
 		if (op == 0x00EE) {
@@ -275,17 +304,34 @@ function Emulator() {
 		if ((op & 0xFFF0) == 0x00C0) {
 			// scroll down n pixels
 			var rowSize = this.hires ? 128 : 64;
-			for(var z = this.p.length; z >= 0; z--) {
-				this.p[z] = (z > rowSize * n) ? this.p[z - (rowSize * n)] : 0;
+			for(var layer = 0; layer < 2; layer++) {
+				if ((this.plane & (layer+1)) == 0) { continue; }
+				for(var z = this.p[layer].length; z >= 0; z--) {
+					this.p[layer][z] = (z > rowSize * n) ? this.p[layer][z - (rowSize * n)] : 0;
+				}
+			}
+			return;
+		}
+		if ((op & 0xFFF0) == 0x00D0) {
+			// scroll up n pixels
+			var rowSize = this.hires ? 128 : 64;
+			for(var layer = 0; layer < 2; layer++) {
+				if ((this.plane & (layer+1)) == 0) { continue; }
+				for(var z = 0; z < this.p[layer].length; z++) {
+					this.p[layer][z] = (z < (this.p[layer].length - rowSize * n)) ? this.p[layer][z + (rowSize * n)] : 0;
+				}
 			}
 			return;
 		}
 		if (op == 0x00FB) {
 			// scroll right 4 pixels
 			var rowSize = this.hires ? 128 : 64;
-			for(var a = 0; a < this.p.length; a += rowSize) {
-				for(var b = rowSize-1; b >= 0; b--) {
-					this.p[a + b] = (b > 3) ? this.p[a + b - 4] : 0;
+			for(var layer = 0; layer < 2; layer++) {
+				if ((this.plane & (layer+1)) == 0) { continue; }
+				for(var a = 0; a < this.p[layer].length; a += rowSize) {
+					for(var b = rowSize-1; b >= 0; b--) {
+						this.p[layer][a + b] = (b > 3) ? this.p[layer][a + b - 4] : 0;
+					}
 				}
 			}
 			return;
@@ -293,9 +339,12 @@ function Emulator() {
 		if (op == 0x00FC) {
 			// scroll left 4 pixels
 			var rowSize = this.hires ? 128 : 64;
-			for(var a = 0; a < this.p.length; a += rowSize) {
-				for(var b = 0; b < rowSize; b++) {
-					this.p[a + b] = (b < rowSize - 4) ? this.p[a + b + 4] : 0;
+			for(var layer = 0; layer < 2; layer++) {
+				if ((this.plane & (layer+1)) == 0) { continue; }
+				for(var a = 0; a < this.p[layer].length; a += rowSize) {
+					for(var b = 0; b < rowSize; b++) {
+						this.p[layer][a + b] = (b < rowSize - 4) ? this.p[layer][a + b + 4] : 0;
+					}
 				}
 			}
 			return;
@@ -309,20 +358,36 @@ function Emulator() {
 		if (op == 0x00FE) {
 			// lores
 			this.hires = false;
-			this.p = [];
-			for(var z = 0; z < 32*64; z++) { this.p[z] = false; }
+			this.p = [[], []];
+			for(var z = 0; z < 32*64; z++) { this.p[0][z] = 0; this.p[1][z] = 0; }
 			return;
 		}
 		if (op == 0x00FF) {
 			// hires
 			this.hires = true;
-			this.p = [];
-			for(var z = 0; z < 64*128; z++) { this.p[z] = false; }
+			this.p = [[], []];
+			for(var z = 0; z < 64*128; z++) { this.p[0][z] = 0; this.p[1][z] = 0; }
 			return;
 		}
 
 		if (o == 0x5 && n != 0) {
-			throw "unknown op: " + op;
+			if (n == 2) {
+				// save range
+				var dist = Math.abs(x - y);
+				if (x < y) { for(var z = 0; z <= dist; z++) { this.m[this.i+z] = this.v[x+z]; }}
+				else       { for(var z = 0; z <= dist; z++) { this.m[this.i+z] = this.v[x-z]; }}
+				return;
+			}
+			else if (n == 3) {
+				// load range
+				var dist = Math.abs(x - y);
+				if (x < y) { for(var z = 0; z <= dist; z++) { this.v[x+z] = this.m[this.i+z]; }}
+				else       { for(var z = 0; z <= dist; z++) { this.v[x-z] = this.m[this.i+z]; }}
+				return;
+			}
+			else {
+				throw "unknown op: " + op;
+			}
 		}
 		if (o == 0x9 && n != 0) {
 			throw "unknown op: " + op;
@@ -340,7 +405,7 @@ function Emulator() {
 			case 0x7: this.v[x] = (this.v[x] + nn) & 0xFF;          break;
 			case 0x8: this.math(x, y, n);                           break;
 			case 0x9: if (this.v[x] != this.v[y]) { this.pc += 2; } break;
-			case 0xA: this.i = nnn;                                 break;
+			case 0xA: this.i = (this.i & 0xF000) | nnn;             break;
 			case 0xB: this.pc = nnn + this.v[0];                    break;
 			case 0xC: this.v[x] = (Math.random()*255)&nn;           break;
 			case 0xD: this.sprite(this.v[x], this.v[y], n);         break;

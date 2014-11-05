@@ -34,12 +34,16 @@ function compile() {
 	var status = document.getElementById("status");
 
 	var MAX_ROM = 3584;
+	if (emulator.enableXO) { MAX_ROM += 4096; }
 
 	var c = new Compiler(input.value);
 	try {
 		output.value = "";
 		output.style.display = "none";
 		c.go();
+		if (c.xo && (!emulator.enableXO)) {
+			throw "Rom makes use of XO-Chip extensions. They must be enabled in the Options panel.";
+		}
 		if (c.rom.length > MAX_ROM) {
 			throw "Rom is too large- " + (c.rom.length-MAX_ROM) + " bytes over!";
 		}
@@ -48,6 +52,7 @@ function compile() {
 		status.innerHTML = ((c.rom.length) + " bytes, " + (MAX_ROM-c.rom.length) + " free.");
 		status.style.backgroundColor = "black";
 		if (c.schip) { status.innerHTML += " (SuperChip instructions used)"; }
+		if (c.xo) { status.innerHTML += " (XO-Chip instructions used)"; }
 	}
 	catch(error) {
 		status.style.backgroundColor = "darkred";
@@ -74,7 +79,9 @@ function runRom(rom) {
 	emulator.exitVector = reset;
 	emulator.importFlags = function() { return JSON.parse(localStorage.getItem("octoFlagRegisters")); }
 	emulator.exportFlags = function(flags) { localStorage.setItem("octoFlagRegisters", JSON.stringify(flags)); }
+	emulator.buzzTrigger = function(ticks) { playPattern(ticks, emulator.pattern); }
 	emulator.init(rom);
+	audioSetup();
 	document.getElementById("emulator").style.display = "inline";
 	document.getElementById("emulator").style.backgroundColor = emulator.quietColor;
 	window.addEventListener("keydown", keyDown, false);
@@ -361,15 +368,6 @@ function toggleSpriteEditor() {
 	}
 }
 
-function getColor(id) {
-	switch(id) {
-		case 0: return emulator.backColor;
-		case 1: return emulator.fillColor;
-		case 2: return emulator.fillColor2;
-		case 3: return emulator.blendColor;
-	}
-}
-
 function drawPalette() {
 	var palette = document.getElementById("spriteEditorPalette");
 	var render = palette.getContext("2d");
@@ -501,6 +499,7 @@ function showHex() {
 	for(var z = 0; z < maxBytes; z++) {
 		var digits = pixel[z].toString(16).toUpperCase();
 		hex += "0x" + (digits.length == 1 ? "0"+digits : digits) + " ";
+		if (z % 8 == 7) { hex += "\n"; }
 	}
 	output.value = hex;
 }

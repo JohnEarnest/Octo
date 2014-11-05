@@ -1,0 +1,99 @@
+# XO-Chip test program.
+# perform basic exercises demonstrating the XO-Chip instructions
+# to verify the behavior of the compiler, emulator and disassembler.
+
+: main
+
+	# demonstrate playing an audio sample
+	# several times from bank 1 ram:
+	bank 1
+	i := gurgle
+	audio := i
+	v0 := 3
+	loop
+		vf     := 10
+		buzzer := vf
+		vf     := 15
+		wait
+		v0 += -1
+		if v0 != 0 then
+	again
+
+	# demonstrate drawing a color sprite,
+	# also from bank 1.
+	plane 3
+	i := rocket
+	v2 := 24
+	sprite v2 v1 0
+
+	# demonstrate the ranged load instructions
+	# drawing hex characters to plane 2.
+	# should display F B A.
+	print-init
+	i := data1
+	load vf - vf
+	print
+
+	bank 1 # using 'hex' resets the ram bank
+	i := data2
+	load v1 - v0
+	vf := v0 print
+	vf := v1 print
+
+	# demonstrate vertical scrolling
+	# in both directions with one plane:
+	plane 1
+	loop
+		v0 := 0
+		loop
+			vf := 5 wait
+			scroll-down 1
+			v0 += 1
+			if v0 != 16 then
+		again
+		loop
+			vf := 5 wait
+			scroll-up 1
+			v0 += -1
+			if v0 != 0 then
+		again
+		vf := 20 wait
+	again
+
+: wait
+	delay  := vf
+	loop
+		vf := delay
+		if vf != 0 then
+	again
+;
+
+: print-init
+	plane 2
+	ve := 4
+	vd := 1
+;
+
+: print
+	i := hex vf
+	sprite ve vd 5
+	vd += 6
+;
+
+:org 0x1000
+: gurgle
+	0x55 0xAA 0x55 0xAA 0x55 0xAA 0x55 0xAA
+	0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00
+
+: rocket
+	0x03 0xC0 0x05 0xE0 0x08 0x70 0x09 0xF0 
+	0x13 0xF8 0x12 0xF8 0x11 0xB8 0x08 0x30 
+	0x08 0xB0 0x04 0x60 0x04 0xE0 0x1E 0x78 
+	0x2E 0x5C 0x26 0x4C 0x23 0xC4 0x3C 0x3C 
+	0x03 0xC0 0x06 0x20 0x0F 0x90 0x0F 0x90 
+	0x1E 0x48 0x1F 0x48 0x1F 0xC8 0x0F 0xD0 
+	0x0F 0xD0 0x07 0xA0 0x07 0xA0 0x1B 0xD8 
+	0x33 0xE4 0x3B 0xF4 0x3F 0xFC 0x3C 0x3C 
+
+: data1 0x0F
+: data2 0x0A 0x0B

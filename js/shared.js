@@ -33,20 +33,28 @@ function setRenderTarget(scale, canvas) {
 	c.style.marginTop  = (scaleFactor * -32) + "px";
 }
 
+function getColor(id) {
+	switch(id) {
+		case 0: return emulator.backColor;
+		case 1: return emulator.fillColor;
+		case 2: return emulator.fillColor2;
+		case 3: return emulator.blendColor;
+	}
+	throw "invalid color: " + id;
+}
+
 function renderDisplay(emulator) {
 	var c = document.getElementById(renderTarget);
 	var g = c.getContext("2d");
 	g.setTransform(1, 0, 0, 1, 0, 0);
 	g.fillStyle = emulator.backColor;
 	g.fillRect(0, 0, c.width, c.height);
-	g.fillStyle = emulator.fillColor;
-
 	var max    = emulator.hires ? 128*64      : 64*32;
 	var stride = emulator.hires ? 128         : 64;
 	var size   = emulator.hires ? scaleFactor : scaleFactor*2;
 
 	for(var z = 0; z < max; z++) {
-		if (!emulator.p[z]) { continue; }
+		g.fillStyle = getColor(emulator.p[0][z] + (emulator.p[1][z] * 2));
 		g.fillRect(
 			Math.floor(z%stride)*size,
 			Math.floor(z/stride)*size,
@@ -63,6 +71,7 @@ function renderDisplay(emulator) {
 
 var audio;
 function audioSetup() {
+	if (audio) { return; }
 	if (typeof webkitAudioContext !== 'undefined') {
 		audio = new webkitAudioContext();
 		return true;

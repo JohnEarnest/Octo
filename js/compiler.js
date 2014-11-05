@@ -64,6 +64,7 @@ function Compiler(source) {
 	this.constants = {}; // map<name, token>
 	this.hasmain = true;
 	this.schip = false;
+	this.xo = false;
 	this.breakpoints = {}; // map<address, name>
 	this.hereaddr = 0x200;
 
@@ -151,7 +152,8 @@ function Compiler(source) {
 		"begin":true, "else":true, "end":true, "jump":true, "jump0":true,
 		"native":true, "sprite":true, "loop":true, "while":true, "again":true,
 		"scroll-down":true, "scroll-right":true, "scroll-left":true,
-		"lores":true, "hires":true, "loadflags":true, "saveflags":true, "i":true
+		"lores":true, "hires":true, "loadflags":true, "saveflags":true, "i":true,
+		"audio":true, "plane":true, "bank":true, "scroll-up":true
 	};
 
 	this.checkName = function(name, kind) {
@@ -375,8 +377,28 @@ function Compiler(source) {
 		else if (token == "return")  { this.inst(0x00, 0xEE); }
 		else if (token == "clear")   { this.inst(0x00, 0xE0); }
 		else if (token == "bcd")     { this.inst(0xF0 | this.register(), 0x33); }
-		else if (token == "save")    { this.inst(0xF0 | this.register(), 0x55); }
-		else if (token == "load")    { this.inst(0xF0 | this.register(), 0x65); }
+		else if (token == "save")    {
+			var reg = this.register();
+			if (this.peek() == "-") {
+				this.expect("-");
+				this.xo = true;
+				this.inst(0x50 | reg, (this.register() << 4) | 0x02);
+			}
+			else {
+				this.inst(0xF0 | reg, 0x55);
+			}
+		}
+		else if (token == "load") {
+			var reg = this.register();
+			if (this.peek() == "-") {
+				this.expect("-");
+				this.xo = true;
+				this.inst(0x50 | reg, (this.register() << 4) | 0x03);
+			}
+			else {
+				this.inst(0xF0 | reg, 0x65);
+			}
+		}
 		else if (token == "delay")   { this.expect(":="); this.inst(0xF0 | this.register(), 0x15); }
 		else if (token == "buzzer")  { this.expect(":="); this.inst(0xF0 | this.register(), 0x18); }
 		else if (token == "if") {
@@ -442,7 +464,26 @@ function Compiler(source) {
 			}
 			this.whiles.pop();
 		}
+		else if (token == "bank") {
+			var bank = this.tinyValue();
+			if (bank > 1) { throw "the bank id must be [0, 1]."; }
+			this.xo = true;
+			this.inst(0xF0 | bank, 0x00);
+		}
+		else if (token == "plane") {
+			var plane = this.tinyValue();
+			if (plane > 3) { throw "the plane bitmask must be [0, 3]."; }
+			this.xo = true;
+			this.inst(0xF0 | plane, 0x01);
+		}
+		else if (token == "audio") {
+			this.expect(":=");
+			this.expect("i");
+			this.xo = true;
+			this.inst(0xF0, 0x02);
+		}
 		else if (token == "scroll-down")  { this.schip = true; this.inst(0x00, 0xC0 | this.tinyValue()); }
+		else if (token == "scroll-up")    { this.xo    = true; this.inst(0x00, 0xD0 | this.tinyValue()); }
 		else if (token == "scroll-right") { this.schip = true; this.inst(0x00, 0xFB); }
 		else if (token == "scroll-left")  { this.schip = true; this.inst(0x00, 0xFC); }
 		else if (token == "exit")         { this.schip = true; this.inst(0x00, 0xFD); }
