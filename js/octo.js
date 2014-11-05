@@ -431,8 +431,13 @@ function setSpriteEditorSize() {
 		canvas.height = 25 * 16;
 		var newpixels = [];
 		for(var z = 0; z < 64; z++) { newpixels[z] = 0; }
-		for(var z = 0; z < pixel.length; z++) {
+		for(var z = 0; z < 15; z++) {
 			newpixels[z * 2] = pixel[z];
+		}
+		if (enableColor) {
+			for(var z = 0; z < 15; z++) {
+				newpixels[32 + (z * 2)] = pixel[15 + z];
+			}
 		}
 		pixel = newpixels;
 	}
@@ -446,8 +451,8 @@ function setSpriteEditorSize() {
 			newpixels[z] = pixel[z*2];
 		}
 		if (enableColor) {
-			for(var z = 15; z < 30; z++) {
-				newpixels[z] = pixel[z*2 + 32];
+			for(var z = 0; z < 15; z++) {
+				newpixels[15 + z] = pixel[32 + z*2];
 			}
 		}
 		pixel = newpixels;
