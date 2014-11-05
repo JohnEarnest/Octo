@@ -76,8 +76,13 @@ function audioSetup() {
 
 var SAMPLES = 16;
 var VOLUME = 0.25;
+var soundSource = null;
+
 function playPattern(soundLength, buffer) {
 	if (!audio) { return; }
+
+	// if another sound is in progress, stop it
+	if (soundSource != null) { soundSource.stop(0); }
 
 	// construct an audio buffer from the pattern buffer
 	var sampleCount = Math.floor((audio.sampleRate / 120) * soundLength);
@@ -98,7 +103,7 @@ function playPattern(soundLength, buffer) {
 	}
 
 	// play the sound
-	var soundSource = audio.createBufferSource();
+	soundSource = audio.createBufferSource();
 	soundSource.buffer = soundBuffer;
 	soundSource.connect(audio.destination);
 	soundSource.loop = false;
