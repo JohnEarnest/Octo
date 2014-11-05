@@ -15,7 +15,7 @@ var VF_ORDER_QUIRKS   = false; // arithmetic results write to vf after status fl
 
 var regNames = [
 	0x0,0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9,0xA,0xB,0xC,0xD,0xE,0xF,
-	'f0','f1','f2','f3','f4','f5','f6','f7','i','rets'
+	'f0','f1','f2','f3','f4','f5','f6','f7','i','rets','plane'
 ];
 
 // global state:
@@ -329,6 +329,22 @@ function apply(address) {
 		}
 		ret['i'] = s;
 	}
+	function ibank(bankid) {
+		var mask = (bankid << 12);
+		var s = {};
+		for(var a in ret['i']) {
+			s[capi((parseInt(a) & 0xFFF) | mask)] = true;
+		}
+		return s;
+	}
+	function isingle(value) {
+		var s = {};
+		for(var a in ret['i']) {
+			s[value | (parseInt(a) & 0xF000)] = true;
+		}
+		console.log("isingle " + JSON.stringify(s));
+		return s;
+	}
 	function ioffsets() {
 		var s = {};
 		for(var a in ret['i']) {
@@ -376,17 +392,18 @@ function apply(address) {
 		}
 		return destinations;
 	}
-	function markRead(size) {
+	function markRead(size, offset) {
+		if (!offset) { offset = 0; }
 		for(var w in ret['i']) {
-			var addr = parseInt(w);
+			var addr = parseInt(w) + offset;
 			for(var z = 0; z <= size; z++) {
 				setType(addr + z, "data");
 			}
 		}
 	}
-	function markWrite(size) {
+	function markWrite(size, offset) {
 		// todo: distinguish read-only/read-write data?
-		markRead(size);
+		markRead(size, offset);
 	}
 
 	// simulate postconditions:
@@ -405,8 +422,10 @@ function apply(address) {
 	if (o == 0x8 && n == 0x6)   { bincarry(function(a, b) { return [b >> 1, b & 1];        }); }
 	if (o == 0x8 && n == 0x7)   { bincarry(function(a, b) { return [b -  a, b >= a];       }); }
 	if (o == 0x8 && n == 0xE)   { bincarry(function(a, b) { return [b << 1, b & 128];      }); }
-	if (o == 0xA)               { ret['i'] = single(nnn);        } // i := nnn
+	if (o == 0xA)               { ret['i'] = isingle(nnn);       } // i := nnn
 	if (o == 0xC)               { ret[x]   = maskedrand();       } // vx := random nn
+	if (o == 0xF && nn == 0x00) { ret['i'] = ibank(x);           } // bank n
+	if (o == 0xF && nn == 0x01) { ret['plane'] = single(x);      } // plane n
 	if (o == 0xF && nn == 0x07) { ret[x]   = iota(0xFF);         } // vx := delay
 	if (o == 0xF && nn == 0x0A) { ret[x]   = iota(0xF);          } // vx := key
 	if (o == 0xF && nn == 0x1E) { ret['i'] = ioffsets();         } // i += vx
@@ -419,8 +438,9 @@ function apply(address) {
 	if (o == 0xD) {
 		// sprite vx vy n
 		ret[0xF] = { 1:true, 0:true };
-		if (n == 0) { markRead(31);  }
-		else        { markRead(n-1); }
+		var color = (3 in ret['plane']);
+		if (n == 0) { markRead(color ? 63      : 31 ); }
+		else        { markRead(color ? (n-1)*2 : n-1); }
 	}
 	if (o == 0xF && nn == 0x33) {
 		// bcd
@@ -439,6 +459,22 @@ function apply(address) {
 		for(var z = 0; z <= x; z++) { ret[z] = all; }
 		markRead(x);
 		ioffset(x);
+	}
+	if (op == 0xF002) {
+		// audio := i
+		markRead(15);
+	}
+	if (o == 0x5 && n == 0x2) {
+		// save vx - vy
+		markWrite(Math.abs(x - y), Math.min(x, y));
+	}
+	if (o == 0x5 && n == 0x3) {
+		// load vx - vy
+		var all = iota(0xFF);
+		var dist = Math.abs(x - y);
+		if (x < y) { for(var z = 0; z <= dist; z++) { ret[x+z] = all; }}
+		else       { for(var z = 0; z <= dist; z++) { ret[x-z] = all; }}
+		markRead(Math.abs(x - y), Math.min(x, y));
 	}
 
 	return ret;
@@ -539,9 +575,10 @@ function analyzeInit(rom, quirks) {
 		reaching[0x200][regNames[z]] = { 0:true };
 	}
 	reaching[0x200]['rets'] = {};
+	reaching[0x200]['plane'] = { 1:true };
 	fringe = [0x200];
 
-	for(var x = 0; x < 4096; x++)       { program[x] = 0x00; }
+	for(var x = 0; x < 4096 * 2; x++)   { program[x] = 0x00; }
 	for(var x = 0; x < rom.length; x++) { program[x+0x200] = rom[x]; }
 }
 
