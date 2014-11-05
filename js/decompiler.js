@@ -85,8 +85,12 @@ function formatInstruction(a, nn) {
 	if (o == 0xD)               { return "sprite " + vx + " " + vy + " " + n; }
 	if (o == 0xE && nn == 0x9E) { return "if " + vx + " -key then"; }
 	if (o == 0xE && nn == 0xA1) { return "if " + vx + " key then"; }
-	if (o == 0xF && nn == 0x00) { return "bank " + x; }
-	if (o == 0xF && nn == 0x01) { return "plane " + x; }
+	if (op == 0xF000)           { return "bank 0"; }
+	if (op == 0xF100)           { return "bank 1"; }
+	if (op == 0xF001)           { return "plane 0"; }
+	if (op == 0xF101)           { return "plane 1"; }
+	if (op == 0xF201)           { return "plane 2"; }
+	if (op == 0xF301)           { return "plane 3"; }
 	if (op == 0xF002)           { return "audio := i"; }
 	if (o == 0xF && nn == 0x07) { return vx + " := delay"; }
 	if (o == 0xF && nn == 0x0A) { return vx + " := key"; }
@@ -342,7 +346,6 @@ function apply(address) {
 		for(var a in ret['i']) {
 			s[value | (parseInt(a) & 0xF000)] = true;
 		}
-		console.log("isingle " + JSON.stringify(s));
 		return s;
 	}
 	function ioffsets() {
