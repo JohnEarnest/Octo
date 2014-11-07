@@ -95,6 +95,7 @@ function reset() {
 	window.removeEventListener("keyup"  , keyUp  , false);
 	window.clearInterval(intervalHandle);
 	clearBreakpoint();
+	stopAudio();
 }
 
 function share() {
