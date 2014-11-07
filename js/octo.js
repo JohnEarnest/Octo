@@ -843,6 +843,23 @@ function swapWaveforms() {
 	drawAudio();
 }
 
+function shiftAudio(delta) {
+	var audioPattern = parseAudio("audioPattern");
+	var result = "";
+	for(var z = 0; z < 16; z++) {
+		var b = 0;
+		for(var index = 0; index < 8; index++) {
+			var sourceIndex = (index + delta + (z * 8)) & 127;
+			var sourceByte  = Math.floor(sourceIndex / 8);
+			var sourceBit   = 7 - Math.floor(sourceIndex % 8);
+			b = (b <<= 1) | ((audioPattern[sourceByte] >> sourceBit) & 1);
+		}
+		result += hexFormat(b) + " ";
+	}
+	document.getElementById("audioPattern").value = result;
+	drawAudio();
+}
+
 function blendWaveform(func) {
 	var audioPattern = parseAudio("audioPattern");
 	var blendPattern = parseAudio("blendPattern");
