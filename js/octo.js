@@ -835,12 +835,46 @@ function randomAudio() {
 	drawAudio();
 }
 
-function parseAudio() {
+function swapWaveforms() {
+	var a = document.getElementById("audioPattern").value;
+	var b = document.getElementById("blendPattern").value;
+	document.getElementById("audioPattern").value = b;
+	document.getElementById("blendPattern").value = a;
+	drawAudio();
+}
+
+function blendWaveform(func) {
+	var audioPattern = parseAudio("audioPattern");
+	var blendPattern = parseAudio("blendPattern");
+	function blend(target, dyad) {
+		var data = "";
+		for(var z = 0; z < audioPattern.length; z++) {
+			data += hexFormat(dyad(audioPattern[z], blendPattern[z]) & 0xFF) + " ";
+		}
+		document.getElementById(target).value = data;
+	}
+
+	if (func == 'xor') {
+		blend("audioPattern", function(a, b) { return a ^ b; });
+	}
+	if (func == 'and') {
+		blend("audioPattern", function(a, b) { return a & b; });
+	}
+	if (func == 'or') {
+		blend("audioPattern", function(a, b) { return a | b; });
+	}
+	if (func == 'not') {
+		blend("blendPattern", function(a, b) { return (~b); });
+	}
+	drawAudio();
+}
+
+function parseAudio(id) {
 	function parse(token) {
 		var num = (token.slice(0, 2) == "0b") ? parseInt(token.slice(2),2) : parseInt(token);
 		return isNaN(num) ? token : num;
 	}
-	var pattern = document.getElementById("audioPattern").value;
+	var pattern = document.getElementById(id).value;
 	pattern = pattern.replace("[", "");
 	pattern = pattern.replace("]", "");
 	pattern = pattern.split(/\s+/);
@@ -859,7 +893,7 @@ function drawAudio() {
 	render.fillRect(0, 0, canvas.width, canvas.height);
 	render.fillStyle = emulator.fillColor;
 
-	var buffer = parseAudio();
+	var buffer = parseAudio("audioPattern");
 	for(var z = 0; z < 8 * 16; z++) {
 		var a = Math.floor(z / 8);
 		var b = 7 - Math.floor(z % 8);
@@ -883,7 +917,7 @@ function playAudio() {
 	}
 
 	// parse the input string into a byte array, padding with zeros if necessary:
-	var buffer = parseAudio();
+	var buffer = parseAudio("audioPattern");
 
 	playPattern(soundLength, buffer);
 }

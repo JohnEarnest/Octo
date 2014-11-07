@@ -277,12 +277,21 @@
 					<option value="0xF0 0xF0 0xF0 0xF0 0xcc 0xcc 0xcc 0xcc 0xF0 0xF0 0xF0 0xF0 0xcc 0xcc 0xcc 0xcc">Doorbell</option>
 					<option value="0x55 0xAA 0x55 0xAA 0x55 0xAA 0x55 0xAA 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00">Gurgle</option>
 					<option value="0x02 0xCD 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00">Click</option>
+					<option value="0xFF 0x80 0x3F 0xE0 0x0F 0xF8 0x03 0xFF 0x00 0x7F 0xC0 0x8E 0x38 0xE3 0x8E 0x38">A5</option>
 				</select>
 				<button onclick="randomAudio();">Random</button>
 				<br>
 				Duration (1/60ths of a second): <input id="time" type="text" size="4" value="30">
 				<button onclick="playAudio();">Play</button>
 				<div id="audioerror" style="color: red;"></div>
+				<h3>Waveform Blending</h3>
+				Combine this waveform with the one above.<br>
+				<textarea id="blendPattern" rows="4" cols="40" spellcheck="false"></textarea><br>
+				<button type="button" onclick="blendWaveform('xor');">XOR</button>
+				<button type="button" onclick="blendWaveform('and');">AND</button>
+				<button type="button" onclick="blendWaveform('or');">OR</button>
+				<button type="button" onclick="blendWaveform('not');">NOT (this pattern)</button>
+				<button type="button" onclick="swapWaveforms();">Swap</button>
 			</div>
 		</center>
 
