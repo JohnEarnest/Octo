@@ -836,11 +836,11 @@ function randomAudio() {
 	drawAudio();
 }
 
-function swapWaveforms() {
-	var a = document.getElementById("audioPattern").value;
-	var b = document.getElementById("blendPattern").value;
-	document.getElementById("audioPattern").value = b;
-	document.getElementById("blendPattern").value = a;
+function swapWaveforms(x, y) {
+	var a = document.getElementById(x).value;
+	var b = document.getElementById(y).value;
+	document.getElementById(x).value = b;
+	document.getElementById(y).value = a;
 	drawAudio();
 }
 
@@ -886,6 +886,49 @@ function blendWaveform(func) {
 	}
 	drawAudio();
 }
+
+function generateWaveform() {
+	var canvas = document.getElementById("waveform");
+	var h = canvas.height;
+	var w = canvas.width;
+	var g = canvas.getContext("2d");
+	g.fillStyle = emulator.backColor;
+	g.fillRect(0, 0, canvas.width, canvas.height);
+
+	// Samples are played at 4000 samples/second.
+	// 128 samples is (1 seconds / 4000 * 128) = .032 seconds.
+	// This also means that a full 128 bit pattern is ~ 2/60ths of a second.
+	// A sine wave at N hz would be given by sin(t * N * 2Pi).
+
+	var frequency = parseInt(document.getElementById("frequency").value);
+	var cutoff    = parseInt(document.getElementById("cutoff").value);
+
+	var word = 0;
+	var pattern = "";
+
+	for(var z = 0; z < 128; z++) {
+		var t = z * (1 / 4000 * 128);                  // time in seconds
+		var v = Math.sin(t * frequency * 2 * Math.PI); // sine wave
+		var s = Math.floor((v + 1) * 128);             // offset and scale
+
+		// draw some nice waveform displays
+		g.fillStyle = emulator.fillColor2;
+		g.fillRect(z*(w/128), h-(s*(h/256)), (w/128), s*(h/256));
+		if (s >= cutoff) {
+			g.fillStyle = emulator.fillColor;
+			g.fillRect(z*(w/128), h-(cutoff*(h/256)), (w/128), cutoff*(h/256));
+		}
+
+		// build up a bit vector
+		word = (word << 1) | ((s >= cutoff) ? 1 : 0);
+		if ((z % 8) == 7) {
+			pattern += hexFormat(word) + " ";
+			word = 0;
+		}
+	}
+	document.getElementById("generatedPattern").value = pattern;
+}
+generateWaveform();
 
 function parseAudio(id) {
 	function parse(token) {

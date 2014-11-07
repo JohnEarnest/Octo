@@ -293,7 +293,13 @@
 				<button type="button" onclick="blendWaveform('and');">AND</button>
 				<button type="button" onclick="blendWaveform('or');">OR</button>
 				<button type="button" onclick="blendWaveform('not');">NOT (this pattern)</button>
-				<button type="button" onclick="swapWaveforms();">Swap</button>
+				<button type="button" onclick="swapWaveforms('blendPattern', 'audioPattern');">Swap</button>
+				<h3>Tone Generator</h3>
+				<canvas id="waveform" width="256" height="64"></canvas><br>
+				Freq. (Hz): <input id="frequency" type="text" size="4" value="440" onchange="generateWaveform();" onkeyup="generateWaveform();">
+				Cutoff: <input id="cutoff" type="text" size="4" value="128" onchange="generateWaveform();" onkeyup="generateWaveform();">
+				<button type="button" onclick="swapWaveforms('generatedPattern', 'audioPattern');">Swap</button>
+				<br><textarea id="generatedPattern" rows="4" cols="40" spellcheck="false"></textarea>
 			</div>
 		</center>
 
