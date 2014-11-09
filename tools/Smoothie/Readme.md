@@ -3,6 +3,8 @@ Smoothie
 
 Smoothie is a utility for generating smoothly-looping sprite animations for Chip8 programs from a horizontal sprite sheet. By building a sequence of sprite frames which are XORed with the previous frame in the sequence it is possible to draw animations without needing to erase and then redraw, reducing flicker. Both 8xN and 16x16 SuperChip sprites are supported.
 
+If a color image is provided, Smoothie will assume black is the blended color and transparent is the background color and arrange each sprite with data for plane 1 followed by plane 2.
+
 Compiling is easy:
 
 	javac Smoothie.java
@@ -14,6 +16,8 @@ By default, Smoothie will output hex sprite data for the looped animation. The f
 Our input image: ![input data](snap.png)
 
 	java Smoothie snap.png
+	# color 0: 0x00FFFFFF
+	# color 1: 0xFF000000
 	: snap-0
 		0x00 0x00 0x00 0x00 0x00 0x28 0x28 0x28
 		0x28 0x3C 0x34 0x3C 0x3C 0x3C 0x38 

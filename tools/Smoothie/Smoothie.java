@@ -33,19 +33,70 @@ public class Smoothie {
 			System.exit(1);
 		}
 
+		// extract a palette.
+		List<Integer> palette = new ArrayList<>();
+		{
+			Set<Integer> colors = new TreeSet<>();
+			for(int x = 0; x < image.getWidth(); x++) {
+				for(int y = 0; y < image.getHeight(); y++) {
+					colors.add(image.getRGB(x, y));
+				}
+			}
+			final int TRANSPARENT = 0x00FFFFFF;
+			if (colors.contains(TRANSPARENT)) {
+				colors.remove(TRANSPARENT);
+				palette.add(TRANSPARENT);
+			}
+			final int BLACK = 0xFF000000;
+			boolean foundBlack = false;
+			if (colors.contains(BLACK)) {
+				colors.remove(BLACK);
+				foundBlack = true;
+			}
+			for(int c : colors) {
+				palette.add(c);
+			}
+			if (foundBlack) {
+				palette.add(BLACK);
+			}
+			for(int z = 0; z < palette.size(); z++) {
+				System.out.format("# color %d: 0x%08X%n", z, palette.get(z));
+			}
+			if (palette.size() > 4) {
+				System.err.format("This image uses %d colors, but only 4 can be represented!", palette.size());
+				System.exit(1);
+			}
+		}
+		List<HashSet<Integer>> planes;
+		if (palette.size() > 2) {
+			planes = Arrays.asList(
+				new HashSet<>(Arrays.asList(palette.get(1), palette.get(3))),
+				new HashSet<>(Arrays.asList(palette.get(2), palette.get(3)))
+			);
+		}
+		else {
+			planes = Arrays.asList(
+				new HashSet<>(Arrays.asList(palette.get(1)))
+			);
+		}
+
+
 		// split image data into sprites
 		List<int[]> sprites = new ArrayList<>();
 		int height = Math.min(image.getHeight(), 16);
 		int width  = (height == 16) ? 16 : 8;
 		for(int n = 0; n < image.getWidth() / width; n++) {
-			int[] s = new int[height * (width/8)];
+			int[] s = new int[height * (width/8) * (palette.size() > 2 ? 2 : 1)];
 			sprites.add(s);
 			int index = 0;
-			for(int y = 0; y < height; y++) {
-				for(int x = 0; x < width; x++) {
-					int solid = (((image.getRGB(x + (width*n), y) >> 24) & 0xFF) != 0) ? 1 : 0;
-					s[index] = (s[index] << 1) | solid;
-					if (x % 8 == 7) { index++; }
+			for(Set<Integer> plane : planes) {
+				for(int y = 0; y < height; y++) {
+					for(int x = 0; x < width; x++) {
+						int color = image.getRGB(x + (width*n), y);
+						int solid = plane.contains(color) ? 1 : 0;
+						s[index] = (s[index] << 1) | solid;
+						if (x % 8 == 7) { index++; }
+					}
 				}
 			}
 		}
@@ -90,16 +141,17 @@ public class Smoothie {
 				BufferedImage.TYPE_INT_ARGB
 			);
 			for(int n = 0; n < sprites.size(); n++) {
-				int index = 0;
-				int row = sprites.get(n)[index];
+				int[] sprite = sprites.get(n);
 				for(int y = 0; y < height; y++) {
 					for(int x = 0; x < width; x++) {
-						int color = ((row & 0x80) != 0) ? 0xFF000000 : 0x00000000;
-						row = row << 1;
+						int index = (width / 8) * y;
+						int row1 = sprite[index];
+						int row2 = (palette.size() > 2) ? sprite[index + sprite.length/2] : 0;
+						int color = palette.get(
+							(((row1 >> (7-x)) & 1) != 0 ? 1 : 0) +
+							(((row2 >> (7-x)) & 1) != 0 ? 2 : 0)
+						);
 						out.setRGB(x + (width*n), y, color);
-						if (index+1 < sprites.get(n).length) {
-							if (x % 8 == 7) { row = sprites.get(n)[++index]; }
-						}
 					}
 				}
 			}
