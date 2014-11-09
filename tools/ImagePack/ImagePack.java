@@ -117,30 +117,24 @@ public class ImagePack {
 		List<Integer> data = new ArrayList<>();
 		int outerMax = order.getOuterMax(image, spritew, spriteh);
 		int innerMax = order.getInnerMax(image, spritew, spriteh);
+		List<HashSet<Integer>> planes;
 		if (palette.size() > 2) {
-			List<HashSet<Integer>> planes = Arrays.asList(
+			planes = Arrays.asList(
 				new HashSet<>(Arrays.asList(palette.get(1), palette.get(3))),
 				new HashSet<>(Arrays.asList(palette.get(2), palette.get(3)))
 			);
-			for(int outer = 0; outer < outerMax; outer++) {
-				for(int inner = 0; inner < innerMax; inner++) {
-					for(Set<Integer> plane : planes) {
-						for(int yoff = 0; yoff < spriteh; yoff += 1) {
-							for(int xoff = 0; xoff < spritew; xoff += 8) {
-								data.add(order.getByte(outer, inner, spritew, spriteh, xoff, yoff, image, plane));
-							}
-						}
-					}
-				}
-			}
 		}
 		else {
-			Set<Integer> plane1 = Collections.singleton(palette.get(1));
-			for(int outer = 0; outer < outerMax; outer++) {
-				for(int inner = 0; inner < innerMax; inner++) {
+			planes = Arrays.asList(
+				new HashSet<>(Arrays.asList(palette.get(1)))
+			);
+		}
+		for(int outer = 0; outer < outerMax; outer++) {
+			for(int inner = 0; inner < innerMax; inner++) {
+				for(Set<Integer> plane : planes) {
 					for(int yoff = 0; yoff < spriteh; yoff += 1) {
 						for(int xoff = 0; xoff < spritew; xoff += 8) {
-							data.add(order.getByte(outer, inner, spritew, spriteh, xoff, yoff, image, plane1));
+							data.add(order.getByte(outer, inner, spritew, spriteh, xoff, yoff, image, plane));
 						}
 					}
 				}
