@@ -3,6 +3,8 @@ ImagePack
 
 ImagePack is a utility for preparing large images for Chip8 programs. Images which cannot be drawn with a single `sprite` operation must be split into a sequential form intended for some sprite dimensions. ImagePack offers a number of options for the ordering and division of data, allowing for inexpensive transition animations and scrolls.
 
+If a color image is provided, ImagePack will assume black is the blended color and transparent is the background color and arrange each sprite-sized chunk with data for plane 1 followed by plane 2.
+
 Compiling:
 
 	javac ImagePack.java
@@ -36,6 +38,8 @@ The possible orderings are thus `tblr`,`tbrl`,`btlr`,`btrl`,`lrtb`,`lrbt`,`rltb`
 By default, ImagePack assumes an 8x8 sprite and the ordering `tblr`.
 
 	java ImagePack example.png --sprite=1 --order=tbrl
+	# color 0: 0x00FFFFFF
+	# color 1: 0xFF000000
 	: example # (256 bytes)
 		0xFF 0xFF 0xFF 0xFF 0xFF 0xFF 0xFF 0xFF
 		0x01 0x00 0x00 0x00 0x00 0x00 0x00 0x80

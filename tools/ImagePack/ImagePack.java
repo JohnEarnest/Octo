@@ -78,15 +78,70 @@ public class ImagePack {
 			System.exit(1);
 		}
 
+		// extract a palette.
+		List<Integer> palette = new ArrayList<>();
+		{
+			Set<Integer> colors = new TreeSet<>();
+			for(int x = 0; x < image.getWidth(); x++) {
+				for(int y = 0; y < image.getHeight(); y++) {
+					colors.add(image.getRGB(x, y));
+				}
+			}
+			final int TRANSPARENT = 0x00FFFFFF;
+			if (colors.contains(TRANSPARENT)) {
+				colors.remove(TRANSPARENT);
+				palette.add(TRANSPARENT);
+			}
+			final int BLACK = 0xFF000000;
+			boolean foundBlack = false;
+			if (colors.contains(BLACK)) {
+				colors.remove(BLACK);
+				foundBlack = true;
+			}
+			for(int c : colors) {
+				palette.add(c);
+			}
+			if (foundBlack) {
+				palette.add(BLACK);
+			}
+			for(int z = 0; z < palette.size(); z++) {
+				System.out.format("# color %d: 0x%08X%n", z, palette.get(z));
+			}
+			if (palette.size() > 4) {
+				System.err.format("This image uses %d colors, but only 4 can be represented!", palette.size());
+				System.exit(1);
+			}
+		}
+
 		// unpack image data
 		List<Integer> data = new ArrayList<>();
 		int outerMax = order.getOuterMax(image, spritew, spriteh);
 		int innerMax = order.getInnerMax(image, spritew, spriteh);
-		for(int outer = 0; outer < outerMax; outer++) {
-			for(int inner = 0; inner < innerMax; inner++) {
-				for(int yoff = 0; yoff < spriteh; yoff += 1) {
-					for(int xoff = 0; xoff < spritew; xoff += 8) {
-						data.add(order.getByte(outer, inner, spritew, spriteh, xoff, yoff, image));
+		if (palette.size() > 2) {
+			List<HashSet<Integer>> planes = Arrays.asList(
+				new HashSet<>(Arrays.asList(palette.get(1), palette.get(3))),
+				new HashSet<>(Arrays.asList(palette.get(2), palette.get(3)))
+			);
+			for(int outer = 0; outer < outerMax; outer++) {
+				for(int inner = 0; inner < innerMax; inner++) {
+					for(Set<Integer> plane : planes) {
+						for(int yoff = 0; yoff < spriteh; yoff += 1) {
+							for(int xoff = 0; xoff < spritew; xoff += 8) {
+								data.add(order.getByte(outer, inner, spritew, spriteh, xoff, yoff, image, plane));
+							}
+						}
+					}
+				}
+			}
+		}
+		else {
+			Set<Integer> plane1 = Collections.singleton(palette.get(1));
+			for(int outer = 0; outer < outerMax; outer++) {
+				for(int inner = 0; inner < innerMax; inner++) {
+					for(int yoff = 0; yoff < spriteh; yoff += 1) {
+						for(int xoff = 0; xoff < spritew; xoff += 8) {
+							data.add(order.getByte(outer, inner, spritew, spriteh, xoff, yoff, image, plane1));
+						}
 					}
 				}
 			}
@@ -133,7 +188,7 @@ enum Order {
 		return !verticalOuter ? (i.getHeight()/spriteh) : (i.getWidth()/spritew);
 	}
 
-	public int getByte(int outer, int inner, int spritew, int spriteh, int xoff, int yoff, BufferedImage i) {
+	public int getByte(int outer, int inner, int spritew, int spriteh, int xoff, int yoff, BufferedImage i, Set<Integer> colors) {
 		if (!ascendingOuter) { outer = getOuterMax(i, spritew, spriteh) - 1 - outer; }
 		if (!ascendingInner) { inner = getInnerMax(i, spritew, spriteh) - 1 - inner; }
 		int x = xoff + ( verticalOuter ? (inner*spritew) : (outer*spritew));
@@ -141,7 +196,7 @@ enum Order {
 		int ret = 0;
 		for(int index = 0; index < 8; index++) {
 			int pixel = i.getRGB(x + index, y);
-			ret = ((ret << 1) | (((pixel & 0xFF000000) != 0) ? 1 : 0));
+			ret = ((ret << 1) | (colors.contains(pixel) ? 1 : 0));
 		}
 		return ret;
 	}
