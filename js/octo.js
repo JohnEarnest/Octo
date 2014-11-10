@@ -907,7 +907,7 @@ function generateWaveform() {
 	var pattern = "";
 
 	for(var z = 0; z < 128; z++) {
-		var t = z * (1 / 4000 * 128);                  // time in seconds
+		var t = z * (1 / 4000);                        // time in seconds
 		var v = Math.sin(t * frequency * 2 * Math.PI); // sine wave
 		var s = Math.floor((v + 1) * 128);             // offset and scale
 
