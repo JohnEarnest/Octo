@@ -5,16 +5,18 @@ title: Octo Assembly Language
 Octo Assembly Language
 ----------------------
 
-Octo syntax is in some ways inspired by Forth- a series of whitespace-delimited tokens. Labels are defined with `:` followed by a name, and simply using a name by itself will perform a call. `;` terminates subroutines with a return. `#` indicates a single-line comment. Numbers can use `0x` or `0b` prefixes to indicate hexadecimal or binary encodings, respectively. Whenever numbers are encountered outside a statement they will be compiled as literal bytes. An entrypoint named `main` must be defined.
+Octo programs are a series of _tokens_ separated by whitespace. Some tokens represent Chip8 instructions and some tokens are _directives_ which instruct Octo to do some special action as the program is compiled. The `:` directive, followed by a name (which cannot contain spaces) defines a _label_. A label represents a memory address- a location in your program. You must define at least one label called `main` which serves as the entrypoint to your program.
 
-Numeric constants can be defined with `:const` followed by a name and then a value, which may be a number, another constant or a (non forward-declared) label. Registers may be given named aliases with `:alias` followed by a name and then a register. The `i` register may not be given an alias, but v registers can be given as many aliases as desired. Here are some examples of constants and aliases:
+Using a label by itself will perform a subroutine call to the address the label represents. A semicolon (`;`) is another way to write `return`, which returns from a subroutine. The `#` directive is a single-line comment; it ignores the rest of the current line. Numbers can be written using `0x` or `0b` prefixes to indicate hexadecimal or binary encodings, respectively.
+
+Numeric constants can be defined with the `:const` directive followed by a name and then a value, which may be a number, another constant or a (non forward-declared) label. Registers may be given named aliases with `:alias` followed by a name and then a register. The `i` register may not be given an alias, but v registers can be given as many aliases as desired. Here are some examples of constants and aliases:
 
 	:alias x v0
 	:alias CARRY_FLAG vF
 	:const iterations 16
 	:const sprite-height 9
 
-Chip8 has 16 general-purpose 8-bit registers named `v0` to `vF`. `vF` is the "flag" register", and some operations will modify it as a side effect. `i` is the memory index register and is used when reading and writing memory via `load`, `save` and `bcd`, and also provides the address of the graphics data drawn by `sprite`. Sprites are drawn by xoring their pixels with the contents of the screen. Drawing a sprite sets `vF` to 0, or to 1 if drawing the sprite toggles any pixels which were previously on.
+Chip8 has 16 general-purpose 8-bit registers named `v0` to `vF`. `vF` is the "flag" register", and some operations will modify it as a side effect. `i` is the memory index register and is used when reading and writing memory via `load`, `save` and `bcd`, and also provides the address of the graphics data drawn by `sprite`. Sprites are drawn by XORing their pixels with the contents of the screen. The screen is 64 pixels wide and 32 pixels tall, and sprites drawn off the edge of the display will wrap around. Drawing a sprite sets `vF` to 0, or to 1 if drawing the sprite toggles any pixels which were previously on. For a more detailed description of the behavior of Chip8 instructions consult [Mastering Chip8](mattmik.com/chip8.html).
 
 In the following descriptions, `vx` and `vy` refer to some register name (v0-vF) and `n` refers to some number. The Chip8 keypad is represented on your keyboard as follows:
 
