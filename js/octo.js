@@ -324,6 +324,13 @@ function setVfOrderQuirks() {
 function setEnableXO() {
 	var check = document.getElementById("enableXO");
 	emulator.enableXO = check.checked;
+	if (check.checked) {
+		var features = document.getElementsByClassName("xofeature");
+		for(var z = 0; z < features.length; z++) {
+			var feature = features[z];
+			feature.style.display = (feature.tagName == "TR") ? "table-row" : "inline";
+		}
+	}
 }
 
 function toggleOptions() {

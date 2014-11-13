@@ -126,7 +126,7 @@
 		<button type="button" onClick="toggleManual();">Manual</button>
 		<button type="button" onClick="toggleOptions();">Options</button>
 		<button type="button" onClick="toggleSpriteEditor();">Sprite Editor</button>
-		<button type="button" onClick="toggleAudioEditor();">Audio Editor</button>
+		<button type="button" onClick="toggleAudioEditor();" class="xofeature" style="display:none" class="xofeature" style="display:none" >Audio Editor</button>
 		<button type="button" onClick="toggleBinaryTools();">Binary Tools</button>
 	</div>
 
@@ -182,8 +182,10 @@
 					<input type="checkbox" id="spriteEditorSize" onchange="setSpriteEditorSize();">
 					<label for="spriteEditorSize">16x16 mode</label>
 					<br/>
+					<div class="xofeature" style="display:none">
 					<input type="checkbox" id="spriteEditorColor" onchange="setSpriteEditorColor();">
 					<label for="spriteEditorColor">Color mode</label>
+					</div>
 					<br/>
 					<canvas id="spriteEditorPalette" width="200px" height="25px" style="display:none;"></canvas><br/>
 					<canvas id="draw" width="200" height="375" style="border:1px solid;"></canvas><br/>
@@ -204,12 +206,12 @@
 						<td><input type="text" size="7" id="foreEdit1" onchange="editFore1();" onkeyup="editFore1();"></td>
 						<td bgcolor="0xFF0000" id="foreSample1"  >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
 					</tr>
-					<tr>
+					<tr class="xofeature" style="display:none">
 						<td>Foreground 2 (XO-Chip)</td>
 						<td><input type="text" size="7" id="foreEdit2" onchange="editFore2();" onkeyup="editFore2();"></td>
 						<td bgcolor="0xFF0000" id="foreSample2"  >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
 					</tr>
-					<tr>
+					<tr class="xofeature" style="display:none">
 						<td>Blended (XO-Chip)</td>
 						<td><input type="text" size="7" id="blendEdit" onchange="editBlend();" onkeyup="editBlend();"></td>
 						<td bgcolor="0xFF0000" id="blendSample"  >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
