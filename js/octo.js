@@ -324,6 +324,13 @@ function setVfOrderQuirks() {
 function setEnableXO() {
 	var check = document.getElementById("enableXO");
 	emulator.enableXO = check.checked;
+	if (check.checked) {
+		var features = document.getElementsByClassName("xofeature");
+		for(var z = 0; z < features.length; z++) {
+			var feature = features[z];
+			feature.style.display = (feature.tagName == "TR") ? "table-row" : "inline";
+		}
+	}
 }
 
 function toggleOptions() {
@@ -907,7 +914,7 @@ function generateWaveform() {
 	var pattern = "";
 
 	for(var z = 0; z < 128; z++) {
-		var t = z * (1 / 4000 * 128);                  // time in seconds
+		var t = z * (1 / 4000);                        // time in seconds
 		var v = Math.sin(t * frequency * 2 * Math.PI); // sine wave
 		var s = Math.floor((v + 1) * 128);             // offset and scale
 
