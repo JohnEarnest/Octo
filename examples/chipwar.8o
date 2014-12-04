@@ -568,8 +568,7 @@
 
 : cursor-to-index
 	# leave result in vf
-	vf := 0
-	vf += cursorx
+	vf := cursorx
 	if cursory == 1 then vf +=  6
 	if cursory == 2 then vf += 12
 ;
@@ -874,7 +873,7 @@
 		restock-single
 		va += 1
 		if vb != 16 then
-	again	
+	again
 ;
 
 ###########################################
@@ -908,15 +907,13 @@
 	# trashes v0-v2
 	# pick an index 0-17
 	v2 := random 0b11111
-	v1 := 16
-	v1 -= v2
-	if vf == 1 then jump place-empty
+	if v2 > 17 then jump place-empty
 	
 	# make sure that spot is uninitialized
 	i := owns-at
 	i += v2
 	load v0
-	if vf != START then jump place-empty
+	if v0 != START then jump place-empty
 
 	# set it to be empty
 	i := owns-at
