@@ -379,7 +379,7 @@ function Compiler(source) {
 		else if (token == "bcd")     { this.inst(0xF0 | this.register(), 0x33); }
 		else if (token == "save")    {
 			var reg = this.register();
-			if (this.peek() == "-") {
+			if (this.tokens.length > 0 && this.peek() == "-") {
 				this.expect("-");
 				this.xo = true;
 				this.inst(0x50 | reg, (this.register() << 4) | 0x02);
@@ -390,7 +390,7 @@ function Compiler(source) {
 		}
 		else if (token == "load") {
 			var reg = this.register();
-			if (this.peek() == "-") {
+			if (this.tokens.length > 0 && this.peek() == "-") {
 				this.expect("-");
 				this.xo = true;
 				this.inst(0x50 | reg, (this.register() << 4) | 0x03);
