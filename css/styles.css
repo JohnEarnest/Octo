@@ -90,9 +90,10 @@ div.leftpanel {
 	position: absolute;
 	background-color:white;
 	left: 5px;
-	padding-bottom: 40px;
+	padding-bottom: 60px;
 	height: 100%;
-	bottom: 25px; /* 25px is the height of .statusbar */
+	top: 1px; /* account for the top border overlapping menubar */
+	bottom: 0;
 }
 canvas#spriteEditorPalette {
 	border-left: 1px solid;
