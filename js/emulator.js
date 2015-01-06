@@ -20,6 +20,11 @@ var keymap = [
 	/* F */ 86  // v
 ];
 
+var keymapInverse = [];
+for (var i = 0, len = keymap.length; i < len; i++) {
+	keymapInverse[keymap[i]] = i;
+}
+
 var font = [
 	0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
 	0x20, 0x60, 0x20, 0x20, 0x70, // 1
