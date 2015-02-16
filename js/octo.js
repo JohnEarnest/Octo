@@ -190,11 +190,14 @@ function render() {
 function keyDown(event) {
 	if (!(event.keyCode in emulator.keys)) {
 		emulator.keys[event.keyCode] = true;
-
-		// add an "active" class to the current button
-		var keyElement = document.getElementById('0x' + keymapInverse[event.keyCode].toString(16).toUpperCase());
-		if (! (keyElement.className.match(/active/))) {
-			keyElement.className += ' active';
+		if (event.keyCode in keymapInverse) {
+			// add an "active" class to the current button
+			var keyElement = document.getElementById(
+				'0x' + keymapInverse[event.keyCode].toString(16).toUpperCase()
+			);
+			if (!(keyElement.className.match(/active/))) {
+				keyElement.className += ' active';
+			}
 		}
 	}
 }
@@ -202,8 +205,12 @@ function keyDown(event) {
 function keyUp(event) {
 	if (event.keyCode in emulator.keys) {
 		delete emulator.keys[event.keyCode];
-		var keyElement = document.getElementById('0x' + keymapInverse[event.keyCode].toString(16).toUpperCase());
-		keyElement.className = keyElement.className.replace('active', '')
+		if (event.keyCode in keymapInverse) {
+			var keyElement = document.getElementById(
+				'0x' + keymapInverse[event.keyCode].toString(16).toUpperCase()
+			);
+			keyElement.className = keyElement.className.replace('active', '');
+		}
 	}
 	if (event.keyCode == 27) { reset(); }
 	if (event.keyCode == 73) { // i
