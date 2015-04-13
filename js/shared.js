@@ -97,6 +97,7 @@ var soundSource = null;
 
 function playPattern(soundLength, buffer) {
 	if (!audio) { return; }
+	if (soundLength < 1) { return; }
 	stopAudio();
 
 	// construct an audio buffer from the pattern buffer
