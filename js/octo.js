@@ -327,6 +327,33 @@ function editSilent() {
 	emulator.quietColor = val;
 }
 
+function palettePreset() {
+	var val = document.getElementById("palettePreset").value;
+	if (val.length < 1) { return; }
+	if (val == 'classic') {
+		document.getElementById("foreEdit1") .value = "#FFCC00"; editFore1();
+		document.getElementById("foreEdit2") .value = "#FF6600"; editFore2();
+		document.getElementById("blendEdit") .value = "#662200"; editBlend();
+		document.getElementById("backEdit")  .value = "#996600"; editBack();
+		document.getElementById("buzzEdit")  .value = "#FFAA00"; editBuzz();
+		document.getElementById("silentEdit").value = "#000000"; editSilent();
+		return;
+	}
+	val = JSON.parse(val);
+	if (emulator.enableXO) {
+		document.getElementById("foreEdit1").value = val[0]; editFore1();
+		document.getElementById("foreEdit2").value = val[1]; editFore2();
+		document.getElementById("blendEdit").value = val[2]; editBlend();
+		document.getElementById("backEdit") .value = val[3]; editBack();
+	}
+	else {
+		document.getElementById("foreEdit1").value = val[0]; editFore1();
+		document.getElementById("backEdit" ).value = val[1]; editBack();		
+	}
+	document.getElementById("buzzEdit")  .value = val[4]; editBuzz();
+	document.getElementById("silentEdit").value = val[5]; editSilent();
+}
+
 function setShiftQuirks() {
 	var check = document.getElementById("shiftQuirks");
 	emulator.shiftQuirks = check.checked;
