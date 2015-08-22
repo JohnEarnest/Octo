@@ -157,6 +157,10 @@ function runGist() {
 			framerateEl.value = framerateNum;
 			emulator.ticksPerFrame = (framerateEl.value == "") ? framerateNum : framerateEl.value;
 			unpackOptions(emulator, options);
+			if (emulator.enableXO) {
+				document.getElementById("enableXO").checked = true;
+				setEnableXO();
+			}
 			run();
 		}
 	}
