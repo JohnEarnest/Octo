@@ -70,7 +70,6 @@ To display a single digit from a register, we can make use of the `hex` statemen
 		v0 := 7        # some one-digit number
 		i  := hex v0   # load the address of a character
 		sprite v0 v0 5 # built in characters are 5 pixels tall
-		loop again
 
 There are two caveats here: the number displayed is in hexadecimal and we can only display a single digit. How do we display larger numbers? That's where `bcd` comes in. It'll take a number in a register, split it into hundreds, tens and ones and then store those into sequential addresses in memory. Then we use `load` to scoop those values into the bottom three registers and use `hex` like before to display them.
 
@@ -98,15 +97,13 @@ There are two caveats here: the number displayed is in hexadecimal and we can on
 		i := hex v2    # ones digit
 		sprite va vb 5
 
-		loop again
-
 You can also use `bcd` as a way of dividing numbers by 10 or 100, but it's a little fiddly for this purpose.
 
 Moving Slowly
 -------------
 It's easy to make objects move in whole numbers of pixels per second- just store a speed in a register and add that speed to the object's position every time you update the display. What may be less obvious is how you move objects slower than 1 pixel per frame.
 
-One technique for accomplishing this is to use fixed-point and the flag (`vf`) register. You'll store a fractional position in one register, accumulating your speed into it and incrementing the real position whenever the result sets the carry register- that is, whenever the result wraps around.
+One technique for accomplishing this is to use [fixed-point arithmetic](https://en.wikipedia.org/wiki/Fixed-point_arithmetic) and the flag (`vf`) register. You'll store a fractional position in one register, accumulating your speed into it and incrementing the real position whenever the result sets the carry register- that is, whenever the result wraps around.
 
 	: ball
 		0b0110000
@@ -153,7 +150,7 @@ Say you want to make a turn-based game where a player moves an 8x8 tile at a tim
 		0b00111000
 		0b00101000
 		0b00101000
-
+	
 	: draw-player
 		va := v0
 		vc := 0b00111 # low 3 bits of v0 are the x coordinate
@@ -161,32 +158,30 @@ Say you want to make a turn-based game where a player moves an 8x8 tile at a tim
 		va <<= va     # multiply by 8 to get pixels
 		va <<= va
 		va <<= va
-
+	
 		vb := v0
 		vc := 0b11000 # high 2 bits of v0 are the y coordinate
 		vb &= vc      # mask them off
 					  # and they're already in pixels!
-
+	
 		i := darwinian
 		sprite va vb 8
 	;
-
+	
 	: main
 		v0 := 12 # the player's position in tiles
 		loop
 			draw-player
 			v1 := key     # wait for a keypress
-			v2 := 1       # horizontal stride
-			v3 := 8       # vertical stride
 			draw-player   # erase the player before moving
-
+	
 			# assuming a default keyboard layout,
 			# these numbers will map to ASWD:
-
-			if v1 == 7 then v0 -= v2 # move left
-			if v1 == 9 then v0 += v2 # move right
-			if v1 == 5 then v0 -= v3 # move up
-			if v1 == 8 then v0 += v3 # move down
+	
+			if v1 == 7 then v0 += -1 # move left
+			if v1 == 9 then v0 +=  1 # move right
+			if v1 == 5 then v0 += -8 # move up
+			if v1 == 8 then v0 +=  8 # move down
 		again
 
 Note that since we do no boundary checking the player can wrap around the edges of the screen. You could add additional logic to prevent this, or you could take advantage of it as a game mechanic.
@@ -348,26 +343,22 @@ One approach would be to use repeated addition into `i`:
 	i += v1
 	loop
 		while v0 != 0
-		i += v2   # we can't add 256 at once,
-		i += v2   # so we do it in two steps.
-		v0 += 255 # equivalent to subtracting 1
+		i  += v2  # we can't add 256 at once,
+		i  += v2  # so we do it in two steps.
+		v0 += -1  # equivalent to adding 255
 	again
 
 Another approach would be to use self-modifying code to place an `i := NNN` instruction in memory before executing it. This looks like "0xANNN" in memory, so we can `or` our high nybble with `0xA0`.
-
-	: trampoline
-		0 0 # destination for i := NNN
-	;
 
 	: code
 		v0 :=    2 # high 4 bits of desired i
 		v1 :=   37 # low 8 bits of desired i
 		v2 := 0xA0 # constant
 
-		v0 |= v2        # now v0-v1 contain our instruction
-		i := trampoline # select destination for instruction
-		save v1         # write the instruction
-		trampoline      # execute our instruction, setting i.
+		v0 |= v2          # now v0-v1 contain our instruction
+		i := trampoline   # select destination for instruction
+		save v1           # write the instruction
+		: trampoline 0 0  # destination for i := NNN
 
 If you want to generate an `i :=` instruction pointing to a label known at assembly time, you can use Octo's `:unpack` statement to achieve the same trick:
 
