@@ -162,7 +162,7 @@ Say you want to make a turn-based game where a player moves an 8x8 tile at a tim
 		vb := v0
 		vc := 0b11000 # high 2 bits of v0 are the y coordinate
 		vb &= vc      # mask them off
-					  # and they're already in pixels!
+		              # and they're already in pixels!
 	
 		i := darwinian
 		sprite va vb 8
@@ -261,7 +261,6 @@ First, let's try writing some simple loops that cover the entire display with tr
 			v1 += 8
 			if v1 != 32 then
 		again
-		loop again
 
 Now we want to extend this program to randomly scatter tiles. Let's generate a tile offset in v2 by using `random` and a mask which will select random numbers spaced 8 bytes apart. This process is made very convenient because both the size and number of tiles are powers of two.
 
@@ -285,7 +284,6 @@ Now we want to extend this program to randomly scatter tiles. Let's generate a t
 			v1 += 8
 			if v1 != 32 then
 		again
-		loop again
 
 What if instead of picking tiles randomly we had static data defining a level? There are many ways we might store the level data with varying degrees of compactness. For simplicity and ease of editing, let's represent each tile in the map with a byte, 0-3. Data will be stored a row at a time to correspond to the way we draw the level. I've rearranged our registers a bit because we need low registers free to be able to use `load`.
 
@@ -323,7 +321,6 @@ What if instead of picking tiles randomly we had static data defining a level? T
 			vb += 8
 			if vb != 32 then
 		again
-		loop again
 
 Naturally we could simplify our `get-tile` routine a bit if we stored tiles in multiples of 8 to begin with. Perhaps we could use the lower-order bits to store other information and mask them off with a simple `and` before using them to index into the tile sheet. This approach can support up to 32 8x8 tiles before `v0` will wrap around while computing an offset for `i`. If we wanted more tiles, we would need to add to `i` in multiple smaller steps.
 

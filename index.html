@@ -16,7 +16,7 @@
 		<select id="framerate" onchange="framerate()">
 			<option value="7">7 Cycles/Frame</option>
 			<option value="15">15 Cycles/Frame</option>
-			<option value="20">20 Cycles/Frame</option>
+			<option value="20" selected="selected">20 Cycles/Frame</option>
 			<option value="30">30 Cycles/Frame</option>
 			<option value="100">100 Cycles/Frame</option>
 			<option value="200">200 Cycles/Frame</option>
@@ -37,42 +37,42 @@
 				<iframe src="https://johnearnest.github.io/Octo/docs/Manual.html" width="450" height="100%"></iframe>
 			</div>
 
-			<textarea id="input"  rows="40" cols="80" spellcheck="false">
+			<textarea id="input"  rows="40" cols="100" spellcheck="false">
 # Chip8 is a virtual machine designed in 1977 for programming video games.
-# Octo is a high level assembler and simulator for Chip8.
-# Here is an example program which draws sprites on the screen
-# randomly and periodically clears the display.
+# Octo is a high level assembler, disassembler and simulator for Chip8.
 #
 # for more examples and documentation, consult the project page:
 #	https://github.com/JohnEarnest/Octo
 
-: smile
-	0b00100100
-	0b00100100
-	0b00000000
-	0b10000001
-	0b01000010
-	0b00111100
-
-: body
-	v2 := 0
-	loop
-		v0 := random 0b01111111
-		v1 := random 0b00111111
-		sprite v0 v1 6
-		v2 += 1
-		if v2 != 32 then
-	again
-	clear
-;
+:alias px v3
+:alias py v4
 
 : main
-	# uncomment for SuperChip high resolution mode:
-	#hires
-	i := smile
+	px := random 0b0011111
+	py := random 0b0001111
+	i  := person # this data will be used for drawing sprites
+	sprite px py 8
+
 	loop
-		body
+		# erase the player, update its position and then redraw:
+		sprite px py 8
+		v0 := 5   if v0 key then py += -1 # keyboard W
+		v0 := 8   if v0 key then py +=  1 # keyboard S
+		v0 := 7   if v0 key then px += -1 # keyboard A
+		v0 := 9   if v0 key then px +=  1 # keyboard D
+		sprite px py 8
+
+		# lock the framerate of this program via the delay timer:
+		loop
+			vf := delay
+			if vf != 0 then
+		again
+		vf := 3
+		delay := vf
 	again
+
+: person
+	0x70 0x70 0x20 0x70 0xA8 0x20 0x50 0x50
 </textarea>
 			<div id="spriteEditor" class="rightpanel" style="display:none">
 				<h3>Sprite Editor</h3>

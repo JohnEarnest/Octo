@@ -72,7 +72,7 @@ var bigfont = [
 function Emulator() {
 
 	// persistent configuration settings
-	this.ticksPerFrame   = 7;
+	this.ticksPerFrame   = 20;
 	this.fillColor       = "#FFCC00";
 	this.fillColor2      = "#FF6600";
 	this.blendColor      = "#662200";
