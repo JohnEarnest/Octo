@@ -1,6 +1,12 @@
-# unpacking test program.
-# uses the :unpack operative to perform
-# self-modification to rewrite an i assignment.
+###########################################
+#
+#  Unpacking Tests
+#
+#  Uses the :unpack operative to perform
+#  self-modification and rewrite an
+#  i := NNN instruction.
+#
+###########################################
 
 : font
 	0x20 0x20 0x20 0x00 0x20 0xF0 0x10 0x70 0x00 0x40 0xE0 0x90 0xE0 0x90 0x90 0x90 
@@ -60,3 +66,4 @@
 	:unpack INDEX demo-string
 	v4 := demo-string-length
 	display-string
+	loop again

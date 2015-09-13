@@ -1,6 +1,13 @@
-# numeric comparison test program.
-# exercises all combination of register-to-register
-# and register-to-constant comparisons with < > <= and >=
+###########################################
+#
+#  Numeric Comparison Tests
+#
+#  Exercises all combinations of
+#  register-to-register and register-to-constant
+#  comparisons with the synthetic pseudo-ops
+#  < > <= and >=
+#
+###########################################
 
 :alias compare-temp v3
 
@@ -60,3 +67,6 @@
 	v1 := 3 lesse5?
 	v1 := 5 lesse5?
 	v1 := 7 lesse5?
+
+	loop again
+

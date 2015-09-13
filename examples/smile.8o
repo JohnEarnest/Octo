@@ -1,5 +1,11 @@
-# A very simple example program which draws smiley faces
-# on the screen randomly and periodically clears the display.
+###########################################
+#
+#  Smile
+#
+#  Draw smiley faces on the screen randomly
+#  and periodically clear the display.
+#
+###########################################
 
 : smile
 	0b00100100
@@ -9,18 +15,16 @@
 	0b01000010
 	0b00111100
 
-: body
-	v2 := 0
-	loop
-		v0 := random 0b00111111
-		v1 := random 0b00011111
-		sprite v0 v1 6
-		v2 += 1
-		if v2 != 32 then
-	again
-	clear
-;
-
 : main
 	i := smile
-	loop body again
+	loop
+		v2 := 0
+		loop
+			v0 := random 0b00111111
+			v1 := random 0b00011111
+			sprite v0 v1 6
+			v2 += 1
+			if v2 != 32 then
+		again
+		clear
+	again

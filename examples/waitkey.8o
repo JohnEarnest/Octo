@@ -1,6 +1,11 @@
-# Key input test program.
-# Prompt for a keypress, display its
-# hex digit onscreen.
+###########################################
+#
+#  Key Input Test
+#
+#  Prompt for a keypress,
+#  then display its hex digit onscreen.
+#
+###########################################
 
 : main
 	v0 := 20

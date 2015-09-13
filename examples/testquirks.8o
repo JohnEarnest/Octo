@@ -1,14 +1,21 @@
-# quirks mode test program.
-# examines the behavior of operations which have
-# multiple interpretations in the wild and demonstrates
-# the distinction between Octo's defaults and quirks modes.
+###########################################
+#
+#  Quirks Mode Tests
+#
+#  Examines the behavior of operations
+#  which have multiple interpretations
+#  in the wild and demonstrates the
+#  distinction between Octo's defaults
+#  and quirks modes for each instruction.
+#
+###########################################
 
 : buffer 0 3
 
 : main
 	# Perform a shift where source and dest
-	# differ. The correct behavior will draw
-	# a 1 while in-place vx modification will draw 2:
+	# differ. The correct behavior will draw a 1
+	# while in-place vx modification will draw 2.
 	v0 := 4
 	v1 := 2
 	v0 >>= v1

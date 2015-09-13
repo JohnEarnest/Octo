@@ -40,9 +40,8 @@
 			<textarea id="input"  rows="40" cols="100" spellcheck="false">
 # Chip8 is a virtual machine designed in 1977 for programming video games.
 # Octo is a high level assembler, disassembler and simulator for Chip8.
-#
-# for more examples and documentation, consult the project page:
-#	https://github.com/JohnEarnest/Octo
+# Click 'Run' and then press ASWD to move the sprite around the screen.
+# Click the Octo logo for source, documentation and examples.
 
 :alias px v3
 :alias py v4
@@ -50,7 +49,7 @@
 : main
 	px := random 0b0011111
 	py := random 0b0001111
-	i  := person # this data will be used for drawing sprites
+	i  := person
 	sprite px py 8
 
 	loop

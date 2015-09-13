@@ -1,5 +1,12 @@
-# high resolution font test program.
-# draws the complete alphabet of SuperChip high res characters.
+###########################################
+#
+#  Big Font
+#
+#  High resolution font test program.
+#  Draw the complete SuperChip high res
+#  hex character set.
+#
+###########################################
 
 : main
 	hires
@@ -12,3 +19,5 @@
 		if v0 == 8 then v2 += 11
 		if v0 != 16 then
 	again
+
+	loop again

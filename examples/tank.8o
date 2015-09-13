@@ -1,5 +1,14 @@
-# translated from VIPer Volume 1 Issue 1 (June 1978), pg 12-14
-# http://mattmik.com/downloads/viper/Volume1Issue01.pdf
+###########################################
+#
+#  Tank
+#
+#  Classic Chip8 program translated from
+#  VIPer Volume 1 Issue 1 (June 1978), pg 12-14
+#  http://mattmik.com/downloads/viper/Volume1Issue01.pdf
+#
+#  Press 2/E/S/Q to move the tank.
+#
+###########################################
 
 : tankup
   0x10 0x54 0x7c 0x6c 0x7c 0x7c 

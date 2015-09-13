@@ -1,7 +1,13 @@
-# loop test program.
-# tests boundary conditions using 'if' and 'while' 
-# with simple and compound comparison operators.
-# should draw five vertical strips of 6 boxes.
+###########################################
+#
+#  Loop Construct Tests
+#
+#  Tests boundary conditions using `if`
+#  and `while` with simple and synthetic
+#  comparison operators.
+#  Should draw 5 vertical strips of 6 boxes.
+#
+###########################################
 
 : main
 	# while with pseudo-op

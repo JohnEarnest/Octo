@@ -3,7 +3,10 @@
 #  Chipenstein 3D
 #
 #  A work-in-progress experiment
-#  in creating a raycast 2.5d shooter
+#  in creating a raycast 2.5d shooter.
+#  Uses PWM techniques to simulate extra
+#  colors and must run at 1000 cycles/frame.
+#  Epilepsy warning!
 #
 ###########################################
 

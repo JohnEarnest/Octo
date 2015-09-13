@@ -1,9 +1,14 @@
-# branch test program.
-# tests the if...begin...else...then control structure
-# should print 51368
+###########################################
+#
+#  Branch Test
+#
+#  Tests the if...begin...else...then
+#  control structure.
+#  Should print "51368"
+#
+###########################################
 
 : main
-
 	# simple taken branch
 	v0 := 1
 	v1 := 3
@@ -59,7 +64,6 @@
 	print0
 
 	loop again	
-
 
 : print0
 	i := hex v0

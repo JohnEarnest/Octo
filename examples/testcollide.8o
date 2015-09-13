@@ -1,7 +1,12 @@
-# Collision detection test program.
-# Draws two overlapping sprites and displays
-# the contents of the vF register.
-# (Should say '1')
+###########################################
+#
+#  Collision Detection Test
+#
+#  Draws two overlapping sprites and
+#  displays the contents of the vF register.
+#  Should print "1".
+#
+###########################################
 
 : square
 	0b11110000

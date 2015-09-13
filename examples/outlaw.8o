@@ -8,6 +8,7 @@
 #  Move with ASWD and fire with E.
 #  Holding a direction while firing will
 #  fire an angled shot, which ricochets.
+#  Plays fairly well at 30 cycles/frame
 #
 ###########################################
 

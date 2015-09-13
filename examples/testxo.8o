@@ -1,6 +1,13 @@
-# XO-Chip test program.
-# perform basic exercises demonstrating the XO-Chip instructions
-# to verify the behavior of the compiler, emulator and disassembler.
+###########################################
+#
+#  XO-Chip Tests
+#
+#  Perform basic exercises demonstrating
+#  the XO-Chip extended instructions
+#  to verify the behavior of the compiler,
+#  emulator and disassembler.
+#
+###########################################
 
 : main
 

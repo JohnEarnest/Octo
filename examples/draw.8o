@@ -1,7 +1,10 @@
-# Key input test program.
-# allows the user to move a dot
-# around the screen in response
-# to keypresses.
+###########################################
+#
+#  Key input test program.
+#  Move a dot around the screen in response
+#  to keypresses.
+#
+###########################################
 
 : dot
 	0b10000000

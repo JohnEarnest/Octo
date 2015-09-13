@@ -4,6 +4,7 @@
 #
 #  An adaptation of "Swing Copters"
 #  for the Super Chip8.
+#  Runs best at 100 cycles/frame.
 #
 #  Press E to start a game and then
 #  press E to switch directions.

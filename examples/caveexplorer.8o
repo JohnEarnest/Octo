@@ -2,6 +2,16 @@
 #
 #  Cave Explorer
 #
+#  Discover the secrets of a mysterious
+#  tunnel system. A fairly elaborate
+#  Chip8 adventure game. Best played at
+#  about 20 cycles/frame.
+#
+#  On the overworld, press ASWD to move.
+#  In platformer levels, A/D move,
+#  E picks up/sets down blocks,
+#  Q resets the level.
+#
 ###########################################
 
 : font
