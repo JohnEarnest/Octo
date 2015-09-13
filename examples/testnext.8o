@@ -1,5 +1,13 @@
-# Compiler test program.
-# demonstrates the use of :next
+###########################################
+#
+#  Next Test
+#
+#  Demonstrates the use of the :next
+#  operative to refer to the second byte
+#  of an instruction. Mainly used for
+#  writing self-modifying code.
+#
+###########################################
 
 : lt  v0 := -1 i := vx save v0 ;
 : rt  v0 :=  1 i := vx save v0 ;
@@ -24,4 +32,3 @@
 		if vb ==  0 then dn
 		if vb == 26 then up
 	again
-;
