@@ -179,7 +179,8 @@ function Emulator() {
 				var t = this.v[y] << 1;
 				this.writeCarry(x, t, ((this.v[y] >> 7) & 0x1));
 				break;
-			default: throw "unknown math op: " + op;
+			default:
+				haltBreakpoint("unknown math opcode "+op);
 		}
 	}
 
@@ -229,7 +230,8 @@ function Emulator() {
 				}
 				for(var z = 0; z <= x; z++) { this.v[z] = this.flags[z]; }
 				break;
-			default: throw "unknown misc op: " + rest;
+			default:
+				haltBreakpoint("unknown misc opcode "+rest);
 		}
 	}
 
@@ -267,6 +269,19 @@ function Emulator() {
 				i += len;
 			}
 		}
+	}
+
+	this.call = function(nnn) {
+		if (this.r.length >= 12) {
+			haltBreakpoint("call stack overflow.");
+		}
+		this.r.push(this.pc);
+		this.pc = nnn
+	}
+
+	this.machine = function(nnn) {
+		if (nnn == 0x000) { this.halted = true; return; }
+		haltBreakpoint("machine code is not supported.");
 	}
 
 	this.opcode = function() {
@@ -391,18 +406,18 @@ function Emulator() {
 				return;
 			}
 			else {
-				throw "unknown op: " + op;
+				haltBreakpoint("unknown opcode "+op);
 			}
 		}
 		if (o == 0x9 && n != 0) {
-			throw "unknown op: " + op;
+			haltBreakpoint("unknown opcode "+op);
 		}
 
 		// dispatch complex opcodes
 		switch(o) {
-			case 0x0: throw "machinecode not supported.";
+			case 0x0: this.machine(nnn);                            break;
 			case 0x1: this.pc = nnn;                                break;
-			case 0x2: this.r.push(this.pc); this.pc = nnn;          break;
+			case 0x2: this.call(nnn);                               break;
 			case 0x3: if (this.v[x] == nn)        { this.pc += 2; } break;
 			case 0x4: if (this.v[x] != nn)        { this.pc += 2; } break;
 			case 0x5: if (this.v[x] == this.v[y]) { this.pc += 2; } break;
@@ -415,7 +430,7 @@ function Emulator() {
 			case 0xC: this.v[x] = (Math.random()*255)&nn;           break;
 			case 0xD: this.sprite(this.v[x], this.v[y], n);         break;
 			case 0xF: this.misc(x, nn);                             break;
-			default: throw "unknown op: " + o;
+			default: haltBreakpoint("unknown opcode "+o);
 		}
 	}
 
