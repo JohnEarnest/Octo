@@ -1,9 +1,7 @@
 Octo
 ====
 
-Octo is a high-level assembler for the Chip8 virtual machine, complete with an environment for testing programs. You can try it out [here](http://johnearnest.github.io/Octo/).
-
-While a program is running, you can press escape to return to the editor. The Chip8 keypad is represented on your keyboard as follows:
+Octo is a high-level assembler for the Chip8 virtual machine, complete with an environment for testing programs. You can try it out [here](http://johnearnest.github.io/Octo/). The Chip8 keypad is represented on your keyboard as follows:
 
 	Chip8 Key   Keyboard
 	---------   ---------
@@ -12,7 +10,7 @@ While a program is running, you can press escape to return to the editor. The Ch
 	 7 8 9 E     a s d f
 	 A 0 B F     z x c v
 
-To learn more about Chip8 programming techniques, have a look at the [documentation](https://github.com/JohnEarnest/Octo/tree/gh-pages/docs) section as well as [the manual](https://github.com/JohnEarnest/Octo/tree/gh-pages/docs/Manual.md) for Octo assembly language. Octo fully supports SuperChip extended instructions as well as a set of original extended instructions called [XO-Chip](https://github.com/JohnEarnest/Octo/tree/gh-pages/docs/XO-ChipSpecification.md).
+To learn more about Chip8 programming techniques, have a look at the [documentation](https://github.com/JohnEarnest/Octo/tree/gh-pages/docs) section as well as [the manual](https://github.com/JohnEarnest/Octo/tree/gh-pages/docs/Manual.md) for Octo assembly language. Octo fully supports [SuperChip](https://github.com/JohnEarnest/Octo/blob/gh-pages/docs/SuperChip.md) extended instructions as well as a set of original extended instructions called [XO-Chip](https://github.com/JohnEarnest/Octo/tree/gh-pages/docs/XO-ChipSpecification.md). Written any neat programs with Octo, or looking for help? Try the [Octo Programming Google Group](https://groups.google.com/forum/#!forum/octo-programming).
 
 The Octo assembler can also be used as a command-line tool via a [Node.js](http://nodejs.org) fontend:
 
