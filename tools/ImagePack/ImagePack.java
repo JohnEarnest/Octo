@@ -7,7 +7,7 @@ public class ImagePack {
 
 	public static void main(String[] a) {
 		// handle arguments
-		List<String> args = new ArrayList<>(Arrays.asList(a));
+		List<String> args = new ArrayList<String>(Arrays.asList(a));
 		int spritew = 8;
 		int spriteh = 8;
 		for(int x = 0; x < args.size(); x++) {
@@ -79,9 +79,9 @@ public class ImagePack {
 		}
 
 		// extract a palette.
-		List<Integer> palette = new ArrayList<>();
+		List<Integer> palette = new ArrayList<Integer>();
 		{
-			Set<Integer> colors = new TreeSet<>();
+			Set<Integer> colors = new TreeSet<Integer>();
 			for(int x = 0; x < image.getWidth(); x++) {
 				for(int y = 0; y < image.getHeight(); y++) {
 					colors.add(image.getRGB(x, y));
@@ -114,20 +114,16 @@ public class ImagePack {
 		}
 
 		// unpack image data
-		List<Integer> data = new ArrayList<>();
+		List<Integer> data = new ArrayList<Integer>();
 		int outerMax = order.getOuterMax(image, spritew, spriteh);
 		int innerMax = order.getInnerMax(image, spritew, spriteh);
-		List<HashSet<Integer>> planes;
+		List<HashSet<Integer>> planes = new ArrayList<HashSet<Integer>>();
 		if (palette.size() > 2) {
-			planes = Arrays.asList(
-				new HashSet<>(Arrays.asList(palette.get(1), palette.get(3))),
-				new HashSet<>(Arrays.asList(palette.get(2), palette.get(3)))
-			);
+			planes.add(new HashSet<Integer>(Arrays.asList(palette.get(1), palette.get(3))));
+			planes.add(new HashSet<Integer>(Arrays.asList(palette.get(2), palette.get(3))));
 		}
 		else {
-			planes = Arrays.asList(
-				new HashSet<>(Arrays.asList(palette.get(1)))
-			);
+			planes.add(new HashSet<Integer>(Arrays.asList(palette.get(1))));
 		}
 		for(int outer = 0; outer < outerMax; outer++) {
 			for(int inner = 0; inner < innerMax; inner++) {

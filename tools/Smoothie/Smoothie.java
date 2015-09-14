@@ -7,7 +7,7 @@ public class Smoothie {
 	
 	public static void main(String[] a) {
 		// handle arguments
-		List<String> args = new ArrayList<>(Arrays.asList(a));
+		List<String> args = new ArrayList<String>(Arrays.asList(a));
 		boolean toimage = args.contains("--toimage");
 		args.remove("--toimage");
 		boolean raw = args.contains("--raw");
@@ -34,9 +34,9 @@ public class Smoothie {
 		}
 
 		// extract a palette.
-		List<Integer> palette = new ArrayList<>();
+		List<Integer> palette = new ArrayList<Integer>();
 		{
-			Set<Integer> colors = new TreeSet<>();
+			Set<Integer> colors = new TreeSet<Integer>();
 			for(int x = 0; x < image.getWidth(); x++) {
 				for(int y = 0; y < image.getHeight(); y++) {
 					colors.add(image.getRGB(x, y));
@@ -67,22 +67,18 @@ public class Smoothie {
 				System.exit(1);
 			}
 		}
-		List<HashSet<Integer>> planes;
+
+		List<HashSet<Integer>> planes = new ArrayList<HashSet<Integer>>();
 		if (palette.size() > 2) {
-			planes = Arrays.asList(
-				new HashSet<>(Arrays.asList(palette.get(1), palette.get(3))),
-				new HashSet<>(Arrays.asList(palette.get(2), palette.get(3)))
-			);
+			planes.add(new HashSet<Integer>(Arrays.asList(palette.get(1), palette.get(3))));
+			planes.add(new HashSet<Integer>(Arrays.asList(palette.get(2), palette.get(3))));
 		}
 		else {
-			planes = Arrays.asList(
-				new HashSet<>(Arrays.asList(palette.get(1)))
-			);
+			planes.add(new HashSet<Integer>(Arrays.asList(palette.get(1))));
 		}
 
-
 		// split image data into sprites
-		List<int[]> sprites = new ArrayList<>();
+		List<int[]> sprites = new ArrayList<int[]>();
 		int height = Math.min(image.getHeight(), 16);
 		int width  = (height == 16) ? 16 : 8;
 		for(int n = 0; n < image.getWidth() / width; n++) {
@@ -103,7 +99,7 @@ public class Smoothie {
 
 		// generate masked sprites
 		if (!raw) {
-			List<int[]> masksprites = new ArrayList<>();
+			List<int[]> masksprites = new ArrayList<int[]>();
 			masksprites.add(sprites.get(0));
 			for(int n = 0; n < sprites.size(); n++) {
 				int[] masked = new int[sprites.get(n).length];

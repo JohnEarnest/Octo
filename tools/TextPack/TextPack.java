@@ -7,7 +7,7 @@ public class TextPack {
 	
 	public static void main(String[] argArray) {
 		// handle arguments
-		List<String> args = new ArrayList<>(Arrays.asList(argArray));
+		List<String> args = new ArrayList<String>(Arrays.asList(argArray));
 		boolean toimage = args.contains("--toimage");
 		args.remove("--toimage");
 		boolean strip = args.contains("--strip");
@@ -33,7 +33,7 @@ public class TextPack {
 		}
 
 		// split font data into characters
-		List<Chunk> chunks = new ArrayList<>();
+		List<Chunk> chunks = new ArrayList<Chunk>();
 		{
 			int charHeight = font.getHeight() / alphabet.length();
 			int offset = 0;
@@ -151,8 +151,8 @@ public class TextPack {
 }
 
 class Chunk {
-	List<Byte> data = new ArrayList<>();
-	Map<Character, Integer> offsets = new HashMap<>();
+	List<Byte> data = new ArrayList<Byte>();
+	Map<Character, Integer> offsets = new HashMap<Character, Integer>();
 
 	int size() {
 		return data.size();
