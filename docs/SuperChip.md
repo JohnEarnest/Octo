@@ -3,7 +3,7 @@ Mastering SuperChip
 In 1990, Erik Bryntse wrote a Chip8 emulator for the [HP-48 graphing calculator](https://en.wikipedia.org/wiki/HP_48_series) called [CHIP-48](http://www.hpcalc.org/details.php?id=854) which adds a series of "SCHIP" or "SuperChip" extended instructions. SuperChip intends to be backwards compatible with the ordinary Chip8 instruction set and the new instructions occupy unused space in the Chip8 instruction encoding. In this document I will attempt to describe SuperChip instructions in detail and also discuss programming techniques which use them. Code examples will use Octo syntax.
 
 Compatibility
-=============
+-------------
 In the [SCHIP 1.1 documentation](http://devernay.free.fr/hacks/chip8/schip.txt), Bryntse describes both the Chip8 and SuperChip instruction set. Of particular note are the shift and memory load/store instructions:
 
 	8XY6     VX := VX shr 1, VF := carry
@@ -39,7 +39,7 @@ A comparable alternative which is "SuperChip Safe" could be:
 SuperChip scroll instructions were introduced with SCHIP v1.1, while all other SuperChip instructions were introduced with v1.0. The [CHIPPER](https://groups.google.com/forum/#!topic/comp.sys.hp48/e7In51mOgHY) assembler draws a distinction between these two revisions of SuperChip, but most emulators simply provide all the v1.1 instructions.
 
 The SuperChip Instructions
-==========================
+--------------------------
 SuperChip instructions add the ability to toggle a "high res" 128x64 pixel graphics mode with a scrollable display, larger sprites and a larger hexadecimal font, an instruction for exiting the interpreter and instructions for reading and writing the HP-48's "RPL user flag" registers.
 
 - `00FF` (`hires`) Enable 128x64 high resolution graphics mode.
@@ -68,7 +68,7 @@ Flag registers are particularly interesting, as they are persistent across progr
 In Octo, an `exit` will immediately quit the program and drop back to the editor, while executing `0000` will leave the program on screen and halted. Well-behaved games should probably avoid using either instruction and instead automatically reset at a game over.
 
 Full Screen Blit
-================
+----------------
 The Chip8 display size is evenly divisible by the size of the 16x16 SuperChip sprite, and the display can be redrawn with a mere 8 draw calls. This makes it practical to make some very fast full-screen drawing routines. Suppose we have already used a tool like [ImagePack](https://github.com/JohnEarnest/Octo/tree/gh-pages/tools/ImagePack) to prepare a properly sliced 64x32 bitmap. We can use a simple loop to draw the bitmap in 4 vertical slices:
 
 	i := bitmap
@@ -106,7 +106,7 @@ This takes 32 cycles. By more aggressively unrolling and doing a bulk initializa
 This only takes 18 cycles! This is fast enough to make it feasible to do simple full-screen animations. To avoid unnecessary flicker, avoid using the `clear` instruction between frames and instead prepare your data by XORing each frame with its predecessor. Similar tricks can also be employed to do full screen drawing in high resolution mode, but they are less practical. A full screen uncompressed bitmap at 64x32 is only 256 bytes (permitting as many as 13 such bitmaps and a single 256 byte "page" of code) while at 128x64 a single bitmap would be 1024 bytes and take up nearly a third of available RAM.
 
 Screen Shake
-============
+------------
 [ScreenShake](https://www.youtube.com/watch?v=AJdEqssNZ-U) is a popular stylistic technique in many "indie" video games today. It can be used to add punch and impact to games, enhancing the player's sense of feedback. A crude version of this effect can be created by using `scroll-left` and `scroll-right` in rapid succession:
 
 	vf := 16

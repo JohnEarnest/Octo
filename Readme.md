@@ -1,6 +1,8 @@
 Octo
 ====
 
+![Title Image](f8z.png)
+
 Octo is a high-level assembler for the Chip8 virtual machine, complete with an environment for testing programs. You can try it out [here](http://johnearnest.github.io/Octo/). The Chip8 keypad is represented on your keyboard as follows:
 
 	Chip8 Key   Keyboard
