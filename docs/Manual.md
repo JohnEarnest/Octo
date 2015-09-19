@@ -170,9 +170,9 @@ Beyond SuperChip, Octo provides a set of unique extended instructions called XO-
 
 - `save vx - vy` save an inclusive range of registers to memory starting at `i`.
 - `load vx - vy` load an inclusive range of registers from memory starting at `i`.
-- `bank n` select a 4k memory bank used by `i` for all operations (0 <= n <= 1).
+- `i := long NNNN` load `i` with a 16-bit address. (this instruction is 4 bytes long.)
 - `plane n` select zero or more drawing planes by bitmask (0 <= n <= 3).
-- `audio := i` store 16 bytes starting at `i` in the audio pattern buffer.
+- `audio` store 16 bytes starting at `i` in the audio pattern buffer.
 - `scroll-up n` scroll the contents of the display up by 0-15 pixels.
 
 For more details, consult the XO-Chip specification in Octo's documentation directory. At time of writing Octo is the only Chip8 interpreter which supports these instructions, but authors are encouraged to provide them in their own interpreters.

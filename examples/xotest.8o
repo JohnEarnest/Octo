@@ -11,11 +11,9 @@
 
 : main
 
-	# demonstrate playing an audio sample
-	# several times from bank 1 ram:
-	bank 1
-	i := gurgle
-	audio := i
+	# demonstrate playing an audio sample:
+	i := long gurgle
+	audio
 	v0 := 3
 	loop
 		vf     := 10
@@ -26,10 +24,9 @@
 		if v0 != 0 then
 	again
 
-	# demonstrate drawing a color sprite,
-	# also from bank 1.
+	# demonstrate drawing a color sprite:
 	plane 3
-	i := rocket
+	i := long rocket
 	v2 := 24
 	sprite v2 v1 0
 
@@ -37,12 +34,11 @@
 	# drawing hex characters to plane 2.
 	# should display F B A.
 	print-init
-	i := data1
+	i := long data1
 	load vf - vf
 	print
 
-	bank 1 # using 'hex' resets the ram bank
-	i := data2
+	i := long data2
 	load v1 - v0
 	vf := v0 print
 	vf := v1 print
@@ -87,6 +83,7 @@
 	vd += 6
 ;
 
+# place static data beyond normal addressing space:
 :org 0x1000
 : gurgle
 	0x55 0xAA 0x55 0xAA 0x55 0xAA 0x55 0xAA

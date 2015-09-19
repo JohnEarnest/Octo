@@ -60,6 +60,7 @@ function Compiler(source) {
 	this.whiles    = []; // stack<int>
 	this.dict      = {}; // map<name, addr>
 	this.protos    = {}; // map<name, list<addr>>
+	this.longproto = {}; // set<name, true>
 	this.aliases   = {}; // map<name, registernum>
 	this.constants = {}; // map<name, token>
 	this.hasmain = true;
@@ -153,7 +154,7 @@ function Compiler(source) {
 		"native":true, "sprite":true, "loop":true, "while":true, "again":true,
 		"scroll-down":true, "scroll-right":true, "scroll-left":true,
 		"lores":true, "hires":true, "loadflags":true, "saveflags":true, "i":true,
-		"audio":true, "plane":true, "bank":true, "scroll-up":true
+		"audio":true, "plane":true, "scroll-up":true
 	};
 
 	this.checkName = function(name, kind) {
@@ -161,6 +162,33 @@ function Compiler(source) {
 			throw "The name '"+name+"' is reserved and cannot be used for a "+kind+".";
 		}
 		return name;
+	}
+
+	this.veryWideValue = function() {
+		// i := long NNNN
+		var nnnn = this.next();
+		if (typeof nnnn != "number") {
+			if (nnnn in this.constants) {
+				nnnn = this.constants[nnnn];
+			}
+			else if (nnnn in this.protos) {
+				this.protos[nnnn].push(this.here()+2);
+				this.longproto[this.here()+2] = true;
+				nnnn = 0;
+			}
+			else if (nnnn in this.dict) {
+				nnnn = this.dict[nnnn];
+			}
+			else {
+				this.protos[this.checkName(nnnn, "label")] = [this.here()+2];
+				this.longproto[this.here()+2] = true;
+				nnnn = 0;
+			}
+		}
+		if ((typeof nnnn != "number") || (nnnn < 0) || (nnnn > 0xFFFF)) {
+			throw "Value '"+nnnn+"' cannot fit in 16 bits!";
+		}
+		return (nnnn & 0xFFFF);
 	}
 
 	this.wideValue = function(nnn) {
@@ -291,6 +319,11 @@ function Compiler(source) {
 				this.schip = true;
 				this.inst(0xF0 | this.register(), 0x30);
 			}
+			else if (o == "long") {
+				var addr = this.veryWideValue();
+				this.inst(0xF0, 0x00);
+				this.inst((addr>>8)&0xFF, addr&0xFF);
+			}
 			else { this.immediate(0xA0, this.wideValue(o)); }
 		}
 		else if (token == "+=") {
@@ -341,7 +374,12 @@ function Compiler(source) {
 		if (label in this.protos) {
 			for(var z = 0; z < this.protos[label].length; z++) {
 				var addr  = this.protos[label][z];
-				if ((this.rom[addr - 0x200] & 0xF0) == 0x60) {
+				if (this.longproto[addr]) {
+					// i := long target
+					this.rom[addr - 0x200] = (target >> 8) & 0xFF;
+					this.rom[addr - 0x1FF] = (target & 0xFF);
+				}
+				else if ((this.rom[addr - 0x200] & 0xF0) == 0x60) {
 					// :unpack target
 					this.rom[addr - 0x1FF] = (this.rom[addr - 0x1FF] & 0xF0) | ((target >> 8)&0xF);
 					this.rom[addr - 0x1FD] = (target & 0xFF);
@@ -464,12 +502,6 @@ function Compiler(source) {
 			}
 			this.whiles.pop();
 		}
-		else if (token == "bank") {
-			var bank = this.tinyValue();
-			if (bank > 1) { throw "the bank id must be [0, 1]."; }
-			this.xo = true;
-			this.inst(0xF0 | bank, 0x00);
-		}
 		else if (token == "plane") {
 			var plane = this.tinyValue();
 			if (plane > 3) { throw "the plane bitmask must be [0, 3]."; }
@@ -477,8 +509,6 @@ function Compiler(source) {
 			this.inst(0xF0 | plane, 0x01);
 		}
 		else if (token == "audio") {
-			this.expect(":=");
-			this.expect("i");
 			this.xo = true;
 			this.inst(0xF0, 0x02);
 		}

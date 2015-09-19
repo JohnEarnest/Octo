@@ -85,13 +85,12 @@ function formatInstruction(a, nn) {
 	if (o == 0xD)               { return "sprite " + vx + " " + vy + " " + n; }
 	if (o == 0xE && nn == 0x9E) { return "if " + vx + " -key then"; }
 	if (o == 0xE && nn == 0xA1) { return "if " + vx + " key then"; }
-	if (op == 0xF000)           { return "bank 0"; }
-	if (op == 0xF100)           { return "bank 1"; }
+	if (op == 0xF000)           { return "i := long "; }
 	if (op == 0xF001)           { return "plane 0"; }
 	if (op == 0xF101)           { return "plane 1"; }
 	if (op == 0xF201)           { return "plane 2"; }
 	if (op == 0xF301)           { return "plane 3"; }
-	if (op == 0xF002)           { return "audio := i"; }
+	if (op == 0xF002)           { return "audio"; }
 	if (o == 0xF && nn == 0x07) { return vx + " := delay"; }
 	if (o == 0xF && nn == 0x0A) { return vx + " := key"; }
 	if (o == 0xF && nn == 0x15) { return "delay := " + vx; }
@@ -269,6 +268,14 @@ function apply(address) {
 	var nnn = op & 0xFFF;
 
 	// log label and subroutine references:
+	if (op == 0xF000) {
+		var nnnn = ((program[address+2] << 8) | (program[address+3])) & 0xFFFF;
+		ret['i'] = isingle(nnnn);
+		setType(address + 2, "code");
+		setType(address + 3, "code");
+		if (typeof labels[nnnn] == "undefined") { labels[nnnn] = []; }
+		if (labels[nnnn].indexOf(address) == -1) { labels[nnnn].push(address); }
+	}
 	if (o == 0x1 || o == 0xA || o == 0xB) {
 		if (typeof labels[nnn] == "undefined") { labels[nnn] = []; }
 		if (labels[nnn].indexOf(address) == -1) { labels[nnn].push(address); }
@@ -333,19 +340,9 @@ function apply(address) {
 		}
 		ret['i'] = s;
 	}
-	function ibank(bankid) {
-		var mask = (bankid << 12);
-		var s = {};
-		for(var a in ret['i']) {
-			s[capi((parseInt(a) & 0xFFF) | mask)] = true;
-		}
-		return s;
-	}
 	function isingle(value) {
-		var s = {};
-		for(var a in ret['i']) {
-			s[value | (parseInt(a) & 0xF000)] = true;
-		}
+		value = capi(value);
+		var s = {}; s[value] = true;
 		return s;
 	}
 	function ioffsets() {
@@ -427,7 +424,6 @@ function apply(address) {
 	if (o == 0x8 && n == 0xE)   { bincarry(function(a, b) { return [b << 1, b & 128];      }); }
 	if (o == 0xA)               { ret['i'] = isingle(nnn);       } // i := nnn
 	if (o == 0xC)               { ret[x]   = maskedrand();       } // vx := random nn
-	if (o == 0xF && nn == 0x00) { ret['i'] = ibank(x);           } // bank n
 	if (o == 0xF && nn == 0x01) { ret['plane'] = single(x);      } // plane n
 	if (o == 0xF && nn == 0x07) { ret[x]   = iota(0xFF);         } // vx := delay
 	if (o == 0xF && nn == 0x0A) { ret[x]   = iota(0xF);          } // vx := key
@@ -464,7 +460,7 @@ function apply(address) {
 		ioffset(x);
 	}
 	if (op == 0xF002) {
-		// audio := i
+		// audio
 		markRead(15);
 	}
 	if (o == 0x5 && n == 0x2) {
@@ -513,10 +509,11 @@ function successors(address, prevret) {
 		return ret;
 	}
 
-	if (op == 0x0000) { return [];    } // octo implied halt
-	if (op == 0x00FD) { return [];    } // superchip halt
-	if (o  == 0x1)    { return [nnn]; } // simple jump
-	if (o  == 0x2)    { return [nnn]; } // simple call
+	if (op == 0xF000) { return [address+4]; } // xochip wide load
+	if (op == 0x0000) { return [];          } // octo implied halt
+	if (op == 0x00FD) { return [];          } // superchip halt
+	if (o  == 0x1)    { return [nnn];       } // simple jump
+	if (o  == 0x2)    { return [nnn];       } // simple call
 
 	// simple skips
 	if (o == 0x3) {
@@ -645,7 +642,7 @@ function analyzeFinish() {
 	if (typeof labels[0x200] == "undefined") { labels[0x200] = [4097]; }
 	lnames[0x200] = "main";
 	snames[0x200] = "main";
-	for(var x = 0; x < 4096; x++) {
+	for(var x = 0; x < program.length; x++) {
 		if (x == 0x200)       { continue; }
 		if (x in labels)      { lnames[x] = "label-"   + (lsize++); }
 		if (x in subroutines) { snames[x] = "sub-"     + (ssize++); }
@@ -773,8 +770,15 @@ function formatProgram(programSize) {
 			x++;
 		}
 		else if (type[a] == "code") {
-			ret += (indent + formatInstruction(program[a], program[a+1]) + "\n");
-			x++;
+			if (program[a] == 0xF0 && program[a+1] == 0x00) {
+				var nnnn = (program[a+2] << 8) | (program[a+3]);
+				ret += (indent + "i := long "+lnames[nnnn] + "\n");
+				x+=3;
+			}
+			else {
+				ret += (indent + formatInstruction(program[a], program[a+1]) + "\n");
+				x++;
+			}
 		}
 		else if (type[a] == "data") {
 			ret += (indent + hexFormat(program[a]) + "\n");

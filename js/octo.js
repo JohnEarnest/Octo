@@ -34,7 +34,7 @@ function compile() {
 	var status = document.getElementById("status");
 
 	var MAX_ROM = 3584;
-	if (emulator.enableXO) { MAX_ROM += 4096; }
+	if (emulator.enableXO) { MAX_ROM = 65536 - 512; }
 
 	var c = new Compiler(input.value);
 	try {

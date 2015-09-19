@@ -187,10 +187,6 @@ function Emulator() {
 	this.misc = function(x, rest) {
 		// miscellaneous opcodes
 		switch(rest) {
-			case 0x00:
-				this.i &= 0x0FFF;
-				this.i |= x ? 0x1000 : 0x0000;
-				break;
 			case 0x01:
 				this.plane = (x & 0x3);
 				break;
@@ -387,6 +383,12 @@ function Emulator() {
 			this.hires = true;
 			this.p = [[], []];
 			for(var z = 0; z < 64*128; z++) { this.p[0][z] = 0; this.p[1][z] = 0; }
+			return;
+		}
+		if (op == 0xF000) {
+			// long memory reference
+			this.i = ((this.m[this.pc] << 8) | (this.m[this.pc+1])) & 0xFFFF;
+			this.pc += 2;
 			return;
 		}
 
