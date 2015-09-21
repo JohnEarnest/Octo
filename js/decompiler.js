@@ -102,7 +102,7 @@ function formatInstruction(a, nn) {
 	if (o == 0x0) {
 		return "native " + ((nnn in nnames) ? nnames[nnn] : hexFormat(nnn));
 	}
-    return hexFormat(a) + " " + hexFormat(nn) + " # bad opcode?";
+	return hexFormat(a) + " " + hexFormat(nn) + " # bad opcode?";
 }
 
 function formatNative(addr, prefix) {
@@ -652,7 +652,7 @@ function analyze(rom, quirks) {
 }
 
 function formatProgram(programSize) {
-    var ret = "";
+	var ret = "";
 	if (SHIFT_QUIRKS) {
 		ret += "# analyzed with shifts that modify vx in place and ignore vy.\n";
 	}

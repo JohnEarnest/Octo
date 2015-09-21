@@ -84,7 +84,7 @@ function Emulator() {
 	this.vfOrderQuirks      = false;
 	this.enableXO           = false;
 	this.maskFormatOverride = true;
-    this.numericFormatStr   = "default";
+	this.numericFormatStr   = "default";
 
 	// interpreter state
 	this.p  = [[],[]];  // pixels
