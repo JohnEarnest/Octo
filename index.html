@@ -157,15 +157,28 @@
 				</table>
 			</div>
 
-			<div id="bintools" class="rightpanel" style="display:none">
-				<h3>Binary Tools</h3>
-				Note that decompilation can be slow.<br/>
-				Enter a byte array:<br/>
-				<textarea id="decompileInput" rows="6" cols="40">[0xD0, 0x15, 0x70, 0x04, 0x40, 0x40, 0x71, 0x05, 0x40, 0x40, 0x60, 0x00, 0x12, 0x00]</textarea><br/>
-				<button type="button" onclick="decompileStart()">Decompile</button>
-				<button type="button" onclick="decompileRun()">Run</button>
-				<button type="button" onclick="decompileFile()">Open File...</button>
-				<input type="file" id="fileinput" onchange="decompileRequestLoad()" style="display:none">
+            <div id="bintools" class="rightpanel" style="display:none">
+                <h3>Binary Tools</h3>
+                Note that decompilation can be slow.<br/>
+                Enter a byte array:<br/>
+                <textarea id="decompileInput" rows="6" cols="40">[0xD0, 0x15, 0x70, 0x04, 0x40, 0x40, 0x71, 0x05, 0x40, 0x40, 0x60, 0x00, 0x12, 0x00]</textarea><br/>
+                <button type="button" onclick="decompileStart()">Decompile</button>
+                <button type="button" onclick="decompileRun()">Run</button>
+                <button type="button" onclick="decompileFile()">Open File...</button>
+                <input type="file" id="fileinput" onchange="decompileRequestLoad()" style="display:none">
+                <h3>Decompiler Options</h3>
+                <select id="numericFormat" onchange="setNumericFormat();">
+                    <option value='default'>Numeric Format</option>
+                    <option value='hex'>Hexadecimal</option>
+                    <option value='dec'>Decimal</option>
+                    <option value='bin'>Binary</option>
+                </select>
+                <table>
+                    <tr>
+                        <td><input type="checkbox" id="maskOverride" onchange="setMaskFormatOverride();"></td>
+                        <td>Format the numeric operand of <tt>random n</tt> as binary</td>
+                    </tr>
+                </table>
 			</div>
 
 			<div id="audiotools" class="rightpanel" style="display:none">
