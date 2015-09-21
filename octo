@@ -110,8 +110,7 @@ else if (extractFlag("--bin")) { options['numericFormat'] = 'bin'; }
 if (process.argv.length != 3 && process.argv.length != 4 && process.argv.length != 5 && process.argv.length != 6 ) { printUsage(); }
 var sourceFile = process.argv[2];
 var destFile   = process.argv[3];
-console.log(sourceFile);
-console.log(destFile);
+
 var decompiledText = "";
 
 if (decompileFlag) {
