@@ -777,7 +777,7 @@ function setNumericFormat() {
 
 function toggleBinaryTools() {
 	var tools = document.getElementById("bintools");
-	document.getElementById("maskOverride").checked = emulator.maskFormatOverride;
+	document.getElementById("maskOverride").value = emulator.maskFormatOverride;
 	document.getElementById("numericFormat").value = emulator.numericFormatStr;
 	if (tools.style.display == "none") {
 		tools.style.display = "inline";
