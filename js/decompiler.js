@@ -33,11 +33,6 @@ var lnames      = {}; // map<address, name>
 var snames      = {}; // map<address, name>
 var nnames      = {}; // map<address, name>
 
-function hexFormat(num) {
-	var hex = num.toString(16).toUpperCase();
-	return "0x" + ((hex.length > 1) ? hex : "0" + hex);
-}
-
 function formatInstruction(a, nn) {
 	// convert a pair of bytes representing an instruction
 	// into a string of the equivalent octo statement.
@@ -51,8 +46,8 @@ function formatInstruction(a, nn) {
 	var vx = "v" + (x.toString(16).toUpperCase());
 	var vy = "v" + (y.toString(16).toUpperCase());
 
-	if (a  == 0x00 && y == 0xC) { return "scroll-down " + n; } // schip
-	if (a  == 0x00 && y == 0xD) { return "scroll-up " + n; } // xo-chip
+	if (a  == 0x00 && y == 0xC) { return "scroll-down " + numericFormat(n); } // schip
+	if (a  == 0x00 && y == 0xD) { return "scroll-up " + numericFormat(n); } // xo-chip
 	if (op == 0x00E0)           { return "clear"; }
 	if (op == 0x00EE)           { return "return"; }
 	if (op == 0x00FB)           { return "scroll-right"; } // schip
@@ -62,13 +57,13 @@ function formatInstruction(a, nn) {
 	if (op == 0x00FF)           { return "hires"; } // schip
 	if (o == 0x1)               { return "jump " + lnames[nnn]; }
 	if (o == 0x2)               { return snames[nnn]; }
-	if (o == 0x3)               { return "if " + vx + " != " + nn + " then"; }
-	if (o == 0x4)               { return "if " + vx + " == " + nn + " then"; }
+	if (o == 0x3)               { return "if " + vx + " != " + numericFormat(nn) + " then"; }
+	if (o == 0x4)               { return "if " + vx + " == " + numericFormat(nn) + " then"; }
 	if (o == 0x5 && n == 0x0)   { return "if " + vx + " != " + vy + " then"; }
 	if (o == 0x5 && n == 0x2)   { return "save " + vx + " - " + vy; } // xo-chip
 	if (o == 0x5 && n == 0x3)   { return "load " + vx + " - " + vy; } // xo-chip
-	if (o == 0x6)               { return vx + " := " + nn; }
-	if (o == 0x7)               { return vx + " += " + nn; }
+	if (o == 0x6)               { return vx + " := " + numericFormat(nn); }
+	if (o == 0x7)               { return vx + " += " + numericFormat(nn); }
 	if (o == 0x8 && n == 0x0)   { return vx + " := " + vy; }
 	if (o == 0x8 && n == 0x1)   { return vx + " |= " + vy; }
 	if (o == 0x8 && n == 0x2)   { return vx + " &= " + vy; }
@@ -81,8 +76,8 @@ function formatInstruction(a, nn) {
 	if (o == 0x9 && n == 0x0)   { return "if " + vx + " == " + vy + " then"; }
 	if (o == 0xA)               { return "i := " + lnames[nnn]; }
 	if (o == 0xB)               { return "jump0 " + lnames[nnn]; }
-	if (o == 0xC)               { return vx + " := random " + nn; }
-	if (o == 0xD)               { return "sprite " + vx + " " + vy + " " + n; }
+	if (o == 0xC)               { return vx + " := random " + maskFormat(nn, 2); }
+	if (o == 0xD)               { return "sprite " + vx + " " + vy + " " + numericFormat(n); }
 	if (o == 0xE && nn == 0x9E) { return "if " + vx + " -key then"; }
 	if (o == 0xE && nn == 0xA1) { return "if " + vx + " key then"; }
 	if (op == 0xF000)           { return "i := long "; }
@@ -107,7 +102,7 @@ function formatInstruction(a, nn) {
 	if (o == 0x0) {
 		return "native " + ((nnn in nnames) ? nnames[nnn] : hexFormat(nnn));
 	}
-	return hexFormat(a) + " " + hexFormat(nn) + " # bad opcode?"
+	return hexFormat(a) + " " + hexFormat(nn) + " # bad opcode?";
 }
 
 function formatNative(addr, prefix) {
@@ -678,7 +673,7 @@ function formatProgram(programSize) {
 			var addr = parseInt(a);
 			if (addr < 0x200 || addr >= 0x200 + programSize) {
 				dest[addr] = true;
-				ret += (":const " + names[addr] + " " + addr + "\n");
+				ret += (":const " + names[addr] + " " + numericFormat(addr) + "\n");
 			}
 		}
 	}

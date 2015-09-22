@@ -72,17 +72,19 @@ var bigfont = [
 function Emulator() {
 
 	// persistent configuration settings
-	this.ticksPerFrame   = 20;
-	this.fillColor       = "#FFCC00";
-	this.fillColor2      = "#FF6600";
-	this.blendColor      = "#662200";
-	this.backColor       = "#996600";
-	this.buzzColor       = "#FFAA00";
-	this.quietColor      = "#000000";
-	this.shiftQuirks     = false;
-	this.loadStoreQuirks = false;
-	this.vfOrderQuirks   = false;
-	this.enableXO        = false;
+	this.ticksPerFrame      = 20;
+	this.fillColor          = "#FFCC00";
+	this.fillColor2         = "#FF6600";
+	this.blendColor         = "#662200";
+	this.backColor          = "#996600";
+	this.buzzColor          = "#FFAA00";
+	this.quietColor         = "#000000";
+	this.shiftQuirks        = false;
+	this.loadStoreQuirks    = false;
+	this.vfOrderQuirks      = false;
+	this.enableXO           = false;
+	this.maskFormatOverride = true;
+	this.numericFormatStr   = "default";
 
 	// interpreter state
 	this.p  = [[],[]];  // pixels
