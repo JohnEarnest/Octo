@@ -166,6 +166,19 @@
 				<button type="button" onclick="decompileRun()">Run</button>
 				<button type="button" onclick="decompileFile()">Open File...</button>
 				<input type="file" id="fileinput" onchange="decompileRequestLoad()" style="display:none">
+				<h3>Decompiler Options</h3>
+				<select id="numericFormat" onchange="setNumericFormat();">
+					<option value='default'>Numeric Format</option>
+					<option value='hex'>Hexadecimal</option>
+					<option value='dec'>Decimal</option>
+					<option value='bin'>Binary</option>
+				</select>
+				<table>
+					<tr>
+						<td><input type="checkbox" id="maskOverride" onchange="setMaskFormatOverride();"></td>
+						<td>Format the numeric operand of <tt>random n</tt> as binary</td>
+					</tr>
+				</table>
 			</div>
 
 			<div id="audiotools" class="rightpanel" style="display:none">

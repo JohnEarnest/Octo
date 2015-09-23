@@ -6,10 +6,49 @@
 //
 ////////////////////////////////////
 
-function hexFormat(num) {
-	var hex = num.toString(16).toUpperCase();
-	return "0x" + ((hex.length > 1) ? hex : "0" + hex);
+var zeroes = "00000000";
+
+function maskFormat(mask) {
+	if (emulator.maskFormatOverride) { return binaryFormat(mask);  }
+	else                             { return numericFormat(mask); }
 }
+
+function numericFormat(num) {
+	if (emulator.numericFormatStr == "dec")      { return decimalFormat(num); } 
+	else if (emulator.numericFormatStr == "bin") { return binaryFormat(num);  }
+	else if (emulator.numericFormatStr == "hex") { return hexFormat(num);     }
+
+	return hexFormat(num);
+}
+
+
+function decimalFormat(num) {
+	var dec = num.toString(10);
+	return dec;
+}
+
+
+function hexFormat(num) {
+	var hex  = num.toString(16).toUpperCase();
+	var pad0 = zeroPad(hex.length, 2);
+	return "0x" + pad0 + hex;
+}
+
+function binaryFormat(num) {
+	var bin  = num.toString(2);
+	var pad0 = zeroPad(bin.length, 8);
+	return "0b" + pad0 + bin;
+}
+
+function zeroPad(strLen, byteLength) {
+	var dif = strLen % byteLength;
+	if (dif == 0) { return ""; }
+
+	var len  = byteLength - dif;
+	var pad0 = zeroes.substr(0, len);
+	return pad0;
+}
+
 
 function display(rom) {
 	return "[" + (rom.map(hexFormat).join(", ")) + "]";
@@ -726,8 +765,20 @@ function clearBreakpoint() {
 //
 ////////////////////////////////////
 
+function setMaskFormatOverride() {
+	var check = document.getElementById("maskOverride");
+	emulator.maskFormatOverride = check.checked;
+}
+
+function setNumericFormat() {
+	var val = document.getElementById("numericFormat").value;
+	emulator.numericFormatStr = val.length < 1 ? "default"  : val;
+}
+
 function toggleBinaryTools() {
 	var tools = document.getElementById("bintools");
+	document.getElementById("maskOverride").checked = emulator.maskFormatOverride;
+	document.getElementById("numericFormat").value = emulator.numericFormatStr;
 	if (tools.style.display == "none") {
 		tools.style.display = "inline";
 		document.getElementById("options").style.display = "none";

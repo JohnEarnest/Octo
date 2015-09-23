@@ -5,6 +5,50 @@ var compiler   = require('./js/compiler');
 var decompiler = require('./js/decompiler');
 var fs         = require('fs');
 
+
+var zeroes = "00000000";
+
+global.maskFormat = function (mask) {
+	if (!options['numericMask']) { return binaryFormat(mask);  }
+	else                         { return numericFormat(mask); }
+}
+
+global.numericFormat = function (num) {
+	if (options['numericFormat'] == "dec")      { return decimalFormat(num); } 
+	else if (options['numericFormat'] == "bin") { return binaryFormat(num);  }
+	else if (options['numericFormat'] == "hex") { return hexFormat(num);     }
+
+	return hexFormat(num);
+}
+
+global.decimalFormat = function (num) {
+	var dec = num.toString(10);
+	return dec;
+}
+
+global.hexFormat = function (num) {
+	var hex  = num.toString(16).toUpperCase();
+	var pad0 = zeroPad(hex.length, 2);
+	return "0x" + pad0 + hex;
+}
+
+global.binaryFormat = function (num) {
+	var bin  = num.toString(2);
+	var pad0 = zeroPad(bin.length, 8);
+	return "0b" + pad0 + bin;
+}
+
+function zeroPad(strLen, byteLength) {
+	var dif = strLen % byteLength;
+	if (dif == 0) { return ""; }
+
+	var len  = byteLength - dif;
+	var pad0 = zeroes.substr(0, len);
+	return pad0;
+}
+
+
+
 function extractFlag(name) {
 	var index = process.argv.indexOf(name);
 	if (index == -1) { return false; }
@@ -47,7 +91,7 @@ function decompileFile(src, dst) {
 }
 
 function printUsage() {
-	console.log("usage: octo [--decompile] [--roundtrip] [--qshift] [--qloadstore] [--qvforder] <source> [<destination>]");
+	console.log("usage: octo [--decompile | --roundtrip] [--hex | --dec | --bin] [--numMask] [--qshift] [--qloadstore] [--qvforder] <source> [<destination>]");
 	process.exit(1);
 }
 
@@ -55,10 +99,15 @@ var options = {};
 options['shiftQuirks'    ] = extractFlag("--qshift");
 options['loadStoreQuirks'] = extractFlag("--qloadstore");
 options['vfOrderQuirks'  ] = extractFlag("--qvforder");
+options['numericMask'    ] = extractFlag("--numMask") 
 var decompileFlag = extractFlag("--decompile");
 var roundTripFlag = extractFlag("--roundtrip");
 
-if (process.argv.length != 3 && process.argv.length != 4) { printUsage(); }
+if(extractFlag("--hex"))      { options['numericFormat'] = 'hex'; }
+else if(extractFlag("--dec")) { options['numericFormat'] = 'dec'; } 
+else if (extractFlag("--bin")) { options['numericFormat'] = 'bin'; }
+
+if (process.argv.length != 3 && process.argv.length != 4 && process.argv.length != 5 && process.argv.length != 6 ) { printUsage(); }
 var sourceFile = process.argv[2];
 var destFile   = process.argv[3];
 
@@ -78,13 +127,7 @@ if (roundTripFlag) {
 		decompiledText = decompiler.formatProgram(startBinary.length);
 	}
 	var endBinary = compile(decompiledText);
-
-	function hexFormat(num) {
-		if (typeof num == "undefined") { return "(none)"; }
-		var hex = num.toString(16).toUpperCase();
-		return "0x" + ((hex.length > 1) ? hex : "0" + hex);
-	}
-
+	
 	var mismatch = false;
 	for(var x = 0; x < Math.max(startBinary.length, endBinary.length); x++) {
 		var mishere = (startBinary[x] != endBinary[x]);
