@@ -1,0 +1,66 @@
+\documentclass{article}
+\usepackage{fullpage}
+\usepackage[table]{xcolor}
+
+\begin{document}
+	\thispagestyle{empty}
+	\begin{center}
+		{\LARGE CHIP-8 Instruction Set}
+		{\\ \ttfamily http://octo-ide.com}
+		\vspace*{0.5cm}
+
+		\textbf{N} is a number between 0 and 15.\\
+		\textbf{NN} is a number between 0 and 255.\\
+		\textbf{NNN} is an address between 0 and 4095.\\
+		\textbf{vx} and \textbf{vy} are registers (0-F).\\
+		\textbf{i} is the memory index register.\\
+		Instructions in gray rows may modify the vF register.\\
+
+		\vspace*{0.5cm}
+
+		\large
+		\ttfamily
+		\begin{tabular}{| c | l | l |}
+			\hline
+			\textnormal{{Machinecode}} &
+			\textnormal{{Octo Instruction}} &
+			\textnormal{{Comments}}\\
+			\hline
+			00E0                      & clear                   & \\
+			00EE                      & return                  & \textnormal{Exit a subroutine} \\
+			1NNN                      & jump NNN                & \\
+			2NNN                      & NNN                     & \textnormal{Call a subroutine} \\
+			3XNN                      & if vx != NN then        & \\
+			4XNN                      & if vx == NN then        & \\
+			5XY0                      & if vx != vy then        & \\
+			6XNN                      & vx := NN                & \\
+			7XNN                      & vx += NN                & \\
+			8XY0                      & vx := vy                & \\
+			8XY1                      & vx |= vy                & \textnormal{Bitwise OR} \\
+			8XY2                      & vx \&= vy               & \textnormal{Bitwise AND} \\
+			8XY3                      & vx \textasciicircum= vy & \textnormal{Bitwise XOR} \\
+			\rowcolor[gray]{0.8} 8XY4 & vx += vy                & \textnormal{vf = 1 on carry} \\
+			\rowcolor[gray]{0.8} 8XY5 & vx -= vy                & \textnormal{vf = 0 on borrow} \\
+			\rowcolor[gray]{0.8} 8XY6 & vx >>= vy               & \textnormal{vf = old least significant bit} \\
+			\rowcolor[gray]{0.8} 8XY7 & vx =- vy                & \textnormal{vf = 0 on borrow} \\
+			\rowcolor[gray]{0.8} 8XYE & vx <<= vy               & \textnormal{vf = old most significant bit} \\
+			9XY0                      & if vx == vy then        & \\
+			ANNN                      & i := NNN                & \\
+			BNNN                      & jump0 NNN               & \textnormal{Jump to address NNN + v0} \\
+			CXNN                      & vx := random NN         & \textnormal{Random number 0-255 AND NN} \\
+			\rowcolor[gray]{0.8} DXYN & sprite vx vy N          & \textnormal{vf = 1 on collision} \\
+			EX9E                      & if vx -key then         & \textnormal{Is a key not pressed?} \\
+			EXA1                      & if vx key then          & \textnormal{Is a key pressed?} \\
+			FX07                      & vx := delay             & \\
+			FX0A                      & vx := key               & \textnormal{Wait for a keypress} \\
+			FX15                      & delay := vx             & \\
+			FX18                      & buzzer := vx            & \\
+			FX1E                      & i += vx                 & \\
+			FX29                      & i := hex vx             & \textnormal{Set i to a hex character} \\
+			FX33                      & bcd vx                  & \textnormal{Decode vx into binary-coded decimal}\\
+			FX55                      & save vx                 & \textnormal{Save v0-vx to i through (i+x)} \\
+			FX65                      & load vx                 & \textnormal{Load v0-vx from i through (i+x)} \\
+			\hline
+		\end{tabular}
+	\end{center}
+\end{document}
