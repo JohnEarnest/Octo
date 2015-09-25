@@ -609,6 +609,8 @@ function analyzeWork() {
 
 	for(var x = 0; x < children.length; x++) {
 		var child = children[x];
+		if(child == here)
+			continue;
 		var isReturn = (program[child] == 0x00 && program[child+1] == 0xEE);
 
 		if ((typeof reaching[child]) == "undefined") {
