@@ -609,8 +609,13 @@ function analyzeWork() {
 
 	for(var x = 0; x < children.length; x++) {
 		var child = children[x];
+
 		var isReturn = (program[child] == 0x00 && program[child+1] == 0xEE);
 
+		if (child == here && isReturn) { 
+			continue;
+		}
+	
 		if ((typeof reaching[child]) == "undefined") {
 			// always explore fresh nodes:
 			reaching[child] = copyReachingSet(output);
