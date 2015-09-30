@@ -87,7 +87,7 @@ public class ImagePack {
 					colors.add(image.getRGB(x, y));
 				}
 			}
-			final int TRANSPARENT = 0x00FFFFFF;
+			final int TRANSPARENT = 0x00000000;
 			if (colors.contains(TRANSPARENT)) {
 				colors.remove(TRANSPARENT);
 				palette.add(TRANSPARENT);
@@ -103,6 +103,9 @@ public class ImagePack {
 			}
 			if (foundBlack) {
 				palette.add(BLACK);
+			}
+			if (palette.size() == 3) {
+				palette.add(0x00FFFFFF);
 			}
 			for(int z = 0; z < palette.size(); z++) {
 				System.out.format("# color %d: 0x%08X%n", z, palette.get(z));
