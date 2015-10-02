@@ -201,7 +201,7 @@ function Emulator() {
 			case 0x0A: this.waiting = true; this.waitReg = x; break;
 			case 0x15: this.dt = this.v[x]; break;
 			case 0x18: this.st = this.v[x]; this.buzzTrigger(this.v[x]); break;
-			case 0x1E: this.i = (this.i & 0xF000) | ((this.i + this.v[x]) & 0xFFF); break;
+			case 0x1E: this.i = (this.i + this.v[x])&0xFFFF; break;
 			case 0x29: this.i = ((this.v[x] & 0xF) * 5); break;
 			case 0x30: this.i = ((this.v[x] & 0xF) * 10 + font.length); break;
 			case 0x33:
@@ -211,11 +211,11 @@ function Emulator() {
 				break;
 			case 0x55:
 				for(var z = 0; z <= x; z++) { this.m[this.i+z] = this.v[z]; }
-				if (!this.loadStoreQuirks) { this.i = (this.i & 0xF000) | ((this.i+x+1)&0xFFF); }
+				if (!this.loadStoreQuirks) { this.i = (this.i+x+1)&0xFFFF; }
 				break;
 			case 0x65:
 				for(var z = 0; z <= x; z++) { this.v[z] = this.m[this.i+z]; }
-				if (!this.loadStoreQuirks) { this.i = (this.i & 0xF000) | ((this.i+x+1)&0xFFF); }
+				if (!this.loadStoreQuirks) { this.i = (this.i+x+1)&0xFFFF; }
 				break;
 			case 0x75:
 				for(var z = 0; z <= x; z++) { this.flags[z] = this.v[z]; }
