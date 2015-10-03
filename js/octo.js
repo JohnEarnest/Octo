@@ -13,10 +13,13 @@ function maskFormat(mask) {
 	else                             { return numericFormat(mask); }
 }
 
-function numericFormat(num) {
-	if (emulator.numericFormatStr == "dec")      { return decimalFormat(num); } 
-	else if (emulator.numericFormatStr == "bin") { return binaryFormat(num);  }
-	else if (emulator.numericFormatStr == "hex") { return hexFormat(num);     }
+function numericFormat(num, format) {
+	if (!format)
+		format = emulator.numericFormatStr;
+
+	if (format == "dec")      { return decimalFormat(num); } 
+	else if (format == "bin") { return binaryFormat(num);  }
+	else if (format == "hex") { return hexFormat(num);     }
 
 	return hexFormat(num);
 }
@@ -701,6 +704,47 @@ function toggleKeypad() {
 //   Debugger
 //
 ////////////////////////////////////
+var curBreakName;
+
+var regNumFormat = {
+	"pc": "hex",
+	"i" : "hex",
+	0x0 : "hex",
+	0x1 : "hex",
+	0x2 : "hex",
+	0x3 : "hex",
+	0x4 : "hex",
+	0x5 : "hex",
+	0x6 : "hex",
+	0x7 : "hex",
+	0x8 : "hex",
+	0x9 : "hex",
+	0xA : "hex",
+	0xB : "hex",
+	0xC : "hex",
+	0xD : "hex",
+	0xE : "hex",
+	0xF : "hex"
+}
+
+function cycleNumFormat(register) {
+	var curFormat = regNumFormat[register];
+	if (!curFormat) {
+		return;
+	}
+
+	if (curFormat == "hex") {
+		regNumFormat[register] = "bin";
+	}
+	else if (curFormat == "bin") {
+		regNumFormat[register] = "dec";
+	}
+	else {
+		regNumFormat[register] = "hex";
+	}
+
+	haltBreakpoint(curBreakName);
+}
 
 function getLabel(address) {
 	var bestname = "hex-font";
@@ -735,13 +779,13 @@ function haltBreakpoint(breakName) {
 	button.style.display = "inline";
 	regs.style.display = "inline";
 	var regdump =
-		"tick count: " + emulator.tickCounter + "<br>" +
-		"breakpoint: " + breakName + "<br>" +
-		"pc := " + hexFormat(emulator.pc) + getLabel(emulator.pc) + "<br>" +
-		"i := " + hexFormat(emulator.i) + getLabel(emulator.i) + "<br>";
+		"<span>tick count: " + emulator.tickCounter + "</span><br>" +
+		"<span>breakpoint: " + breakName + "</span><br>" +
+		"<span onClick=\"cycleNumFormat('pc');\">pc := " + numericFormat(emulator.pc, regNumFormat["pc"]) + getLabel(emulator.pc) + "</span><br>" +
+		"<span onClick=\"cycleNumFormat('i');\">i := " + numericFormat(emulator.i, regNumFormat["i"]) + getLabel(emulator.i) + "</span><br>";
 	for(var k = 0; k <= 0xF; k++) {
 		var hex = k.toString(16).toUpperCase();
-		regdump += "v" + hex + " := " + hexFormat(emulator.v[k]) + formatAliases(k) +"<br>";
+		regdump += "<span onClick=\"cycleNumFormat('"+ k + "');\">v" + hex + " := " + numericFormat(emulator.v[k], regNumFormat[k]) + formatAliases(k) + "</span><br>";
 	}
 	regdump += "<br>inferred stack trace:<br>";
 	for(var x = 0; x < emulator.r.length; x++) {
@@ -749,6 +793,7 @@ function haltBreakpoint(breakName) {
 	}
 	regs.innerHTML = regdump;
 	emulator.breakpoint = true;
+	curBreakName = breakName;
 }
 
 function clearBreakpoint() {
@@ -757,6 +802,7 @@ function clearBreakpoint() {
 	button.style.display = "none";
 	regs.style.display = "none";
 	emulator.breakpoint = false;
+	curBreakName = undefined;
 }
 
 ////////////////////////////////////
