@@ -233,6 +233,26 @@ function copyReachingSet(source) {
 	return ret;
 }
 
+function singleResult(address) {
+	// is this an arithmetic instruction which
+	// yields a single calculated result?
+	var op = program[address] & 0xF0;
+	if (op != 0x70 && op != 0x80) { return ""; }
+
+	// conveniently, the instructions we care about
+	// always use the second nybble as the target register:
+	var r = program[address] & 0xF;
+
+	// we only want situations where the target
+	// register has a single resulting value.
+	// reference the next instruction's reaching set
+	// to obtain this instruction's output.
+	var vals = Object.keys(reaching[address + 2][r]);
+	if (vals.length != 1) { return ""; }
+
+	return " # result is always "+numericFormat(parseInt(vals[0]));
+}
+
 function apply(address) {
 	// apply this instruction to the reaching set
 	// producing a successor reaching set.
@@ -776,7 +796,7 @@ function formatProgram(programSize) {
 				x+=3;
 			}
 			else {
-				ret += (indent + formatInstruction(program[a], program[a+1]) + "\n");
+				ret += (indent + formatInstruction(program[a], program[a+1]) + singleResult(a) + "\n");
 				x++;
 			}
 		}
