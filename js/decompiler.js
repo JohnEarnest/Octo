@@ -810,7 +810,11 @@ function formatProgram(programSize) {
 			x++;
 		}
 		else {
-			ret += (indent + hexFormat(program[a]) + " # unused?\n");
+			ret += (indent + hexFormat(program[a]) + " # unused?");
+			if (program[a] >= 32 && program[a] <= 127) {
+				ret += " "+String.fromCharCode(program[a]);
+			}
+			ret += "\n";
 		}
 
 		// space apart regions of differing types:
