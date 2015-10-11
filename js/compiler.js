@@ -53,8 +53,26 @@ function tokenize(text) {
 //
 ////////////////////////////////////
 
+function DebugInfo(source) {
+	this.lines = source.split('\n');
+	this.posToLine = function(pos) {
+		var i;
+		for (i = 0; i < this.lines.length; i++) {
+			pos -= this.lines[i].length + 1;
+			if (pos <= 0)
+				break;
+		}
+		return i;
+	}
+	this.locs = {}; // map<addr, line>
+	this.mapAddr = function(addr, pos) {
+		this.locs[addr] = this.posToLine(pos);
+	}
+}
+
 function Compiler(source) {
 	this.rom       = []; // list<int>
+	this.dbginfo   = new DebugInfo(source);
 	this.loops     = []; // stack<[addr, marker]>
 	this.branches  = []; // stack<[addr, marker, type]>
 	this.whiles    = []; // stack<int>
@@ -76,6 +94,7 @@ function Compiler(source) {
 			throw "Data overlap. Address "+hexFormat(this.hereaddr)+" has already been defined.";
 		}
 		this.rom[this.hereaddr-0x200] = (a & 0xFF);
+		if (this.pos) this.dbginfo.mapAddr(this.hereaddr, this.pos[1]);
 		this.hereaddr++;
 	}
 

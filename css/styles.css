@@ -44,6 +44,14 @@ div.debugger {
 	font-family: monospace;
 	color: white;
 }
+table.debugger {
+	font-family: monospace;
+	color: white;
+}
+tr.debugger-searchline {
+	text-decoration: underline;
+	font-weight: bold;
+}
 div.lightbox {
 	position: fixed;
 	top: 0px;

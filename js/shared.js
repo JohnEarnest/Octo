@@ -125,3 +125,9 @@ function playPattern(soundLength, buffer) {
 	soundSource.loop = false;
 	soundSource.start(0);
 }
+
+function escapeHtml(str) {
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
+};

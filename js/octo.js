@@ -17,7 +17,7 @@ function numericFormat(num, format) {
 	if (!format)
 		format = emulator.numericFormatStr;
 
-	if (format == "dec")      { return decimalFormat(num); } 
+	if (format == "dec")      { return decimalFormat(num); }
 	else if (format == "bin") { return binaryFormat(num);  }
 	else if (format == "hex") { return hexFormat(num);     }
 
@@ -29,7 +29,6 @@ function decimalFormat(num) {
 	var dec = num.toString(10);
 	return dec;
 }
-
 
 function hexFormat(num) {
 	var hex  = num.toString(16).toUpperCase();
@@ -110,6 +109,7 @@ function compile() {
 	return {
 		rom        :c.rom,
 		breakpoints:c.breakpoints,
+		dbginfo	   :c.dbginfo,
 		aliases    :c.aliases,
 		labels     :c.dict
 	};
@@ -390,7 +390,7 @@ function palettePreset() {
 	}
 	else {
 		document.getElementById("foreEdit1").value = val[0]; editFore1();
-		document.getElementById("backEdit" ).value = val[1]; editBack();		
+		document.getElementById("backEdit" ).value = val[1]; editBack();
 	}
 	document.getElementById("buzzEdit")  .value = val[4]; editBuzz();
 	document.getElementById("silentEdit").value = val[5]; editSilent();
@@ -473,7 +473,7 @@ function drawPalette() {
 	for(var z = 0; z < 4; z++) {
 		render.fillStyle = getColor(z);
 		render.fillRect(z * 50, 0, 50, 25);
-		
+
 		render.fillStyle = "#000000";
 		render.lineWidth = 0;
 		// note: line drawing must occur at coordinates between pixels
@@ -787,10 +787,36 @@ function haltBreakpoint(breakName) {
 		var hex = k.toString(16).toUpperCase();
 		regdump += "<span onClick=\"cycleNumFormat('"+ k + "');\">v" + hex + " := " + numericFormat(emulator.v[k], regNumFormat[k]) + formatAliases(k) + "</span><br>";
 	}
+
 	regdump += "<br>inferred stack trace:<br>";
 	for(var x = 0; x < emulator.r.length; x++) {
 		regdump += hexFormat(emulator.r[x]) + getLabel(emulator.r[x]) + "<br>";
 	}
+
+	var dbg = emulator.metadata.dbginfo;
+
+	// scan backwards & forwards in memory as long as addrs map to nearby lines
+	var pcline = dbg.locs[emulator.pc];
+	var memlo = emulator.pc, memhi = emulator.pc;
+	while (dbg.locs[memlo - 1] > pcline - 8) memlo--;
+	while (dbg.locs[memhi + 1] < pcline + 8) memhi++;
+
+	var ind = memlo;
+	regdump += '<br><table class="debugger"><tr><td>addr</td><td>data</td><td style="width:40em">source</td></tr>\n';
+	for (var line = dbg.locs[memlo]; line <= dbg.locs[memhi]; line++) {
+		if (dbg.lines[line].match(/^\s*$/)) continue;  // skip empty lines
+		if (dbg.locs[ind] == line) {
+			regdump += dbg.locs[ind] == pcline ? '<tr class="debugger-searchline">' : '<tr>';
+			regdump += "<td>" + hexFormat(ind).slice(2) + "</td><td>";
+			for (; dbg.locs[ind] == line; ind++)
+				regdump += hexFormat(emulator.m[ind]).slice(2);
+			regdump += "</td>";
+		} else {
+			regdump += "<tr><td></td><td></td>"
+		}
+		regdump += "<td><pre>" + escapeHtml(dbg.lines[line]) + "</pre></td></tr>\n";
+	}
+
 	regs.innerHTML = regdump;
 	emulator.breakpoint = true;
 	curBreakName = breakName;
@@ -1121,7 +1147,7 @@ function playAudio() {
 		document.getElementById("audioError").innerHTML = "Your browser doesn't support HTML5 Audio!";
 		return;
 	}
-	
+
 	// parse the sound length
 	var soundLength = parseInt(document.getElementById("time").value);
 	if (typeof soundLength != "number" || isNaN(soundLength)) {
