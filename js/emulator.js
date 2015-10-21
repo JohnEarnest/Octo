@@ -429,7 +429,7 @@ function Emulator() {
 			case 0x7: this.v[x] = (this.v[x] + nn) & 0xFF;          break;
 			case 0x8: this.math(x, y, n);                           break;
 			case 0x9: if (this.v[x] != this.v[y]) { this.pc += 2; } break;
-			case 0xA: this.i = (this.i & 0xF000) | nnn;             break;
+			case 0xA: this.i = nnn;                                 break;
 			case 0xB: this.pc = nnn + this.v[0];                    break;
 			case 0xC: this.v[x] = (Math.random()*255)&nn;           break;
 			case 0xD: this.sprite(this.v[x], this.v[y], n);         break;
