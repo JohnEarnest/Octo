@@ -739,7 +739,7 @@ function formatProgram(programSize) {
 				// must be a backref
 				if (u < a) { continue; }
 				// must be an unconditional jump
-				if ((program[u] & 0x10) != 0x10) { continue; }
+				if ((program[u] & 0xF0) != 0x10) { continue; }
 				// must be in a contiguous forward block
 				var foundBreak = false;
 				for(var scan = a; scan <= u; scan += 2) {
