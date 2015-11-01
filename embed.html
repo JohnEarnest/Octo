@@ -43,14 +43,8 @@
 				document.body.style.backgroundColor = (emulator.st > 0) ? emulator.buzzColor : emulator.quietColor;
 			}
 
-			function run(code) {
-				var compiler = new Compiler(code);
-				try { compiler.go(); }
-				catch(error) {
-					document.write("Compiler error: " + error);
-					return;
-				}
-				emulator.init({ rom : compiler.rom });
+			function run(rom) {
+				emulator.init(rom);
 				emulator.importFlags = function() { return JSON.parse(localStorage.getItem("octoFlagRegisters")); }
 				emulator.exportFlags = function(flags) { localStorage.setItem("octoFlagRegisters", JSON.stringify(flags)); }
 				window.addEventListener("keydown", keyDown, false);
@@ -67,7 +61,21 @@
 					if (xhr.readyState != 4) { return; }
 					var result = JSON.parse(xhr.responseText);
 					unpackOptions(emulator, JSON.parse(result.files["options.json"].content));
-					run(result.files["prog.ch8"].content);
+					if (result.files["compiled.ch8"]) {
+						// when using a proxy for gist, it is possible to
+						// pre-compile roms to save time on page load.
+						// the content of this file node should be a JSON array of bytes.
+						run({ rom : result.files["compiled.rom"].content });
+					}
+					else {
+						var compiler = new Compiler(result.files["prog.ch8"].content);
+						try { compiler.go(); }
+						catch(error) {
+							document.write("Compiler error: " + error);
+							return;
+						}
+						run({ rom : compiler.rom });
+					}
 				}
 				xhr.send();
 			}
