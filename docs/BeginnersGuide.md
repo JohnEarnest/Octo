@@ -118,7 +118,7 @@ Try making your own sprite images using binary, or use the sprite editor built i
 
 Animation
 ---------
-We know how to draw sprites on the screen. To make animations we draw one or more sprites on the screen, erase some or all of the screen, redraw a slightly different scene and then repeat.
+We know how to draw sprites on the screen. To make animations we draw one or more sprites on the screen, erase some or all of the screen, redraw a slightly different scene and then repeat. You'll want to set Octo's emulation speed to "7 Cycles/Frame", it's lowest speed, so you can clearly see the animation take place in very short programs.
 
 To erase everything on the screen, use the statement `clear`. The statements `loop` and `again` are how we write a program that does something over and over. Normally, statements are carried out one after another, from the top of the program to the bottom. When `again` is encountered, Chip8 will skip back to the matching `loop` and resume from that point. Let's look at an example:
 
