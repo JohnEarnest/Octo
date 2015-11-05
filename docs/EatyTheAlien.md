@@ -24,6 +24,7 @@ The overworld representation is a sequence of pairs of bytes which represent an 
 	again
 
 Unskewed and skewed pits, followed by their overworld data:
+
 ![pits](http://i.imgur.com/msSnDgH.png)
 
 	1 40    2 40    3 40    4 40 # normal
