@@ -400,10 +400,14 @@ function Compiler(source) {
 				}
 				else if ((this.rom[addr - 0x200] & 0xF0) == 0x60) {
 					// :unpack target
+					if ((target & 0xFFF) != target)
+						throw "Value '" + target + "' for label '" + label + "' cannot not fit in 12 bits!";
 					this.rom[addr - 0x1FF] = (this.rom[addr - 0x1FF] & 0xF0) | ((target >> 8)&0xF);
 					this.rom[addr - 0x1FD] = (target & 0xFF);
 				}
 				else {
+					if ((target & 0xFFF) != target)
+						throw "Value '" + target + "' for label '" + label + "' cannot not fit in 12 bits!";
 					this.rom[addr - 0x200] = (this.rom[addr - 0x200] & 0xF0) | ((target >> 8)&0xF);
 					this.rom[addr - 0x1FF] = (target & 0xFF);
 				}
