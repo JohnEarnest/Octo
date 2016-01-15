@@ -132,7 +132,7 @@ function audioSetup() {
 				var written = audioData[0].write(outputData, index, size);
 				index += written;
 				if (written < size)
-					audioData.pop();
+					audioData.shift();
 			}
 
 			while(index < samples_n)
