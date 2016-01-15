@@ -113,7 +113,7 @@ function Emulator() {
 	this.exitVector  = function() {}                                   // fired by 'exit'
 	this.importFlags = function() { return [0, 0, 0, 0, 0, 0, 0, 0]; } // load persistent flags
 	this.exportFlags = function(flags) {}                              // save persistent flags
-	this.buzzTrigger = function(ticks) {}                              // fired when buzzer played
+	this.buzzTrigger = function(ticks, remainingTicks) {}                              // fired when buzzer played
 
 	this.init = function(rom) {
 		// initialize memory
@@ -200,7 +200,7 @@ function Emulator() {
 			case 0x07: this.v[x] = this.dt; break;
 			case 0x0A: this.waiting = true; this.waitReg = x; break;
 			case 0x15: this.dt = this.v[x]; break;
-			case 0x18: this.st = this.v[x]; this.buzzTrigger(this.v[x]); break;
+			case 0x18: this.buzzTrigger(this.v[x], this.st); this.st = this.v[x]; break;
 			case 0x1E: this.i = (this.i + this.v[x])&0xFFFF; break;
 			case 0x29: this.i = ((this.v[x] & 0xF) * 5); break;
 			case 0x30: this.i = ((this.v[x] & 0xF) * 10 + font.length); break;

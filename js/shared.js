@@ -136,7 +136,7 @@ function stopAudio() {
 
 var VOLUME = 0.25;
 
-function playPattern(soundLength, buffer) {
+function playPattern(soundLength, buffer, remainingTicks) {
 	if (!audio) { return; }
 
 	var samples = getResampledSize(BUFFER_SIZE)
