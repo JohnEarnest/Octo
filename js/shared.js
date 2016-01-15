@@ -72,18 +72,42 @@ function renderDisplay(emulator) {
 var audio;
 var audioNode;
 var audioSource;
-var audioBuffer;
-var audioPointer;
-var audioLength;
+var audioData;
+
+var AudioBuffer = function(buffer, duration) {
+	if (!(this instanceof AudioBuffer))
+		return new AudioBuffer(buffer, duration)
+
+	this.pointer = 0
+	this.buffer = buffer
+	this.duration = duration
+}
+
+AudioBuffer.prototype.write = function(buffer, index, size) {
+	size = Math.max(0, Math.min(size, this.duration))
+	if (!size)
+		return size
+
+	this.duration -= size;
+	var bufferSize = this.buffer.length;
+	var end = index + size;
+
+	for(var i = index; i < end; ++i) {
+		buffer[i] = this.buffer[this.pointer++];
+		this.pointer %= bufferSize;
+	}
+
+	return size;
+}
+
+AudioBuffer.prototype.dequeue = function(duration) {
+	this.duration -= duration
+}
 
 var FREQ = 4000;
 var TIMER_FREQ = 60;
 var SAMPLES = 16;
 var BUFFER_SIZE = SAMPLES * 8
-
-function getResampledSize(size) {
-	return audio? Math.floor(size * audio.sampleRate / FREQ): 0;
-}
 
 function audioSetup() {
 	if (audio) { return; }
@@ -99,27 +123,22 @@ function audioSetup() {
 		audioNode = audio.createScriptProcessor(4096, 1, 1);
 		audioNode.onaudioprocess = function(audioProcessingEvent) {
 			var outputBuffer = audioProcessingEvent.outputBuffer;
+			var outputData = outputBuffer.getChannelData(0);
 			var samples_n = outputBuffer.length;
-			var audioBufferSize = audioBuffer.length;
-			var half = audioBufferSize >> 1
-			for (var channel = 0; channel < outputBuffer.numberOfChannels; ++channel) {
-				var outputData = outputBuffer.getChannelData(channel);
 
-				for (var sample = 0; sample < samples_n; ++sample) {
-					var ptr = audioPointer + sample
-					if (ptr - half < audioLength) {
-						if (ptr > audioBufferSize)
-							ptr = half + (ptr % half);
-						outputData[sample] = audioBuffer[ptr];
-					} else
-						outputData[sample] = 0;
-				}
+			var index = 0;
+			while(audioData.length && index < samples_n) {
+				var size = samples_n - index;
+				var written = audioData[0].write(outputData, index, size);
+				index += written;
+				if (written < size)
+					audioData.pop();
 			}
-			audioPointer += samples_n
+
+			while(index < samples_n)
+				outputData[index++] = 0;
 		}
-		audioPointer = 0
-		audioLength = 0
-		audioBuffer = Array(getResampledSize(BUFFER_SIZE) * 2); //two buffers
+		audioData = []
 		audioNode.connect(audio.destination);
 		return true
 	}
@@ -132,6 +151,7 @@ function stopAudio() {
 	audioNode.disconnect(audio.destination)
 	audio.close()
 	audio = null
+	audioData = [];
 }
 
 var VOLUME = 0.25;
@@ -139,17 +159,18 @@ var VOLUME = 0.25;
 function playPattern(soundLength, buffer, remainingTicks) {
 	if (!audio) { return; }
 
-	var samples = getResampledSize(BUFFER_SIZE)
+	var samples = Math.floor(BUFFER_SIZE * audio.sampleRate / FREQ);
+	var audioBuffer = new Array(samples);
+	if (remainingTicks && audioData.length > 0)
+		audioData[audioData.length - 1].dequeue(Math.floor(remainingTicks * audio.sampleRate / TIMER_FREQ));
+
 	for(var i = 0; i < samples; ++i) {
-		var next = i + samples;
-		audioBuffer[i] = audioBuffer[next];
 		var srcIndex = Math.floor(i * FREQ / audio.sampleRate);
 		var cell = srcIndex >> 3;
 		var bit = srcIndex & 7;
-		audioBuffer[next] = (buffer[srcIndex >> 3] & (0x80 >> bit))? VOLUME: 0;
+		audioBuffer[i] = (buffer[srcIndex >> 3] & (0x80 >> bit))? VOLUME: 0;
 	}
-	audioLength = soundLength * audio.sampleRate / TIMER_FREQ;
-	audioPointer %= samples; //save phase
+	audioData.push(new AudioBuffer(audioBuffer, Math.floor(soundLength * audio.sampleRate / TIMER_FREQ)));
 }
 
 function escapeHtml(str) {
