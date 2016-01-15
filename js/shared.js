@@ -78,6 +78,12 @@ var audioLength;
 
 var FREQ = 4000;
 var TIMER_FREQ = 60;
+var SAMPLES = 16;
+var BUFFER_SIZE = SAMPLES * 8
+
+function getResampledSize(size) {
+	return audio? Math.floor(size * audio.sampleRate / FREQ): 0;
+}
 
 function audioSetup() {
 	if (audio) { return; }
@@ -93,25 +99,27 @@ function audioSetup() {
 		audioNode = audio.createScriptProcessor(4096, 1, 1);
 		audioNode.onaudioprocess = function(audioProcessingEvent) {
 			var outputBuffer = audioProcessingEvent.outputBuffer;
-			var samples_n = outputBuffer.length
+			var samples_n = outputBuffer.length;
+			var audioBufferSize = audioBuffer.length;
+			var half = audioBufferSize >> 1
 			for (var channel = 0; channel < outputBuffer.numberOfChannels; ++channel) {
 				var outputData = outputBuffer.getChannelData(channel);
 
 				for (var sample = 0; sample < samples_n; ++sample) {
-					var dstIndex = audioPointer + sample;
-					if (audioBuffer && dstIndex < audioLength) {
-						var srcIndex = Math.floor(dstIndex * FREQ / audio.sampleRate) % audioBuffer.length;
-						outputData[sample] = audioBuffer[srcIndex];
-					}
-					else
-						outputData[sample] = 0
+					var ptr = audioPointer + sample
+					if (ptr - half < audioLength) {
+						if (ptr > audioBufferSize)
+							ptr = half + (ptr % half);
+						outputData[sample] = audioBuffer[ptr];
+					} else
+						outputData[sample] = 0;
 				}
 			}
 			audioPointer += samples_n
 		}
 		audioPointer = 0
 		audioLength = 0
-		audioBuffer = null
+		audioBuffer = Array(getResampledSize(BUFFER_SIZE) * 2); //two buffers
 		audioNode.connect(audio.destination);
 		return true
 	}
@@ -126,21 +134,22 @@ function stopAudio() {
 	audio = null
 }
 
-var SAMPLES = 16;
 var VOLUME = 0.25;
 
 function playPattern(soundLength, buffer) {
 	if (!audio) { return; }
-	var outputBuffer = Array(SAMPLES * 8)
-	for(var i = 0; i < SAMPLES; ++i) {
-		var byte = buffer[i];
-		for(var bit = 0; bit < 8; ++bit) {
-			outputBuffer[(i << 3) | bit] = ((byte >> (7 - bit)) & 1) * VOLUME;
-		}
+
+	var samples = getResampledSize(BUFFER_SIZE)
+	for(var i = 0; i < samples; ++i) {
+		var next = i + samples;
+		audioBuffer[i] = audioBuffer[next];
+		var srcIndex = Math.floor(i * FREQ / audio.sampleRate);
+		var cell = srcIndex >> 3;
+		var bit = srcIndex & 7;
+		audioBuffer[next] = (buffer[srcIndex >> 3] & (0x80 >> bit))? VOLUME: 0;
 	}
-	audioBuffer = outputBuffer
-	audioPointer = 0
 	audioLength = soundLength * audio.sampleRate / TIMER_FREQ;
+	audioPointer %= samples; //save phase
 }
 
 function escapeHtml(str) {
