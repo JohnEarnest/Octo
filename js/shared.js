@@ -70,60 +70,77 @@ function renderDisplay(emulator) {
 ////////////////////////////////////
 
 var audio;
+var audioNode;
+var audioSource;
+var audioBuffer;
+var audioPointer;
+var audioLength;
+
+var FREQ = 4000;
+var TIMER_FREQ = 60;
+
 function audioSetup() {
 	if (audio) { return; }
-	if (typeof webkitAudioContext !== 'undefined') {
-		audio = new webkitAudioContext();
-		return true;
-	}
-	else if (typeof AudioContext !== 'undefined') {
+
+	if (typeof AudioContext !== 'undefined') {
 		audio = new AudioContext();
-		return true;
 	}
-	return false;
+	else if (typeof webkitAudioContext !== 'undefined') {
+		audio = new webkitAudioContext();
+	}
+
+	if (audio) {
+		audioNode = audio.createScriptProcessor(4096, 1, 1);
+		audioNode.onaudioprocess = function(audioProcessingEvent) {
+			var outputBuffer = audioProcessingEvent.outputBuffer;
+			var samples_n = outputBuffer.length
+			for (var channel = 0; channel < outputBuffer.numberOfChannels; ++channel) {
+				var outputData = outputBuffer.getChannelData(channel);
+
+				for (var sample = 0; sample < samples_n; ++sample) {
+					var dstIndex = audioPointer + sample;
+					if (audioBuffer && dstIndex < audioLength) {
+						var srcIndex = Math.floor(dstIndex * FREQ / audio.sampleRate) % audioBuffer.length;
+						outputData[sample] = audioBuffer[srcIndex];
+					}
+					else
+						outputData[sample] = 0
+				}
+			}
+			audioPointer += samples_n
+		}
+		audioPointer = 0
+		audioLength = 0
+		audioBuffer = null
+		audioNode.connect(audio.destination);
+		return true
+	}
+	else
+		return false;
 }
 
 function stopAudio() {
 	if (!audio) { return; }
-	if (soundSource != null) {
-		soundSource.stop(0);
-		soundSource = null;
-	}
+	audioNode.disconnect(audio.destination)
+	audio.close()
+	audio = null
 }
 
 var SAMPLES = 16;
 var VOLUME = 0.25;
-var soundSource = null;
 
 function playPattern(soundLength, buffer) {
 	if (!audio) { return; }
-	if (soundLength < 1) { return; }
-	stopAudio();
-
-	// construct an audio buffer from the pattern buffer
-	var sampleCount = Math.floor((audio.sampleRate / 120) * soundLength);
-	var sampleMult  = Math.floor(audio.sampleRate / 30 / (8*SAMPLES));
-	var soundBuffer = audio.createBuffer(1, sampleCount, audio.sampleRate);
-	var sound = soundBuffer.getChannelData(0);
-	for(var z = 0; z < sampleCount;) {
-		var bit   = Math.floor(z / sampleMult) % (8*SAMPLES); // index into pattern bits
-		var cell  = Math.floor(bit / 8);                      // index into pattern bytes
-		var shift = 7 - (bit % 8);                            // index into byte bits
-		var value = ((buffer[cell] >> shift) & 1) == 1;       // on or off
-
-		// unroll sampleMult copies of this sample:
-		for(var repeats = 0; repeats < sampleMult; repeats++) {
-			sound[z] = value ? VOLUME : 0;
-			z++;
+	var outputBuffer = Array(SAMPLES * 8)
+	for(var i = 0; i < SAMPLES; ++i) {
+		var byte = buffer[i];
+		for(var bit = 0; bit < 8; ++bit) {
+			outputBuffer[(i << 3) | bit] = ((byte >> (7 - bit)) & 1) * VOLUME;
 		}
 	}
-
-	// play the sound
-	soundSource = audio.createBufferSource();
-	soundSource.buffer = soundBuffer;
-	soundSource.connect(audio.destination);
-	soundSource.loop = false;
-	soundSource.start(0);
+	audioBuffer = outputBuffer
+	audioPointer = 0
+	audioLength = soundLength * audio.sampleRate / TIMER_FREQ;
 }
 
 function escapeHtml(str) {
