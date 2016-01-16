@@ -70,60 +70,107 @@ function renderDisplay(emulator) {
 ////////////////////////////////////
 
 var audio;
+var audioNode;
+var audioSource;
+var audioData;
+
+var AudioBuffer = function(buffer, duration) {
+	if (!(this instanceof AudioBuffer))
+		return new AudioBuffer(buffer, duration)
+
+	this.pointer = 0
+	this.buffer = buffer
+	this.duration = duration
+}
+
+AudioBuffer.prototype.write = function(buffer, index, size) {
+	size = Math.max(0, Math.min(size, this.duration))
+	if (!size)
+		return size
+
+	this.duration -= size;
+	var bufferSize = this.buffer.length;
+	var end = index + size;
+
+	for(var i = index; i < end; ++i) {
+		buffer[i] = this.buffer[this.pointer++];
+		this.pointer %= bufferSize;
+	}
+
+	return size;
+}
+
+AudioBuffer.prototype.dequeue = function(duration) {
+	this.duration -= duration
+}
+
+var FREQ = 4000;
+var TIMER_FREQ = 60;
+var SAMPLES = 16;
+var BUFFER_SIZE = SAMPLES * 8
+
 function audioSetup() {
 	if (audio) { return; }
-	if (typeof webkitAudioContext !== 'undefined') {
-		audio = new webkitAudioContext();
-		return true;
-	}
-	else if (typeof AudioContext !== 'undefined') {
+
+	if (typeof AudioContext !== 'undefined') {
 		audio = new AudioContext();
-		return true;
 	}
-	return false;
+	else if (typeof webkitAudioContext !== 'undefined') {
+		audio = new webkitAudioContext();
+	}
+
+	if (audio) {
+		audioNode = audio.createScriptProcessor(4096, 1, 1);
+		audioNode.onaudioprocess = function(audioProcessingEvent) {
+			var outputBuffer = audioProcessingEvent.outputBuffer;
+			var outputData = outputBuffer.getChannelData(0);
+			var samples_n = outputBuffer.length;
+
+			var index = 0;
+			while(audioData.length && index < samples_n) {
+				var size = samples_n - index;
+				var written = audioData[0].write(outputData, index, size);
+				index += written;
+				if (written < size)
+					audioData.shift();
+			}
+
+			while(index < samples_n)
+				outputData[index++] = 0;
+		}
+		audioData = []
+		audioNode.connect(audio.destination);
+		return true
+	}
+	else
+		return false;
 }
 
 function stopAudio() {
 	if (!audio) { return; }
-	if (soundSource != null) {
-		soundSource.stop(0);
-		soundSource = null;
-	}
+	audioNode.disconnect(audio.destination)
+	audio.close()
+	audio = null
+	audioData = [];
 }
 
-var SAMPLES = 16;
 var VOLUME = 0.25;
-var soundSource = null;
 
-function playPattern(soundLength, buffer) {
+function playPattern(soundLength, buffer, remainingTicks) {
 	if (!audio) { return; }
-	if (soundLength < 1) { return; }
-	stopAudio();
 
-	// construct an audio buffer from the pattern buffer
-	var sampleCount = Math.floor((audio.sampleRate / 120) * soundLength);
-	var sampleMult  = Math.floor(audio.sampleRate / 30 / (8*SAMPLES));
-	var soundBuffer = audio.createBuffer(1, sampleCount, audio.sampleRate);
-	var sound = soundBuffer.getChannelData(0);
-	for(var z = 0; z < sampleCount;) {
-		var bit   = Math.floor(z / sampleMult) % (8*SAMPLES); // index into pattern bits
-		var cell  = Math.floor(bit / 8);                      // index into pattern bytes
-		var shift = 7 - (bit % 8);                            // index into byte bits
-		var value = ((buffer[cell] >> shift) & 1) == 1;       // on or off
+	var samples = Math.floor(BUFFER_SIZE * audio.sampleRate / FREQ);
+	var audioBuffer = new Array(samples);
+	if (remainingTicks && audioData.length > 0)
+		audioData[audioData.length - 1].dequeue(Math.floor(remainingTicks * audio.sampleRate / TIMER_FREQ));
 
-		// unroll sampleMult copies of this sample:
-		for(var repeats = 0; repeats < sampleMult; repeats++) {
-			sound[z] = value ? VOLUME : 0;
-			z++;
-		}
+	for(var i = 0; i < samples; ++i) {
+		var srcIndex = Math.floor(i * FREQ / audio.sampleRate);
+		var cell = srcIndex >> 3;
+		var bit = srcIndex & 7;
+		audioBuffer[i] = (buffer[srcIndex >> 3] & (0x80 >> bit))? VOLUME: 0;
 	}
-
-	// play the sound
-	soundSource = audio.createBufferSource();
-	soundSource.buffer = soundBuffer;
-	soundSource.connect(audio.destination);
-	soundSource.loop = false;
-	soundSource.start(0);
+	audioData.push(new AudioBuffer(audioBuffer, Math.floor(soundLength * audio.sampleRate / TIMER_FREQ)));
 }
 
 function escapeHtml(str) {
