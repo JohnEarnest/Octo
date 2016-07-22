@@ -11,6 +11,27 @@ function parse(token) {
 	return isNaN(num) ? token : num;
 }
 
+function parseNumber(token) {
+
+    // Check if this token is a valid binary number
+    if (/^0b[01]+$/.test(token)) {
+        return parseInt(token.slice(2), 2);
+    }
+
+    // Check if this token is a valid hexadecimal number
+    if (/^0x[0-9a-f]+$/i.test(token)) {
+        return parseInt(token.slice(2), 16);
+    }
+
+    // Check if this token is a valid decimal number
+    if (/^[0-9]+$/.test(token)) {
+        return parseInt(token, 10);
+    }
+
+    return NaN;
+
+}
+
 function tokenize(text) {
 	var ret   = [];
 	var index = 0;
