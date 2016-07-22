@@ -7,7 +7,7 @@
 ////////////////////////////////////
 
 function parse(token) {
-	var num = (token.slice(0, 2) == "0b") ? parseInt(token.slice(2),2) : parseInt(token);
+	var num = parseNumber(token);
 	return isNaN(num) ? token : num;
 }
 
