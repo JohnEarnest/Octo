@@ -14,8 +14,27 @@ function parse(token) {
 function parseNumber(token) {
 
     // Check if this token is a valid binary number
-    if (/^0b[01]+$/.test(token)) {
-        return parseInt(token.slice(2), 2);
+    if (/^[+\-]?0b[01]+$/.test(token)) {
+
+    	var bitstring;
+    	var isNegative = token.startsWith('-');
+
+    	// Check for any leading +/- sign character
+    	if(isNegative || token.startsWith('+')) {
+
+    		// Remove sign character and 0b- prefix
+    		bitstring = token.slice(3);
+
+    	} else {
+
+    		// Remove 0b- prefix
+    		bitstring = token.slice(2);
+
+    	}
+
+        var value = parseInt(bitstring, 2);
+        return (isNegative) ? -value : value;
+
     }
 
     // Check if this token is a valid hexadecimal number
