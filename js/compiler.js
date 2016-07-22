@@ -19,12 +19,12 @@ function parseNumber(token) {
     }
 
     // Check if this token is a valid hexadecimal number
-    if (/^0x[0-9a-f]+$/i.test(token)) {
-        return parseInt(token.slice(2), 16);
+    if (/^[+\-]?0x[0-9a-f]+$/i.test(token)) {
+        return parseInt(token, 16);
     }
 
     // Check if this token is a valid decimal number
-    if (/^[0-9]+$/.test(token)) {
+    if (/^[+\-]?[0-9]+$/.test(token)) {
         return parseInt(token, 10);
     }
 
