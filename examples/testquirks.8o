@@ -44,4 +44,23 @@
 	vb := 19
 	sprite va vb 5
 
+	# try a jump0 instruction.
+	# the correct behavior should respect the value of v0 as an offset, resulting in 7
+	# quirks mode will respect v2 instead (in this case), resulting in 8.
+	v0 := 8
+	v2 := 4
+	jump0 jump-table
+
+: jump-table
+	0x00 0x00 0x00 0x00
+	vf := 8   jump show-jump0-result
+	vf := 7   jump show-jump0-result
+	0x00 0x00 0x00 0x00
+
+: show-jump0-result
+	i  := hex vf
+	va := 10
+	vb := 5
+	sprite va vb 5
+
 	loop again

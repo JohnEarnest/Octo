@@ -279,6 +279,11 @@ function Emulator() {
 		this.pc = nnn
 	}
 
+	this.jump0 = function(nnn) {
+		if (this.jumpQuirks) { this.pc = nnn + this.v[(this.pc >> 8)&0xF];  }
+		else                 { this.pc = nnn + this.v[0]; }
+	}
+
 	this.machine = function(nnn) {
 		if (nnn == 0x000) { this.halted = true; return; }
 		haltBreakpoint("machine code is not supported.");
@@ -432,7 +437,7 @@ function Emulator() {
 			case 0x8: this.math(x, y, n);                           break;
 			case 0x9: if (this.v[x] != this.v[y]) { this.pc += 2; } break;
 			case 0xA: this.i = nnn;                                 break;
-			case 0xB: this.pc = nnn + this.v[0];                    break;
+			case 0xB: this.jump0(nnn);                              break;
 			case 0xC: this.v[x] = (Math.random()*255)&nn;           break;
 			case 0xD: this.sprite(this.v[x], this.v[y], n);         break;
 			case 0xF: this.misc(x, nn);                             break;
