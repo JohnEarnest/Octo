@@ -169,7 +169,9 @@ function share() {
 		"shiftQuirks"     : emulator.shiftQuirks,
 		"loadStoreQuirks" : emulator.loadStoreQuirks,
 		"vfOrderQuirks"   : emulator.vfOrderQuirks,
-		"enableXO"        : emulator.enableXO
+		"clipQuirks"      : emulator.clipQuirks,
+		"jumpQuirks"      : emulator.jumpQuirks,
+		"enableXO"        : emulator.enableXO,
 	});
 	xhr.send(JSON.stringify({
 		"description" : "Octo Chip8 Program",
@@ -396,19 +398,8 @@ function palettePreset() {
 	document.getElementById("silentEdit").value = val[5]; editSilent();
 }
 
-function setShiftQuirks() {
-	var check = document.getElementById("shiftQuirks");
-	emulator.shiftQuirks = check.checked;
-}
-
-function setLoadStoreQuirks() {
-	var check = document.getElementById("loadStoreQuirks");
-	emulator.loadStoreQuirks = check.checked;
-}
-
-function setVfOrderQuirks() {
-	var check = document.getElementById("vfOrderQuirks");
-	emulator.vfOrderQuirks = check.checked;
+function setQuirks(flag) {
+	emulator[flag] = document.getElementById(flag).checked;
 }
 
 function setEnableXO() {
@@ -439,6 +430,8 @@ function toggleOptions() {
 		document.getElementById("shiftQuirks"    ).checked = emulator.shiftQuirks;
 		document.getElementById("loadStoreQuirks").checked = emulator.loadStoreQuirks;
 		document.getElementById("vfOrderQuirks"  ).checked = emulator.vfOrderQuirks;
+		document.getElementById("clipQuirks"     ).checked = emulator.clipQuirks;
+		document.getElementById("jumpQuirks"     ).checked = emulator.jumpQuirks;
 		document.getElementById("enableXO"       ).checked = emulator.enableXO;
 	}
 	else {
@@ -913,6 +906,7 @@ function decompileStart() {
 	quirks['shiftQuirks'    ] = emulator.shiftQuirks;
 	quirks['loadStoreQuirks'] = emulator.loadStoreQuirks;
 	quirks['vfOrderQuirks'  ] = emulator.vfOrderQuirks;
+	quirks['jumpQuirks'     ] = emulator.jumpQuirks;
 	analyzeInit(buffer, quirks);
 	decompileProgramLength = buffer.length;
 	window.setTimeout(decompileProcess, 0);

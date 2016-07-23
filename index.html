@@ -139,16 +139,24 @@
 				<h3>Compatibility</h3>
 				<table>
 					<tr>
-						<td><input type="checkbox" id="shiftQuirks" onchange="setShiftQuirks();"></td>
+						<td><input type="checkbox" id="shiftQuirks" onchange="setQuirks('shiftQuirks');"></td>
 						<td><tt>&lt;&lt;=</tt> and <tt>&gt;&gt;=</tt> modify <tt>vx</tt> in place and ignore <tt>vy</tt>.</td>
 					</tr>
 					<tr>
-						<td><input type="checkbox" id="loadStoreQuirks" onchange="setLoadStoreQuirks();"></td>
+						<td><input type="checkbox" id="loadStoreQuirks" onchange="setQuirks('loadStoreQuirks');"></td>
 						<td><tt>load</tt> and <tt>store</tt> operations leave <tt>i</tt> unchanged.</td>
 					</tr>
 					<tr>
-						<td><input type="checkbox" id="vfOrderQuirks" onchange="setVfOrderQuirks();"></td>
+						<td><input type="checkbox" id="vfOrderQuirks" onchange="setQuirks('vfOrderQuirks');"></td>
 						<td>arithmetic results write to <tt>vf</tt> after status flag.</td>
+					</tr>
+					<tr>
+						<td><input type="checkbox" id="clipQuirks" onchange="setQuirks('clipQuirks');"></td>
+						<td>clip sprites at screen edges instead of wrapping</td>
+					</tr>
+					<tr>
+						<td><input type="checkbox" id="jumpQuirks" onchange="setQuirks('jumpQuirks');"></td>
+						<td>third nybble of PC determines the base register of <tt>jump0</tt> instead of <tt>v0</tt></td>
 					</tr>
 					<tr>
 						<td><input type="checkbox" id="enableXO" onchange="setEnableXO();"></td>

@@ -82,6 +82,8 @@ function Emulator() {
 	this.shiftQuirks        = false;
 	this.loadStoreQuirks    = false;
 	this.vfOrderQuirks      = false;
+	this.clipQuirks         = false;
+	this.jumpQuirks         = false;
 	this.enableXO           = false;
 	this.maskFormatOverride = true;
 	this.numericFormatStr   = "default";
