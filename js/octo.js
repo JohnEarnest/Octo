@@ -159,11 +159,11 @@ function share() {
 	}
 	var prog = document.getElementById("input").value;
 	var options = JSON.stringify({
-		"tickrate"        : emulator.ticksPerFrame,
+		"tickrate"        : emulator.tickrate,
 		"fillColor"       : emulator.fillColor,
 		"fillColor2"      : emulator.fillColor2,
 		"blendColor"      : emulator.blendColor,
-		"backgroundColor" : emulator.backColor,
+		"backgroundColor" : emulator.backgroundColor,
 		"buzzColor"       : emulator.buzzColor,
 		"quietColor"      : emulator.quietColor,
 		"shiftQuirks"     : emulator.shiftQuirks,
@@ -199,7 +199,7 @@ function runGist() {
 			var framerateNum = options["tickrate"]|0;
 			var framerateEl = document.getElementById("framerate");
 			framerateEl.value = framerateNum;
-			emulator.ticksPerFrame = (framerateEl.value == "") ? framerateNum : framerateEl.value;
+			emulator.tickrate = (framerateEl.value == "") ? framerateNum : framerateEl.value;
 			unpackOptions(emulator, options);
 			if (emulator.enableXO) {
 				document.getElementById("enableXO").checked = true;
@@ -218,7 +218,7 @@ function runGist() {
 ////////////////////////////////////
 
 function render() {
-	for(var z = 0; (z < emulator.ticksPerFrame) && (!emulator.waiting); z++) {
+	for(var z = 0; (z < emulator.tickrate) && (!emulator.waiting); z++) {
 		if (emulator.breakpoint != true) {
 			emulator.tick();
 			if (emulator.pc in emulator.metadata.breakpoints) {
@@ -328,7 +328,7 @@ function toggleManual() {
 ////////////////////////////////////
 
 function framerate() {
-	emulator.ticksPerFrame = document.getElementById("framerate").value;
+	emulator.tickrate = document.getElementById("framerate").value;
 }
 
 function editFore1() {
@@ -355,7 +355,7 @@ function editBlend() {
 function editBack() {
 	var val = document.getElementById("backEdit").value;
 	document.getElementById("backSample").bgColor = val;
-	emulator.backColor = val;
+	emulator.backgroundColor = val;
 	showPixels();
 }
 
@@ -424,7 +424,7 @@ function toggleOptions() {
 		document.getElementById("foreEdit1"      ).value   = emulator.fillColor;  editFore1();
 		document.getElementById("foreEdit2"      ).value   = emulator.fillColor2; editFore2();
 		document.getElementById("blendEdit"      ).value   = emulator.blendColor; editBlend();
-		document.getElementById("backEdit"       ).value   = emulator.backColor;  editBack();
+		document.getElementById("backEdit"       ).value   = emulator.backgroundColor; editBack();
 		document.getElementById("buzzEdit"       ).value   = emulator.buzzColor;  editBuzz();
 		document.getElementById("silentEdit"     ).value   = emulator.quietColor; editSilent();
 		document.getElementById("shiftQuirks"    ).checked = emulator.shiftQuirks;
@@ -553,7 +553,7 @@ function setSpriteEditorSize() {
 function showPixels() {
 	var canvas = document.getElementById("draw");
 	var render = canvas.getContext("2d");
-	render.fillStyle = emulator.backColor;
+	render.fillStyle = emulator.backgroundColor;
 	render.fillRect(0, 0, canvas.width, canvas.height);
 	if (largeSprite) {
 		for(var row = 0; row < 16; row++) {
@@ -1064,7 +1064,7 @@ function generateWaveform() {
 	var h = canvas.height;
 	var w = canvas.width;
 	var g = canvas.getContext("2d");
-	g.fillStyle = emulator.backColor;
+	g.fillStyle = emulator.backgroundColor;
 	g.fillRect(0, 0, canvas.width, canvas.height);
 
 	// Samples are played at 4000 samples/second.
@@ -1122,7 +1122,7 @@ function parseAudio(id) {
 function drawAudio() {
 	var canvas = document.getElementById("drawAudio");
 	var render = canvas.getContext("2d");
-	render.fillStyle = emulator.backColor;
+	render.fillStyle = emulator.backgroundColor;
 	render.fillRect(0, 0, canvas.width, canvas.height);
 	render.fillStyle = emulator.fillColor;
 

@@ -34,7 +34,7 @@
 
 			function render() {
 				if (emulator.halted) { return; }
-				for(var z = 0; (z < emulator.ticksPerFrame) && (!emulator.waiting); z++) {
+				for(var z = 0; (z < emulator.tickrate) && (!emulator.waiting); z++) {
 					emulator.tick();
 				}
 				if (emulator.dt > 0) { emulator.dt--; }

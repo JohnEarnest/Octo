@@ -14,7 +14,7 @@ function saveScreenshot() {
 
 function getSVGColor(id) {
 	switch(id) {
-		case 0: return emulator.backColor;
+		case 0: return emulator.backgroundColor;
 		case 1: return emulator.fillColor;
 		case 2: return emulator.fillColor2;
 		case 3: return emulator.blendColor;

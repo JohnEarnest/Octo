@@ -43,7 +43,7 @@ function setRenderTarget(scale, canvas) {
 
 function getColor(id) {
 	switch(id) {
-		case 0: return emulator.backColor;
+		case 0: return emulator.backgroundColor;
 		case 1: return emulator.fillColor;
 		case 2: return emulator.fillColor2;
 		case 3: return emulator.blendColor;
@@ -55,7 +55,7 @@ function renderDisplay(emulator) {
 	var c = document.getElementById(renderTarget);
 	var g = c.getContext("2d");
 	g.setTransform(1, 0, 0, 1, 0, 0);
-	g.fillStyle = emulator.backColor;
+	g.fillStyle = emulator.backgroundColor;
 	g.fillRect(0, 0, c.width, c.height);
 	var max    = emulator.hires ? 128*64      : 64*32;
 	var stride = emulator.hires ? 128         : 64;
