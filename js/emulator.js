@@ -248,6 +248,9 @@ function Emulator() {
 					for(var b = 0; b < 16; b++) {
 						var target = ((x+b) % rowSize) + ((y+a) % colSize)*rowSize;
 						var source = ((this.m[i+(a*2)+(b > 7 ? 1:0)] >> (7-(b%8))) & 0x1) != 0;
+						if (this.clipQuirks) {
+							if ((x%rowSize)+b>=rowSize || (y%colSize)+a>=colSize) { source = 0; }
+						}
 						if (!source) { continue; }
 						if (this.p[layer][target]) { this.p[layer][target] = 0; this.v[0xF] = 0x1; }
 						else { this.p[layer][target] = 1; }
@@ -261,6 +264,9 @@ function Emulator() {
 					for(var b = 0; b < 8; b++) {
 						var target = ((x+b) % rowSize) + ((y+a) % colSize)*rowSize;
 						var source = ((this.m[i+a] >> (7-b)) & 0x1) != 0;
+						if (this.clipQuirks) {
+							if ((x%rowSize)+b>=rowSize || (y%colSize)+a>=colSize) { source = 0; }
+						}
 						if (!source) { continue; }
 						if (this.p[layer][target]) { this.p[layer][target] = 0; this.v[0xF] = 0x1; }
 						else { this.p[layer][target] = 1; }
