@@ -286,7 +286,7 @@ function Emulator() {
 	}
 
 	this.jump0 = function(nnn) {
-		if (this.jumpQuirks) { this.pc = nnn + this.v[(this.pc >> 8)&0xF];  }
+		if (this.jumpQuirks) { this.pc = nnn + this.v[(nnn >> 8)&0xF];  }
 		else                 { this.pc = nnn + this.v[0]; }
 	}
 
