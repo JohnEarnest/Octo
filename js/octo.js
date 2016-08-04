@@ -1137,7 +1137,7 @@ function drawAudio() {
 
 function playAudio() {
 	// initialize sound if necessary
-	if (!audio && !audioSetup()) {
+	if (!audioSetup()) {
 		document.getElementById("audioError").innerHTML = "Your browser doesn't support HTML5 Audio!";
 		return;
 	}
