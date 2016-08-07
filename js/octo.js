@@ -887,7 +887,7 @@ function getDecompileData() {
 	inData = inData.split(",");
 	var buffer = [];
 	for(var z = 0; z < inData.length; z++) {
-		buffer[z] = parse(inData[z]);
+		buffer[z] = parse(inData[z].trim());
 	}
 	return buffer;
 }
