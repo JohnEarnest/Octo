@@ -195,7 +195,7 @@
 				<h3>Audio Editor</h3>
 				Enter a pattern of 16 bytes:<br>
 				<canvas id="drawAudio" width="256" height="32"></canvas></br>
-				<textarea id="audioPattern" rows="4" cols="40" spellcheck="false" onkeyup="drawAudio();"></textarea><br>
+				<textarea id="audioPattern" rows="4" cols="40" spellcheck="false" onchange="editAudioHex('audioPattern');" onkeyup="editAudioHex('audioPattern');"></textarea><br>
 				<select id="audioPreset" onchange="presetAudio();">
 					<option value="">Choose a preset...</option>
 					<option value="0xFF 0xFF 0xFF 0xFF 0xFF 0xFF 0xFF 0xFF 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00">1/2 Duty Square Wave</option>
@@ -222,7 +222,7 @@
 				<div id="audioerror" style="color: red;"></div>
 				<h3>Waveform Blending</h3>
 				Combine this waveform with the one above.<br>
-				<textarea id="blendPattern" rows="4" cols="40" spellcheck="false"></textarea><br>
+				<textarea id="blendPattern" rows="4" cols="40" spellcheck="false" onchange="editAudioHex('blendPattern');" onkeyup="editAudioHex('blendPattern');"></textarea><br>
 				<button type="button" onclick="blendWaveform('xor');">XOR</button>
 				<button type="button" onclick="blendWaveform('and');">AND</button>
 				<button type="button" onclick="blendWaveform('or');">OR</button>
@@ -233,7 +233,7 @@
 				Freq. (Hz): <input id="frequency" type="text" size="4" value="440" onchange="generateWaveform();" onkeyup="generateWaveform();">
 				Cutoff: <input id="cutoff" type="text" size="4" value="128" onchange="generateWaveform();" onkeyup="generateWaveform();">
 				<button type="button" onclick="swapWaveforms('generatedPattern', 'audioPattern');">Swap</button>
-				<br><textarea id="generatedPattern" rows="4" cols="40" spellcheck="false"></textarea>
+				<br><textarea id="generatedPattern" rows="4" cols="40" spellcheck="false" onchange="editAudioHex('generatedPattern');" onkeyup="editAudioHex('generatedPattern');"></textarea>
 			</div>
 		</center>
 
