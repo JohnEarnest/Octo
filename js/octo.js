@@ -983,9 +983,9 @@ listExamples();
 function toggleAudioEditor() {
 	var audio = document.getElementById("audiotools");
 	if (audio.style.display == "none") {
-		document.getElementById("options").style.display = "none";
+		document.getElementById("options").style.display      = "none";
 		document.getElementById("spriteEditor").style.display = "none";
-		document.getElementById("bintools").style.display = "none";
+		document.getElementById("bintools").style.display     = "none";
 		audio.style.display = "inline";
 		drawAudio();
 	}
@@ -996,15 +996,17 @@ function toggleAudioEditor() {
 
 function presetAudio() {
 	document.getElementById("audioPattern").value = document.getElementById("audioPreset").value;
+	audioPattern = parseAudio("audioPattern");
 	drawAudio();
 }
 
 function randomAudio() {
-	var ret = "";
+	var ret = [];
 	for(var z = 0; z < 16; z++) {
-		ret += hexFormat(Math.floor(Math.random() * 255)) + " ";
+		ret[z] = Math.floor(Math.random() * 255);
 	}
-	document.getElementById("audioPattern").value = ret;
+	audioPattern = ret;
+	document.getElementById("audioPattern").value = getAudioHex(audioPattern);
 	drawAudio();
 }
 
@@ -1013,12 +1015,12 @@ function swapWaveforms(x, y) {
 	var b = document.getElementById(y).value;
 	document.getElementById(x).value = b;
 	document.getElementById(y).value = a;
+	parseWaveforms();
 	drawAudio();
 }
 
 function shiftAudio(delta) {
-	var audioPattern = parseAudio("audioPattern");
-	var result = "";
+	var result = [];
 	for(var z = 0; z < 16; z++) {
 		var b = 0;
 		for(var index = 0; index < 8; index++) {
@@ -1027,15 +1029,14 @@ function shiftAudio(delta) {
 			var sourceBit   = 7 - Math.floor(sourceIndex % 8);
 			b = (b <<= 1) | ((audioPattern[sourceByte] >> sourceBit) & 1);
 		}
-		result += hexFormat(b) + " ";
+		result[z] = b;
 	}
-	document.getElementById("audioPattern").value = result;
+	audioPattern = result;
+	document.getElementById("audioPattern").value = getAudioHex(audioPattern);
 	drawAudio();
 }
 
 function blendWaveform(func) {
-	var audioPattern = parseAudio("audioPattern");
-	var blendPattern = parseAudio("blendPattern");
 	function blend(target, dyad) {
 		var data = "";
 		for(var z = 0; z < audioPattern.length; z++) {
@@ -1056,6 +1057,7 @@ function blendWaveform(func) {
 	if (func == 'not') {
 		blend("blendPattern", function(a, b) { return (~b); });
 	}
+	parseWaveforms();
 	drawAudio();
 }
 
@@ -1075,14 +1077,13 @@ function generateWaveform() {
 	var frequency = parseInt(document.getElementById("frequency").value);
 	var cutoff    = parseInt(document.getElementById("cutoff").value);
 
-	var word = 0;
-	var pattern = "";
+	var word = 0;			
+	var index = 0;
 
 	for(var z = 0; z < 128; z++) {
 		var t = z * (1 / 4000);                        // time in seconds
 		var v = Math.sin(t * frequency * 2 * Math.PI); // sine wave
 		var s = Math.floor((v + 1) * 128);             // offset and scale
-
 		// draw some nice waveform displays
 		g.fillStyle = emulator.fillColor2;
 		g.fillRect(z*(w/128), h-(s*(h/256)), (w/128), s*(h/256));
@@ -1094,29 +1095,60 @@ function generateWaveform() {
 		// build up a bit vector
 		word = (word << 1) | ((s >= cutoff) ? 1 : 0);
 		if ((z % 8) == 7) {
-			pattern += hexFormat(word) + " ";
+			generatedPattern[index++] = word;
 			word = 0;
 		}
 	}
-	document.getElementById("generatedPattern").value = pattern;
+	document.getElementById("generatedPattern").value = getAudioHex(generatedPattern);
 }
-generateWaveform();
 
 function parseAudio(id) {
-	function parse(token) {
-		var num = (token.slice(0, 2) == "0b") ? parseInt(token.slice(2),2) : parseInt(token);
-		return isNaN(num) ? token : num;
-	}
 	var pattern = document.getElementById(id).value;
 	pattern = pattern.replace("[", "");
 	pattern = pattern.replace("]", "");
-	pattern = pattern.split(/\s+/);
+	pattern = pattern.match(/\S+/g) || []
 	var buffer = [];
 	for(var z = 0; z < 16; z++) { buffer[z] = 0; }
 	for(var z = 0; z < Math.min(pattern.length, 16); z++) {
-		buffer[z] = parse(pattern[z]);
+		buffer[z] = parse(pattern[z].trim());
 	}
 	return buffer;
+}
+
+function parseWaveforms() {
+	blendPattern = parseAudio("blendPattern");
+	generatedPattern = parseAudio("generatedPattern");
+	audioPattern = parseAudio("audioPattern");
+}
+
+
+function editAudioHex(id)
+{
+	var data = parseAudio(id);
+	var empty = false;
+
+	if(document.getElementById(id).value.trim() == "") {
+		empty = true;
+	}
+	if(id == 'audioPattern') {
+		audioPattern = data;
+		drawAudio();
+		if(empty) {
+			document.getElementById(id).value =  getAudioHex(audioPattern);
+		}
+	} 
+	if(id == 'blendPattern') {
+		blendPattern = data;
+		if(empty) {
+			document.getElementById(id).value =  getAudioHex(blendPattern);
+		}
+	}
+	if(id == 'generatedPattern') {
+		generatedPattern = data;
+		if(empty) {
+			document.getElementById(id).value =  getAudioHex(generatedPattern);
+		}
+	}
 }
 
 function drawAudio() {
@@ -1125,12 +1157,11 @@ function drawAudio() {
 	render.fillStyle = emulator.backgroundColor;
 	render.fillRect(0, 0, canvas.width, canvas.height);
 	render.fillStyle = emulator.fillColor;
-
-	var buffer = parseAudio("audioPattern");
+	
 	for(var z = 0; z < 8 * 16; z++) {
 		var a = Math.floor(z / 8);
 		var b = 7 - Math.floor(z % 8);
-		if (((buffer[a] >> b) & 1) == 0) { continue; }
+		if (((audioPattern[a] >> b) & 1) == 0) { continue; }
 		render.fillRect(z * 2, 0, 2, 32);
 	}
 }
@@ -1154,3 +1185,57 @@ function playAudio() {
 
 	playPattern(soundLength, buffer);
 }
+
+function getAudioHex(buffer) {
+	var hex = "";
+	var maxBytes = 16;
+	for(var z = 0; z < maxBytes; z++) {
+		var digits = buffer[z].toString(16).toUpperCase();
+		hex += "0x" + (digits.length == 1 ? "0"+digits : digits) + " ";
+		if (z % 8 == 7) { hex += "\n"; }
+	}
+	return hex;
+}
+
+function dragAudio(event) {
+	if (mode == 0) { return; }
+	var rect = document.getElementById("drawAudio").getBoundingClientRect();
+	var mx   = Math.floor((event.clientX - rect.left)/2);
+	var dest = Math.floor(mx / 8);
+	var src  = 128 >> (mx % 8);
+	if (mode == 1) {
+		audioPattern[dest] |= src; // draw
+	}
+	else {
+		audioPattern[dest] &= ~src; // erase
+	}
+
+	document.getElementById("audioPattern").value = getAudioHex(audioPattern);
+	drawAudio();
+}
+
+function releaseAudio(event)    { mode = 0; dragAudio(event); }
+function pressDrawAudio(event)  { if (event.button == 2) {mode = 2;} else {mode = 1;} dragAudio(event); }
+
+var audioPattern = [];
+var blendPattern = [];
+var generatedPattern = [];
+
+function InitializeAudioEditor() {
+	for(var z = 0; z < 16; z++) { 
+		audioPattern[z] = 0;
+		blendPattern[z] = 0;
+	}
+	generateWaveform();
+	document.getElementById("audioPattern").value 	  =	getAudioHex(audioPattern);
+	document.getElementById("blendPattern").value     =	getAudioHex(blendPattern);
+	drawAudio();
+}
+InitializeAudioEditor();
+
+var audioCanvas = document.getElementById("drawAudio");
+audioCanvas.addEventListener("mousemove", dragAudio, false);
+audioCanvas.addEventListener("mousedown", pressDrawAudio, false);
+audioCanvas.addEventListener("mouseup"  , releaseAudio, false);
+audioCanvas.oncontextmenu = function(event) { dragAudio(event); return false; };
+audioCanvas.addEventListener("mouseout", releaseAudio, false);
