@@ -118,9 +118,11 @@ function Emulator() {
 	this.buzzTrigger = function(ticks, remainingTicks) {}                              // fired when buzzer played
 
 	this.init = function(rom) {
+		// initialise memory with a new array to ensure that it is of the right size and is initiliased to 0
+		this.m = this.enableXO ? new Uint8Array(0x10000) : new Uint8Array(0x1000);
+
 		// initialize memory
 		for(var z = 0; z < 32*64;          z++) { this.p[0][z] = 0; this.p[1][z] = 0; }
-		for(var z = 0; z < 4096 * 2;       z++) { this.m[z] = 0; }
 		for(var z = 0; z < font.length;    z++) { this.m[z] = font[z]; }
 		for(var z = 0; z < bigfont.length; z++) { this.m[z + font.length] = bigfont[z]; }
 		for(var z = 0; z < rom.rom.length; z++) { this.m[0x200+z] = rom.rom[z]; }
