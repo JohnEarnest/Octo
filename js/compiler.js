@@ -373,6 +373,7 @@ function Compiler(source) {
 				this.inst(0xF0 | this.register(), 0x30);
 			}
 			else if (o == "long") {
+				this.xo = true;
 				var addr = this.veryWideValue();
 				this.inst(0xF0, 0x00);
 				this.inst((addr>>8)&0xFF, addr&0xFF);
