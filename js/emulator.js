@@ -85,6 +85,7 @@ function Emulator() {
 	this.clipQuirks         = false;
 	this.jumpQuirks         = false;
 	this.enableXO           = false;
+	this.screenRotation     = 0;
 	this.maskFormatOverride = true;
 	this.numericFormatStr   = "default";
 

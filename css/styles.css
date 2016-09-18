@@ -8,7 +8,6 @@ div.canv {
 	position: absolute;
 	left: 50%;
 	top: 50%;
-	margin:-160px 0 0 -320px;
 }
 td.key {
 	height: 40px;

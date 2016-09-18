@@ -123,6 +123,7 @@ function runRom(rom) {
 	emulator.exportFlags = function(flags) { localStorage.setItem("octoFlagRegisters", JSON.stringify(flags)); }
 	emulator.buzzTrigger = function(ticks, remainingTicks) { playPattern(ticks, emulator.pattern, remainingTicks); }
 	emulator.init(rom);
+	setRenderTarget(5, "target");
 	audioSetup();
 	document.getElementById("emulator").style.display = "inline";
 	document.getElementById("emulator").style.backgroundColor = emulator.quietColor;
@@ -172,6 +173,7 @@ function share() {
 		"clipQuirks"      : emulator.clipQuirks,
 		"jumpQuirks"      : emulator.jumpQuirks,
 		"enableXO"        : emulator.enableXO,
+		"screenRotation"  : emulator.screenRotation,
 	});
 	xhr.send(JSON.stringify({
 		"description" : "Octo Chip8 Program",
@@ -331,6 +333,10 @@ function framerate() {
 	emulator.tickrate = document.getElementById("framerate").value;
 }
 
+function editRotation() {
+	emulator.screenRotation = parseInt(document.getElementById("screenRotation").value);
+}
+
 function editFore1() {
 	var val = document.getElementById("foreEdit1").value;
 	document.getElementById("foreSample1").bgColor = val;
@@ -433,6 +439,7 @@ function toggleOptions() {
 		document.getElementById("clipQuirks"     ).checked = emulator.clipQuirks;
 		document.getElementById("jumpQuirks"     ).checked = emulator.jumpQuirks;
 		document.getElementById("enableXO"       ).checked = emulator.enableXO;
+		document.getElementById("screenRotation" ).value   = emulator.screenRotation;
 	}
 	else {
 		options.style.display = "none";
@@ -685,7 +692,7 @@ for(var k = 0; k <= 0xF; k++) {
 function toggleKeypad() {
 	var keypad = document.getElementById("keypad");
 	if (keypad.style.display == "none") {
-		keypad.style.display = "inline";
+		keypad.style.display = "block";
 	}
 	else {
 		keypad.style.display = "none";

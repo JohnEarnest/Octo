@@ -24,6 +24,7 @@ function unpackOptions(emulator, options) {
 		"clipQuirks",
 		"jumpQuirks",
 		"enableXO",
+		"screenRotation",
 	]
 	for (var x = 0; x < flags.length; x++) {
 		var flag = flags[x];
@@ -35,10 +36,45 @@ function setRenderTarget(scale, canvas) {
 	scaleFactor = scale;
 	renderTarget = canvas;
 	var c = document.getElementById(canvas);
-	c.width  = scaleFactor * 128;
-	c.height = scaleFactor *  64;
-	c.style.marginLeft = (scaleFactor * -64) + "px";
-	c.style.marginTop  = (scaleFactor * -32) + "px";
+	var w  = scaleFactor * 128;
+	var h  = scaleFactor *  64;
+	var wm = (scaleFactor * -64) + "px";
+	var hm = (scaleFactor * -32) + "px";
+
+	if (emulator.screenRotation == 90 || emulator.screenRotation == 270) {
+		c.width  = h;
+		c.height = w;
+		c.style.marginLeft = hm;
+		c.style.marginTop  = wm;
+	}
+	else {
+		c.width  = w;
+		c.height = h;
+		c.style.marginLeft = wm;
+		c.style.marginTop  = hm;
+	}
+}
+
+function getTransform(emulator, g) {
+	g.setTransform(1, 0, 0, 1, 0, 0);
+	var x = scaleFactor * 128;
+	var y = scaleFactor *  64;
+	switch(emulator.screenRotation) {
+		case 90:
+			g.rotate(0.5 * Math.PI);
+			g.translate(0, -y);
+			break;
+		case 180:
+			g.rotate(1.0 * Math.PI);
+			g.translate(-x, -y);
+			break;
+		case 270:
+			g.rotate(1.5 * Math.PI);
+			g.translate(-x, 0);
+			break;
+		default:
+			/* nothing to do */
+	}
 }
 
 function getColor(id) {
@@ -54,7 +90,7 @@ function getColor(id) {
 function renderDisplay(emulator) {
 	var c = document.getElementById(renderTarget);
 	var g = c.getContext("2d");
-	g.setTransform(1, 0, 0, 1, 0, 0);
+	getTransform(emulator, g);
 	g.fillStyle = emulator.backgroundColor;
 	g.fillRect(0, 0, c.width, c.height);
 	var max    = emulator.hires ? 128*64      : 64*32;

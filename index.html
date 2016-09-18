@@ -136,6 +136,15 @@
 					<option value='["#FF00FF","#00FFFF","#FFFFFF","#000000","#990099","#330033"]'>CGA 1</option>
 				</select>
 
+				<h3>Misc</h3>
+				Screen Rotation:
+				<select id="screenRotation" onChange="editRotation();">
+					<option value="0" selected="selected">0</option>
+					<option value="90">90</option>
+					<option value="180">180</option>
+					<option value="270">270</option>
+				</select>
+
 				<h3>Compatibility</h3>
 				<table>
 					<tr>
@@ -247,35 +256,35 @@
 	<div class="lightbox" id="emulator" style="display:none">
 		<div class="canv">
 			<canvas id="target" width="640" height="320"></canvas>
+		</div>
 
-			<center>
-				<table border="0" id="keypad" style="display:none">
-					<tr>
-						<td class="key" id="0x1">1</td>
-						<td class="key" id="0x2">2</td>
-						<td class="key" id="0x3">3</td>
-						<td class="key" id="0xC">C</td>
-					</tr>
-					<tr>
-						<td class="key" id="0x4">4</td>
-						<td class="key" id="0x5">5</td>
-						<td class="key" id="0x6">6</td>
-						<td class="key" id="0xD">D</td>
-					</tr>
-					<tr>
-						<td class="key" id="0x7">7</td>
-						<td class="key" id="0x8">8</td>
-						<td class="key" id="0x9">9</td>
-						<td class="key" id="0xE">E</td>
-					</tr>
-					<tr>
-						<td class="key" id="0xA">A</td>
-						<td class="key" id="0x0">0</td>
-						<td class="key" id="0xB">B</td>
-						<td class="key" id="0xF">F</td>
-					</tr>
-				</table>
-			</center>
+		<div style="position: absolute; bottom: 20px; width: 100%;">
+			<table border="0" id="keypad" style="display: none; width: 164px; margin: auto;">
+				<tr>
+					<td class="key" id="0x1">1</td>
+					<td class="key" id="0x2">2</td>
+					<td class="key" id="0x3">3</td>
+					<td class="key" id="0xC">C</td>
+				</tr>
+				<tr>
+					<td class="key" id="0x4">4</td>
+					<td class="key" id="0x5">5</td>
+					<td class="key" id="0x6">6</td>
+					<td class="key" id="0xD">D</td>
+				</tr>
+				<tr>
+					<td class="key" id="0x7">7</td>
+					<td class="key" id="0x8">8</td>
+					<td class="key" id="0x9">9</td>
+					<td class="key" id="0xE">E</td>
+				</tr>
+				<tr>
+					<td class="key" id="0xA">A</td>
+					<td class="key" id="0x0">0</td>
+					<td class="key" id="0xB">B</td>
+					<td class="key" id="0xF">F</td>
+				</tr>
+			</table>
 		</div>
 
 		<div class="buttons">
