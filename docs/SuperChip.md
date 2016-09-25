@@ -2,6 +2,8 @@ Mastering SuperChip
 ===================
 In 1990, Erik Bryntse wrote a Chip8 emulator for the [HP-48 graphing calculator](https://en.wikipedia.org/wiki/HP_48_series) called [CHIP-48](http://www.hpcalc.org/details.php?id=854) which adds a series of "SCHIP" or "SuperChip" extended instructions. SuperChip intends to be backwards compatible with the ordinary Chip8 instruction set and the new instructions occupy unused space in the Chip8 instruction encoding. In this document I will attempt to describe SuperChip instructions in detail and also discuss programming techniques which use them. Code examples will use Octo syntax.
 
+Some of the details in this document have been superceded or given more explanation by [this guide](https://github.com/Chromatophore/HP48-Superchip), which describes the behavior of SCHIP based on original research and careful examination of the source code to several HP-48-based Chip8 emulators.
+
 Compatibility
 -------------
 In the [SCHIP 1.1 documentation](http://devernay.free.fr/hacks/chip8/schip.txt), Bryntse describes both the Chip8 and SuperChip instruction set. Of particular note are the shift and memory load/store instructions:
