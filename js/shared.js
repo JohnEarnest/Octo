@@ -33,6 +33,16 @@ function setRenderTarget(scale, canvas) {
 	c.style.marginTop  = (scaleFactor * -32) + "px";
 }
 
+
+function arrayEqual(a, b) {
+	var length = a.length;
+	if (length !== b.length) { return false; }
+	for (var i = 0; i < length; i++) {
+		if (a[i] !== b[i]) { return false; }
+	}
+	return true;
+}
+
 function getColor(id) {
 	switch(id) {
 		case 0: return emulator.backColor;
@@ -45,6 +55,20 @@ function getColor(id) {
 
 function renderDisplay(emulator) {
 	var c = document.getElementById(renderTarget);
+
+	// Canvas rendering can be expensive. Exit out early if nothing has changed.
+	// NOTE: toggling emulator.hires changes emulator.p dimensions.
+	var colors = [emulator.backColor, emulator.fillColor, emulator.fillColor2, emulator.blendColor];
+	if (c.last !== undefined
+			&& arrayEqual(c.last.p[0], emulator.p[0]) && arrayEqual(c.last.p[1], emulator.p[1])
+			&& arrayEqual(c.last.colors, colors)) {
+		return;
+	}
+	c.last = {
+		colors: colors,
+		p: [emulator.p[0].slice(), emulator.p[1].slice()]
+	};
+
 	var g = c.getContext("2d");
 	g.setTransform(1, 0, 0, 1, 0, 0);
 	g.fillStyle = emulator.backColor;
@@ -54,7 +78,11 @@ function renderDisplay(emulator) {
 	var size   = emulator.hires ? scaleFactor : scaleFactor*2;
 
 	for(var z = 0; z < max; z++) {
-		g.fillStyle = getColor(emulator.p[0][z] + (emulator.p[1][z] * 2));
+		var color = getColor(emulator.p[0][z] + (emulator.p[1][z] * 2));
+		if (color == emulator.backColor) {
+			continue;  // it's pointless to draw the background color
+		}
+		g.fillStyle = color;
 		g.fillRect(
 			Math.floor(z%stride)*size,
 			Math.floor(z/stride)*size,
