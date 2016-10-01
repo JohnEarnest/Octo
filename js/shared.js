@@ -36,6 +36,10 @@ function setRenderTarget(scale, canvas) {
 	scaleFactor = scale;
 	renderTarget = canvas;
 	var c = document.getElementById(canvas);
+
+	// Remove any existing previous delta frame so first frame is always drawn:
+	c.last = undefined;
+
 	var w  = scaleFactor * 128;
 	var h  = scaleFactor *  64;
 	var wm = (scaleFactor * -64) + "px";
