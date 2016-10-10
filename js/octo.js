@@ -278,6 +278,13 @@ function keyUp(event) {
 			haltBreakpoint("single stepping");
 		}
 	}
+	if (event.keyCode == 80) { // p
+		if (emulator.breakpoint) {
+			clearBreakpoint();
+		} else {
+			haltProfiler("profiler");
+		}
+	}
 	if (emulator.waiting) {
 		for(var z = 0; z < 16; z++) {
 			if (keymap[z] == event.keyCode) {
@@ -821,6 +828,61 @@ function haltBreakpoint(breakName) {
 	emulator.breakpoint = true;
 	curBreakName = breakName;
 }
+
+function haltProfiler(breakName) {
+	var button = document.getElementById("continueButton");
+	var regs   = document.getElementById("registerView");
+	button.style.display = "inline";
+	regs.style.display = "inline";
+	var regdump =
+		"<span>tick count: " + emulator.tickCounter + "</span><br>" +
+		"<span>breakpoint: " + breakName + "</span><br>" +
+		"<span onClick=\"cycleNumFormat('pc');\">pc := " + numericFormat(emulator.pc, regNumFormat["pc"]) + getLabel(emulator.pc) + "</span><br>";
+
+	var addr = 0;
+	var cluster_begins = 0;
+	var label = "";
+	var tick_count = 0;
+	var compressed_profile = [];
+
+	while(addr < 65536) {
+		while (typeof emulator.profile_data[addr] == "undefined") { addr += 1; if (addr > 65535) break; }
+		if (addr > 65535) break;
+		cluster_begins = addr;
+		tick_count = emulator.profile_data[addr];
+		label = getLabel(addr).split(' ')[1].replace('(', ''). replace(')', '');
+
+		while(typeof emulator.profile_data[addr] != "undefined" && getLabel(addr).split(' ')[1].replace('(', ''). replace(')', '') == label) {
+			tick_count += emulator.profile_data[addr];
+			addr += 2;
+		}
+		if(addr < 65536) {
+			var instructions = (addr - cluster_begins) / 2;
+			compressed_profile.push( { 'begin': cluster_begins, 'end': addr - 2, 'ticks': tick_count, 'executions': tick_count / instructions, 'percent': 100.0 * (tick_count / emulator.tickCounter) });
+		}
+	}
+
+	var sort_criteria = 'executions';
+	compressed_profile.sort(function(a,b) { return (a[sort_criteria] < b[sort_criteria] ? 1 : (a[sort_criteria] > b[sort_criteria] ? -1: 0)); });
+
+
+	regdump += '<br><table class="debugger"><tr><td>addr</td><td>ticks</td><td>source</td></tr>\n';
+	var lines = 0;
+	compressed_profile.forEach(function(entry) {
+		lines += 1;
+		if(lines < 40) {
+			regdump += "<tr><td>" + entry.begin.toString(16) + " - " + entry.end.toString(16) + "</td>";
+			regdump += "<td>" + entry.ticks + " ticks, " + entry.executions.toFixed(0) + " ticks/instruction " + entry.percent.toFixed(2) + "% </td>";
+			regdump += "<td>" + getLabel(entry.begin).trim() + " through " + getLabel(entry.end).trim() + "</td></tr>";
+		}
+	});
+	regdump += "</table>";
+	regdump += '<textarea style="width: 70em; height: 10em; overflow: auto">' + JSON.stringify(compressed_profile) + "</textarea>"
+	regs.innerHTML = regdump;
+	emulator.breakpoint = true;
+	curBreakName = breakName;
+}
+
 
 function clearBreakpoint() {
 	var button = document.getElementById("continueButton");

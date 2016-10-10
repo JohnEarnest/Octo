@@ -102,6 +102,7 @@ function Emulator() {
 	this.flags = [];    // semi-persistent hp48 flag vars
 	this.pattern = [];  // audio pattern buffer
 	this.plane = 1;     // graphics plane
+	this.profile_data = {};
 
 	// control/debug state
 	this.keys = {};       // track keys which are pressed
@@ -147,6 +148,7 @@ function Emulator() {
 		this.breakpoint = false;
 		this.metadata = rom;
 		this.tickCounter = 0;
+		this.profile_data = {};
 	}
 
 	this.writeCarry = function(dest, value, flag) {
@@ -299,6 +301,12 @@ function Emulator() {
 	}
 
 	this.opcode = function() {
+		// Record the PC in profiler
+		var pro = this.profile_data[this.pc];
+		if (typeof pro == 'undefined') { pro = 0; }
+		pro += 1;
+		this.profile_data[this.pc] = pro
+
 		// decode the current opcode
 		var op  = (this.m[this.pc  ] << 8) | this.m[this.pc+1];
 		var o   = (this.m[this.pc  ] >> 4) & 0x00F;
