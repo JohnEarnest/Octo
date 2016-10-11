@@ -279,11 +279,7 @@ function keyUp(event) {
 		}
 	}
 	if (event.keyCode == 80) { // p
-		if (emulator.breakpoint) {
-			clearBreakpoint();
-		} else {
-			haltProfiler("profiler");
-		}
+		haltProfiler("profiler");
 	}
 	if (emulator.waiting) {
 		for(var z = 0; z < 16; z++) {
@@ -837,7 +833,9 @@ function haltProfiler(breakName) {
 	var regdump =
 		"<span>tick count: " + emulator.tickCounter + "</span><br>" +
 		"<span>breakpoint: " + breakName + "</span><br>" +
-		"<span onClick=\"cycleNumFormat('pc');\">pc := " + numericFormat(emulator.pc, regNumFormat["pc"]) + getLabel(emulator.pc) + "</span><br>";
+		"<span onClick=\"cycleNumFormat('pc');\">pc := " +
+		numericFormat(emulator.pc, regNumFormat["pc"]) +
+		getLabel(emulator.pc) + "</span><br>";
 
 	var addr = 0;
 	var cluster_begins = 0;
@@ -858,26 +856,38 @@ function haltProfiler(breakName) {
 		}
 		if(addr < 65536) {
 			var instructions = (addr - cluster_begins) / 2;
-			compressed_profile.push( { 'begin': cluster_begins, 'end': addr - 2, 'ticks': tick_count, 'executions': tick_count / instructions, 'percent': 100.0 * (tick_count / emulator.tickCounter) });
+			compressed_profile.push( {	'begin': cluster_begins,
+																	'end': addr - 2,
+																	'ticks': tick_count,
+																	'calls': emulator.profile_data[cluster_begins],
+																	'percent': 100.0 * (tick_count / emulator.tickCounter)
+																});
 		}
 	}
 
-	var sort_criteria = 'executions';
+	var sort_criteria = 'percent';
 	compressed_profile.sort(function(a,b) { return (a[sort_criteria] < b[sort_criteria] ? 1 : (a[sort_criteria] > b[sort_criteria] ? -1: 0)); });
 
 
-	regdump += '<br><table class="debugger"><tr><td>addr</td><td>ticks</td><td>source</td></tr>\n';
+	regdump += '<br><table class="debugger"><tr> <td>ticks</td> <td>time</td> <td>calls</td> <td>source</td> </tr>\n';
 	var lines = 0;
 	compressed_profile.forEach(function(entry) {
 		lines += 1;
-		if(lines < 40) {
-			regdump += "<tr><td>" + entry.begin.toString(16) + " - " + entry.end.toString(16) + "</td>";
-			regdump += "<td>" + entry.ticks + " ticks, " + entry.executions.toFixed(0) + " ticks/instruction " + entry.percent.toFixed(2) + "% </td>";
-			regdump += "<td>" + getLabel(entry.begin).trim() + " through " + getLabel(entry.end).trim() + "</td></tr>";
+		if(lines < 20) {
+			regdump += "<tr><td>" + entry.ticks + "</td>";
+			regdump += "<td>" + entry.percent.toFixed(2) + "%</td>";
+			regdump += "<td>" + entry.calls + "</td>";
+			var span = entry.end - entry.begin;
+			regdump += "<td>" + getLabel(entry.begin).trim();
+			if (span > 0) {
+				regdump += " +" + span;
+			}
+			regdump += "</td></tr>"
 		}
 	});
 	regdump += "</table>";
-	regdump += '<textarea style="width: 70em; height: 10em; overflow: auto">' + JSON.stringify(compressed_profile) + "</textarea>"
+	regdump += '<div style="position: fixed; bottom: 0; width: 100%">Full results:<br>';
+	regdump += '<textarea style="height: 8em; width: 70em; overflow: auto">' + JSON.stringify(compressed_profile) + "</textarea></div>";
 	regs.innerHTML = regdump;
 	emulator.breakpoint = true;
 	curBreakName = breakName;
@@ -1146,7 +1156,7 @@ function generateWaveform() {
 	var frequency = parseInt(document.getElementById("frequency").value);
 	var cutoff    = parseInt(document.getElementById("cutoff").value);
 
-	var word = 0;			
+	var word = 0;
 	var index = 0;
 
 	for(var z = 0; z < 128; z++) {
@@ -1205,7 +1215,7 @@ function editAudioHex(id)
 		if(empty) {
 			document.getElementById(id).value =  getAudioHex(audioPattern);
 		}
-	} 
+	}
 	if(id == 'blendPattern') {
 		blendPattern = data;
 		if(empty) {
@@ -1226,7 +1236,7 @@ function drawAudio() {
 	render.fillStyle = emulator.backgroundColor;
 	render.fillRect(0, 0, canvas.width, canvas.height);
 	render.fillStyle = emulator.fillColor;
-	
+
 	for(var z = 0; z < 8 * 16; z++) {
 		var a = Math.floor(z / 8);
 		var b = 7 - Math.floor(z % 8);
@@ -1291,7 +1301,7 @@ var blendPattern = [];
 var generatedPattern = [];
 
 function InitializeAudioEditor() {
-	for(var z = 0; z < 16; z++) { 
+	for(var z = 0; z < 16; z++) {
 		audioPattern[z] = 0;
 		blendPattern[z] = 0;
 	}
