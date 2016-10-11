@@ -856,18 +856,23 @@ function haltProfiler(breakName) {
 		}
 		if(addr < 65536) {
 			var instructions = (addr - cluster_begins) / 2;
+			var span = (addr - 2) - cluster_begins;
+			var source = getLabel(cluster_begins).trim();
+			if (span > 0) {
+				source += " +" + span;
+			}
 			compressed_profile.push( {	'begin': cluster_begins,
 																	'end': addr - 2,
 																	'ticks': tick_count,
 																	'calls': emulator.profile_data[cluster_begins],
-																	'percent': 100.0 * (tick_count / emulator.tickCounter)
+																	'percent': 100.0 * (tick_count / emulator.tickCounter),
+																	'source': source
 																});
 		}
 	}
 
 	var sort_criteria = 'percent';
 	compressed_profile.sort(function(a,b) { return (a[sort_criteria] < b[sort_criteria] ? 1 : (a[sort_criteria] > b[sort_criteria] ? -1: 0)); });
-
 
 	regdump += '<br><table class="debugger"><tr> <td>ticks</td> <td>time</td> <td>calls</td> <td>source</td> </tr>\n';
 	var lines = 0;
@@ -877,12 +882,7 @@ function haltProfiler(breakName) {
 			regdump += "<tr><td>" + entry.ticks + "</td>";
 			regdump += "<td>" + entry.percent.toFixed(2) + "%</td>";
 			regdump += "<td>" + entry.calls + "</td>";
-			var span = entry.end - entry.begin;
-			regdump += "<td>" + getLabel(entry.begin).trim();
-			if (span > 0) {
-				regdump += " +" + span;
-			}
-			regdump += "</td></tr>"
+			regdump += "<td>" + entry.source + "</td></tr>";
 		}
 	});
 	regdump += "</table>";
