@@ -278,6 +278,9 @@ function keyUp(event) {
 			haltBreakpoint("single stepping");
 		}
 	}
+	if (event.keyCode == 80) { // p
+		haltProfiler("profiler");
+	}
 	if (emulator.waiting) {
 		for(var z = 0; z < 16; z++) {
 			if (keymap[z] == event.keyCode) {
@@ -822,6 +825,75 @@ function haltBreakpoint(breakName) {
 	curBreakName = breakName;
 }
 
+function haltProfiler(breakName) {
+	var button = document.getElementById("continueButton");
+	var regs   = document.getElementById("registerView");
+	button.style.display = "inline";
+	regs.style.display = "inline";
+	var regdump =
+		"<span>tick count: " + emulator.tickCounter + "</span><br>" +
+		"<span>breakpoint: " + breakName + "</span><br>" +
+		"<span onClick=\"cycleNumFormat('pc');\">pc := " +
+		numericFormat(emulator.pc, regNumFormat["pc"]) +
+		getLabel(emulator.pc) + "</span><br>";
+
+	var addr = 0;
+	var cluster_begins = 0;
+	var label = "";
+	var tick_count = 0;
+	var compressed_profile = [];
+
+	while(addr < 65536) {
+		while (typeof emulator.profile_data[addr] == "undefined") { addr += 1; if (addr > 65535) break; }
+		if (addr > 65535) break;
+		cluster_begins = addr;
+		tick_count = emulator.profile_data[addr];
+		label = getLabel(addr).split(' ')[1].replace('(', ''). replace(')', '');
+
+		while(typeof emulator.profile_data[addr] != "undefined" && getLabel(addr).split(' ')[1].replace('(', ''). replace(')', '') == label) {
+			tick_count += emulator.profile_data[addr];
+			addr += 2;
+		}
+		if(addr < 65536) {
+			var instructions = (addr - cluster_begins) / 2;
+			var span = (addr - 2) - cluster_begins;
+			var source = getLabel(cluster_begins).trim();
+			if (span > 0) {
+				source += " +" + span;
+			}
+			compressed_profile.push( {	'begin': cluster_begins,
+																	'end': addr - 2,
+																	'ticks': tick_count,
+																	'calls': emulator.profile_data[cluster_begins],
+																	'percent': 100.0 * (tick_count / emulator.tickCounter),
+																	'source': source
+																});
+		}
+	}
+
+	var sort_criteria = 'percent';
+	compressed_profile.sort(function(a,b) { return (a[sort_criteria] < b[sort_criteria] ? 1 : (a[sort_criteria] > b[sort_criteria] ? -1: 0)); });
+
+	regdump += '<br><table class="debugger"><tr> <td>ticks</td> <td>time</td> <td>calls</td> <td>source</td> </tr>\n';
+	var lines = 0;
+	compressed_profile.forEach(function(entry) {
+		lines += 1;
+		if(lines < 20) {
+			regdump += "<tr><td>" + entry.ticks + "</td>";
+			regdump += "<td>" + entry.percent.toFixed(2) + "%</td>";
+			regdump += "<td>" + entry.calls + "</td>";
+			regdump += "<td>" + entry.source + "</td></tr>";
+		}
+	});
+	regdump += "</table>";
+	regdump += '<div style="position: fixed; bottom: 0; width: 100%">Full results:<br>';
+	regdump += '<textarea style="height: 8em; width: 70em; overflow: auto">' + JSON.stringify(compressed_profile) + "</textarea></div>";
+	regs.innerHTML = regdump;
+	emulator.breakpoint = true;
+	curBreakName = breakName;
+}
+
+
 function clearBreakpoint() {
 	var button = document.getElementById("continueButton");
 	var regs   = document.getElementById("registerView");
@@ -1084,7 +1156,7 @@ function generateWaveform() {
 	var frequency = parseInt(document.getElementById("frequency").value);
 	var cutoff    = parseInt(document.getElementById("cutoff").value);
 
-	var word = 0;			
+	var word = 0;
 	var index = 0;
 
 	for(var z = 0; z < 128; z++) {
@@ -1143,7 +1215,7 @@ function editAudioHex(id)
 		if(empty) {
 			document.getElementById(id).value =  getAudioHex(audioPattern);
 		}
-	} 
+	}
 	if(id == 'blendPattern') {
 		blendPattern = data;
 		if(empty) {
@@ -1164,7 +1236,7 @@ function drawAudio() {
 	render.fillStyle = emulator.backgroundColor;
 	render.fillRect(0, 0, canvas.width, canvas.height);
 	render.fillStyle = emulator.fillColor;
-	
+
 	for(var z = 0; z < 8 * 16; z++) {
 		var a = Math.floor(z / 8);
 		var b = 7 - Math.floor(z % 8);
@@ -1229,7 +1301,7 @@ var blendPattern = [];
 var generatedPattern = [];
 
 function InitializeAudioEditor() {
-	for(var z = 0; z < 16; z++) { 
+	for(var z = 0; z < 16; z++) {
 		audioPattern[z] = 0;
 		blendPattern[z] = 0;
 	}
