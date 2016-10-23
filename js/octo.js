@@ -847,7 +847,7 @@ function haltProfiler(breakName) {
 		while (typeof emulator.profile_data[addr] == "undefined") { addr += 1; if (addr > 65535) break; }
 		if (addr > 65535) break;
 		cluster_begins = addr;
-		tick_count = emulator.profile_data[addr];
+		tick_count = 0;
 		label = getLabel(addr).split(' ')[1].replace('(', ''). replace(')', '');
 
 		while(typeof emulator.profile_data[addr] != "undefined" && getLabel(addr).split(' ')[1].replace('(', ''). replace(')', '') == label) {
