@@ -214,6 +214,8 @@ function audioSetup() {
 			while(index < samples_n) {
 				outputData[index++] = 0;
 			}
+			while(audioData.length > 1)
+				audioData.shift();
 		}
 		audioData = [];
 		audioNode.connect(audio.destination);
