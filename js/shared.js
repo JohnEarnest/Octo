@@ -214,8 +214,15 @@ function audioSetup() {
 			while(index < samples_n) {
 				outputData[index++] = 0;
 			}
-			while(audioData.length > 1)
-				audioData.shift();
+			//the last one can be long sound with high value of buzzer, so always keep it
+			if (audioData.length > 1) {
+				var audioDataSize = 0;
+				var audioBufferSize = audioNode.bufferSize;
+				audioData.forEach(function(buffer) { audioDataSize += buffer.duration; })
+				while(audioDataSize > audioBufferSize && audioData.length > 1) {
+					audioDataSize -= audioData.shift().duration;
+				}
+			}
 		}
 		audioData = [];
 		audioNode.connect(audio.destination);
