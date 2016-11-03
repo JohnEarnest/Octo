@@ -226,6 +226,10 @@ function render() {
 			if (emulator.pc in emulator.metadata.breakpoints) {
 				haltBreakpoint(emulator.metadata.breakpoints[emulator.pc]);
 			}
+			if (emulator.r.length == emulator.stack_breakpoint) {
+				emulator.stack_breakpoint = -1;
+				haltBreakpoint("step out");
+			}
 		}
 	}
 	if (emulator.breakpoint != true) {

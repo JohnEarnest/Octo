@@ -146,6 +146,7 @@ function Emulator() {
 		this.waitReg = -1;
 		this.halted = false;
 		this.breakpoint = false;
+		this.stack_breakpoint = -1;
 		this.metadata = rom;
 		this.tickCounter = 0;
 		this.profile_data = {};
