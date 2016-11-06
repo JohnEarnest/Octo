@@ -226,6 +226,10 @@ function render() {
 			if (emulator.pc in emulator.metadata.breakpoints) {
 				haltBreakpoint(emulator.metadata.breakpoints[emulator.pc]);
 			}
+			if (emulator.r.length == emulator.stack_breakpoint) {
+				emulator.stack_breakpoint = -1;
+				haltBreakpoint("step out");
+			}
 		}
 	}
 	if (emulator.breakpoint != true) {
@@ -262,7 +266,11 @@ function keyUp(event) {
 			keyElement.className = keyElement.className.replace('active', '');
 		}
 	}
+
+	// Reset emulator
 	if (event.keyCode == 27) { reset(); }
+
+	// Halt / Continue
 	if (event.keyCode == 73) { // i
 		if (emulator.breakpoint) {
 			clearBreakpoint();
@@ -271,13 +279,51 @@ function keyUp(event) {
 			haltBreakpoint("user interrupt");
 		}
 	}
+
+	// Single Step
 	if (event.keyCode == 79) { // o
 		if (emulator.breakpoint) {
 			emulator.tick();
 			renderDisplay(emulator);
-			haltBreakpoint("single stepping");
+			haltBreakpoint("step over");
 		}
 	}
+
+	// Step Out - Sets a breakpoint that will trigger when there is one less address
+	// on the stack (that is when the current subroutine returns). The current
+	// breakpoint is cleared and execution is resumed.
+	if (event.keyCode == 85) { // u
+		if (emulator.breakpoint) {
+			var stacklen = emulator.r.length;
+			if(stacklen > 0) {
+				emulator.stack_breakpoint = stacklen - 1;
+				clearBreakpoint();
+			}
+		}
+	}
+
+	// Step Over - Same as single-step unless the current instruction is a call.
+	// In that case, a stack breakpoint is set for the current stack level and
+	// execution is resumed
+	if (event.keyCode == 76) { // l
+		if (emulator.breakpoint) {
+
+			if ((emulator.m[emulator.pc] & 0xF0) == 0x20) {
+				var stacklen = emulator.r.length;
+				if(stacklen >= 0) {
+					emulator.stack_breakpoint = stacklen;
+					clearBreakpoint();
+				}
+			} else {
+				emulator.tick();
+				renderDisplay(emulator);
+				haltBreakpoint("stepping over");
+			}
+
+		}
+	}
+
+	// Display Profiler
 	if (event.keyCode == 80) { // p
 		haltProfiler("profiler");
 	}
