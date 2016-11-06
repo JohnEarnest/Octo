@@ -301,11 +301,8 @@ function Emulator() {
 	}
 
 	this.opcode = function() {
-		// Record the PC in profiler
-		var pro = this.profile_data[this.pc];
-		if (typeof pro == 'undefined') { pro = 0; }
-		pro += 1;
-		this.profile_data[this.pc] = pro
+		// Increment profilining data
+		this.profile_data[this.pc] = (this.profile_data[this.pc] || 0) + 1;
 
 		// decode the current opcode
 		var op  = (this.m[this.pc  ] << 8) | this.m[this.pc+1];
