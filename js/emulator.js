@@ -453,7 +453,7 @@ function Emulator() {
 			case 0x9: if (this.v[x] != this.v[y]) { this.pc += 2; } break;
 			case 0xA: this.i = nnn;                                 break;
 			case 0xB: this.jump0(nnn);                              break;
-			case 0xC: this.v[x] = (Math.random()*255)&nn;           break;
+			case 0xC: this.v[x] = (Math.random()*256)&nn;           break;
 			case 0xD: this.sprite(this.v[x], this.v[y], n);         break;
 			case 0xF: this.misc(x, nn);                             break;
 			default: haltBreakpoint("unknown opcode "+o);
