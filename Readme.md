@@ -14,7 +14,7 @@ Octo
 
 To learn more about Chip8 programming techniques, have a look at the [documentation](https://github.com/JohnEarnest/Octo/tree/gh-pages/docs) section as well as [the manual](https://github.com/JohnEarnest/Octo/tree/gh-pages/docs/Manual.md) for Octo assembly language. Octo fully supports [SuperChip](https://github.com/JohnEarnest/Octo/blob/gh-pages/docs/SuperChip.md) extended instructions as well as a set of original extended instructions called [XO-Chip](https://github.com/JohnEarnest/Octo/tree/gh-pages/docs/XO-ChipSpecification.md). Written any neat programs with Octo, or looking for help? Try the [Octo Programming Google Group](https://groups.google.com/forum/#!forum/octo-programming). Once a year, every October, the [AwfulJams](http://www.awfuljams.com) hosts an Octo-based Chip8 game jam. If you like Octo, check it out!
 
-The Octo assembler can also be used as a command-line tool via a [Node.js](http://nodejs.org) fontend:
+The Octo assembler can also be used as a command-line tool via a [Node.js](http://nodejs.org) frontend:
 
 	$ ./octo
 		usage: octo [--decompile] [--roundtrip] [--qshift]
