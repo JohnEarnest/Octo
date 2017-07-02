@@ -1025,8 +1025,12 @@ function decompileRun() {
 var decompileProgramLength = 0;
 
 function decompileStart() {
-	document.getElementById("decompileWork").style.display = "inline";
 	var buffer = getDecompileData();
+	if (document.getElementById("rawDisassembly").checked) {
+		decompileRaw(buffer);
+		return;
+	}
+	document.getElementById("decompileWork").style.display = "inline";
 	var quirks = {};
 	quirks['shiftQuirks'    ] = emulator.shiftQuirks;
 	quirks['loadStoreQuirks'] = emulator.loadStoreQuirks;
@@ -1035,6 +1039,18 @@ function decompileStart() {
 	analyzeInit(buffer, quirks);
 	decompileProgramLength = buffer.length;
 	window.setTimeout(decompileProcess, 0);
+}
+
+function decompileRaw(rom) {
+	var r = '\n: main\n';
+	for(var x = 0; x < rom.length; x += 2) {
+		var a = rom[x  ] | 0;
+		var b = rom[x+1] | 0;
+		r += hexFormat(a) + ' ' + hexFormat(b) + ' # ' + hexFormat(0x200 + x);
+		r += '\t' + formatInstruction(a, b);
+		r += '\n';
+	}
+	document.getElementById("input").value = "# decompiled program:\n" + r;
 }
 
 function decompileProcess() {
