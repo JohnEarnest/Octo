@@ -22,3 +22,15 @@ function saveBinaryFile() {
 	saveAs(blob, "output.ch8");
 
 }
+
+////////////////////////////////////
+//
+//   .8o source code export:
+//
+////////////////////////////////////
+
+function saveSourceFile() {
+	var input  = document.getElementById("input");
+	var blob = new Blob([input.value], {type: "text/plain;charset=utf-8"})
+	saveAs(blob, "source.8o")
+}
