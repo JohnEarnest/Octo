@@ -78,28 +78,22 @@
 	v1 := py
 	i := snow
 
+	:macro scoop DELTA1 DELTA2 {
+		v0 := px
+		v0 += DELTA1
+		sprite v0 v1 15
+		if vf == 0 begin
+			sprite v0 v1 15
+		else
+			v0 += DELTA2
+			sprite v0 v1 15
+			if vf == 1 then sprite v0 v1 15
+		end
+	}
 	if dir == LEFT begin
-		v0 := px
-		v0 += -8
-		sprite v0 v1 15
-		if vf == 0 begin
-			sprite v0 v1 15
-		else
-			v0 += 16
-			sprite v0 v1 15
-			if vf == 1 then sprite v0 v1 15
-		end
+		scoop -8 16
 	else
-		v0 := px
-		v0 += 8
-		sprite v0 v1 15
-		if vf == 0 begin
-			sprite v0 v1 15
-		else
-			v0 += -16
-			sprite v0 v1 15
-			if vf == 1 then sprite v0 v1 15
-		end
+		scoop 8 -16
 	end
 ;
 

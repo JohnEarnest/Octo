@@ -115,6 +115,7 @@ function Compiler(source) {
 	this.longproto = {}; // set<name, true>
 	this.aliases   = {}; // map<name, registernum>
 	this.constants = {}; // map<name, token>
+	this.macros    = {}; // map<name, {args, body}>
 	this.hasmain = true;
 	this.schip = false;
 	this.xo = false;
@@ -134,6 +135,7 @@ function Compiler(source) {
 
 	this.tokens = tokenize(source);
 	this.next = function()    { this.pos = this.tokens[0]; this.tokens.splice(0, 1); return this.pos[0]; }
+	this.raw  = function()    { this.pos = this.tokens[0]; this.tokens.splice(0, 1); return this.pos; }
 	this.peek = function()    { return this.tokens[0][0]; }
 	this.here = function()    { return this.hereaddr; }
 	this.inst = function(a,b) { this.data(a); this.data(b); }
@@ -207,7 +209,7 @@ function Compiler(source) {
 		"native":true, "sprite":true, "loop":true, "while":true, "again":true,
 		"scroll-down":true, "scroll-right":true, "scroll-left":true,
 		"lores":true, "hires":true, "loadflags":true, "saveflags":true, "i":true,
-		"audio":true, "plane":true, "scroll-up":true
+		"audio":true, "plane":true, "scroll-up":true, ":macro":true,
 	};
 
 	this.checkName = function(name, kind) {
@@ -467,6 +469,35 @@ function Compiler(source) {
 			var name = this.checkName(this.next(), "constant");
 			if (name in this.constants) { throw "The name '"+name+"' has already been defined."; }
 			this.constants[name] = this.constantValue();
+		}
+		else if (token == ":macro")  {
+			var name = this.checkName(this.next(), "macro");
+			var args = [];
+			while(this.peek() != '{' && this.tokens.length > 0) {
+				args.push(this.checkName(this.next(), "macro argument"));
+			}
+			if (this.next() != '{') { throw "Expected '{' for definition of macro '"+name+"'."; }
+			var body = [];
+			while(this.peek() != '}' && this.tokens.length > 0) {
+				body.push(this.raw());
+			}
+			if (this.next() != '}') { throw "Expected '}' for definition of macro '"+name+"'."; }
+			this.macros[name] = { args: args, body: body };
+		}
+		else if (token in this.macros) {
+			var macro = this.macros[token];
+			var bindings = {};
+			for (var x = 0; x < macro.args.length; x++) {
+				if (this.tokens.length == 0) {
+					throw "Not enough arguments for expansion of macro '"+token+"'";
+				}
+				bindings[macro.args[x]] = this.raw();
+			}
+			for (var x = 0; x < macro.body.length; x++) {
+				var chunk = macro.body[x];
+				var value = (chunk[0] in bindings) ? bindings[chunk[0]] : chunk;
+				this.tokens.splice(x, 0, value);
+			}
 		}
 		else if (token == ":org")    { this.hereaddr = this.constantValue(); }
 		else if (token == ";")       { this.inst(0x00, 0xEE); }

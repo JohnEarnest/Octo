@@ -130,41 +130,19 @@
 		timer-2 += 1
 	end
 
-	# try to move north:
-	i := dot-n
-	sprite ex ey 5
-	if vf != 0 begin
-		ey += -1
-		return
-	end
-	sprite ex ey 5
-
-	# try to move east:
-	i := dot-e
-	sprite ex ey 5
-	if vf != 0 begin
-		ex += 1
-		return
-	end
-	sprite ex ey 5
-
-	# try to move south:
-	i := dot-s
-	sprite ex ey 5
-	if vf != 0 begin
-		ey += 1
-		return
-	end
-	sprite ex ey 5
-
-	# try to move west:
-	i := dot-w
-	sprite ex ey 5
-	if vf != 0 begin
-		ex += -1
-		return
-	end
-	sprite ex ey 5
+	:macro try-move SPRITE REG DELTA {
+		i := SPRITE
+		sprite ex ey 5
+		if vf != 0 begin
+			REG += DELTA
+			return
+		end
+		sprite ex ey 5
+	}
+	try-move dot-n ey -1 # north
+	try-move dot-e ex  1 # east
+	try-move dot-s ey  1 # south
+	try-move dot-w ex -1 # west
 
 : game-over
 	# no trail, so we've failed!

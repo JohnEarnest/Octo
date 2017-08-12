@@ -11,104 +11,34 @@
 ###########################################
 
 : sort-8
-	# Yes, this is generated code.
-	# I'm crazy, but not THAT crazy.
-
-	if v0 > v1 begin
-		vf := v0
-		v0 := v1
-		v1 := vf
-	end
-	if v2 > v3 begin
-		vf := v2
-		v2 := v3
-		v3 := vf
-	end
-	if v4 > v5 begin
-		vf := v4
-		v4 := v5
-		v5 := vf
-	end
-	if v6 > v7 begin
-		vf := v6
-		v6 := v7
-		v7 := vf
-	end
-	if v0 > v2 begin
-		vf := v0
-		v0 := v2
-		v2 := vf
-	end
-	if v4 > v6 begin
-		vf := v4
-		v4 := v6
-		v6 := vf
-	end
-	if v1 > v3 begin
-		vf := v1
-		v1 := v3
-		v3 := vf
-	end
-	if v0 > v4 begin
-		vf := v0
-		v0 := v4
-		v4 := vf
-	end
-	if v5 > v7 begin
-		vf := v5
-		v5 := v7
-		v7 := vf
-	end
-	if v3 > v7 begin
-		vf := v3
-		v3 := v7
-		v7 := vf
-	end
-	if v1 > v5 begin
-		vf := v1
-		v1 := v5
-		v5 := vf
-	end
-	if v3 > v5 begin
-		vf := v3
-		v3 := v5
-		v5 := vf
-	end
-	if v2 > v6 begin
-		vf := v2
-		v2 := v6
-		v6 := vf
-	end
-	if v2 > v4 begin
-		vf := v2
-		v2 := v4
-		v4 := vf
-	end
-	if v1 > v2 begin
-		vf := v1
-		v1 := v2
-		v2 := vf
-	end
-	if v3 > v6 begin
-		vf := v3
-		v3 := v6
-		v6 := vf
-	end
-	if v2 > v4 begin
-		vf := v2
-		v2 := v4
-		v4 := vf
-	end
-	if v5 > v6 begin
-		vf := v5
-		v5 := v6
-		v6 := vf
-	end
-	if v3 > v4 begin
-		vf := v3
-		v3 := v4
-		v4 := vf
-	end
+	# compare-and-swap:
+	:macro cas A B {
+		if A > B begin
+			vf := A
+			A  := B
+			B  := vf
+		end
+	}
+	
+	cas v0 v1
+	cas v2 v3
+	cas v4 v5
+	cas v6 v7
+	cas v0 v2
+	cas v4 v6
+	cas v1 v3
+	cas v0 v4
+	cas v5 v7
+	cas v3 v7
+	cas v1 v5
+	cas v3 v5
+	cas v2 v6
+	cas v2 v4
+	cas v1 v2
+	cas v3 v6
+	cas v2 v4
+	cas v5 v6
+	cas v3 v4
 ;
 
 : heap1 0 0 0 0 0 0 0 0

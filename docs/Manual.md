@@ -146,6 +146,32 @@ Another type of self-modifying code that comes up frequently is overwriting the 
 
 You can also specify an address at which subsequent instructions should be compiled by using `:org` followed by an address. The use of this operative is very brittle, so it should be avoided unless absolutely necessary.
 
+Metaprogramming
+---------------
+Sometimes your code will contain repetitive patterns that don't make sense to break out into subroutines. Perhaps they differ by the registers they operate upon, or for performance reasons you need to avoid the overhead of a call and a return. The `:macro` command is the solution. It takes a name, followed by names for 0 or more arguments, then a `{`, a sequence of arbitrary Octo statements and finally a terminal `}`. When you reference the name of a macro, you must provide tokens corresponding to each argument, and then Octo will inline the contents of the macro with any instances of the argument names substituted by the input tokens. Here's a trivial use and definition example:
+
+	:macro swap A B {
+		vf := A
+		A  := B
+		B  := vf
+	}
+
+	...
+
+	swap v0 v1
+	swap v2 v1
+
+This generates code equivalent to the following:
+
+	vf := v0
+	v0 := v1
+	v1 := vf
+	vf := v2
+	v2 := v1
+	v1 := vf
+
+Macros must be defined before expansion, and macro definitions may not be nested, but macro invocations may appear within macro definitions.
+
 SuperChip
 ---------
 SuperChip or SCHIP is a set of extended Chip8 instructions. Octo can emulate these instructions and will indicate if any such instructions are used in an assembled program. The SuperChip instructions are as follows:

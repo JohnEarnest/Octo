@@ -522,7 +522,7 @@ int main(int, char**) {
 	}
 
 	SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
+	SDL_DestroyWindow(window);
 	SDL_Quit();
 	return 0;
 }
