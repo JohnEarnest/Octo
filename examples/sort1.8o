@@ -7,7 +7,7 @@
 ###########################################
 
 :const SIZE   16
-:const SIZE-1 15
+:calc  SIZE-1 { SIZE - 1 }
 
 :alias  here       v1
 :alias  rest       v2

@@ -20,9 +20,9 @@
 
 :const HEIGHT   15 # sprite height
 :const N_EDGE   32
-:const N_LIMIT  17 # (N_EDGE - S_HEIGHT)
+:calc  N_LIMIT  { N_EDGE - HEIGHT }
 :const S_EDGE   64
-:const S_LIMIT  49 # (S_EDGE - S_HEIGHT)
+:calc  S_LIMIT  { S_EDGE - HEIGHT }
 
 :alias offset  vd # could be a temp register
 :alias height  vc # could be a temp register

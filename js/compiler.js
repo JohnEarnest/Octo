@@ -104,6 +104,37 @@ function DebugInfo(source) {
 	}
 }
 
+var unaryFunc = {
+	'-'    : function(x) { return -x; },
+	'~'    : function(x) { return ~x; },
+	'!'    : function(x) { return !x; },
+	'sin'  : function(x) { return Math.sin(x);   },
+	'cos'  : function(x) { return Math.cos(x);   },
+	'tan'  : function(x) { return Math.tan(x);   },
+	'exp'  : function(x) { return Math.exp(x);   },
+	'log'  : function(x) { return Math.log(x);   },
+	'abs'  : function(x) { return Math.abs(x);   },
+	'sqrt' : function(x) { return Math.sqrt(x);  },
+	'sign' : function(x) { return Math.sign(x);  },
+	'ceil' : function(x) { return Math.ceil(x);  },
+	'floor': function(x) { return Math.floor(x); },
+};
+var binaryFunc = {
+	'-'    : function(x,y) { return x-y; },
+	'+'    : function(x,y) { return x+y; },
+	'*'    : function(x,y) { return x*y; },
+	'/'    : function(x,y) { return x/y; },
+	'%'    : function(x,y) { return x%y; },
+	'&'    : function(x,y) { return x&y; },
+	'|'    : function(x,y) { return x|y; },
+	'^'    : function(x,y) { return x^y; },
+	'<<'   : function(x,y) { return x<<y; },
+	'>>'   : function(x,y) { return x>>y; },
+	'pow'  : function(x,y) { return Math.pow(x, y); },
+	'min'  : function(x,y) { return Math.min(x, y); },
+	'max'  : function(x,y) { return Math.max(x, y); },
+};
+
 function Compiler(source) {
 	this.rom       = []; // list<int>
 	this.dbginfo   = new DebugInfo(source);
@@ -209,7 +240,7 @@ function Compiler(source) {
 		"native":true, "sprite":true, "loop":true, "while":true, "again":true,
 		"scroll-down":true, "scroll-right":true, "scroll-left":true,
 		"lores":true, "hires":true, "loadflags":true, "saveflags":true, "i":true,
-		"audio":true, "plane":true, "scroll-up":true, ":macro":true,
+		"audio":true, "plane":true, "scroll-up":true, ":macro":true, ":calc":true, ":byte":true,
 	};
 
 	this.checkName = function(name, kind) {
@@ -453,6 +484,37 @@ function Compiler(source) {
 		}
 	}
 
+	this.parseTerminal = function(name) {
+		// NUMBER | CONSTANT | LABEL | '(' expression ')'
+		var x = this.peek();
+		if (x == 'PI'  ) { this.next(); return Math.PI; }
+		if (x == 'E'   ) { this.next(); return Math.E; }
+		if (x == 'HERE') { this.next(); return this.hereaddr; }
+		if (typeof x == "number") { return this.next(); }
+		if (x in this.constants)  { return this.constants[this.next()]; }
+		if (x in this.dict)       { return this.dict[this.next()]; }
+		if (x in this.protos) {
+			throw "Cannot use forward declaration '"+x+"' in calculated constant '"+name+'".';
+		}
+		if (this.next() != '(') { throw "Undefined constant '"+x+"'."; }
+		var value = this.parseCalc(name);
+		if (this.next() != ')') { throw "Expected ')' for calculated constant '"+name+"'."; }
+		return value;
+	}
+	this.parseCalc = function(name) {
+		// UNARY expression | terminal BINARY expression | terminal
+		if (this.peek() in unaryFunc) {
+			return unaryFunc[this.next()](this.parseCalc(name));
+		}
+		var t = this.parseTerminal(name);
+		if (this.peek() in binaryFunc) {
+			return binaryFunc[this.next()](t, this.parseCalc(name));
+		}
+		else {
+			return t;
+		}
+	}
+
 	this.instruction = function(token) {
 		if (token == ":") { this.resolveLabel(0); }
 		else if (token == ":next") { this.resolveLabel(1); }
@@ -478,7 +540,11 @@ function Compiler(source) {
 			}
 			if (this.next() != '{') { throw "Expected '{' for definition of macro '"+name+"'."; }
 			var body = [];
-			while(this.peek() != '}' && this.tokens.length > 0) {
+			var depth = 1;
+			while(this.tokens.length > 0) {
+				if (this.peek() == '{') { depth += 1; }
+				if (this.peek() == '}') { depth -= 1; }
+				if (depth == 0) { break; }
 				body.push(this.raw());
 			}
 			if (this.next() != '}') { throw "Expected '}' for definition of macro '"+name+"'."; }
@@ -499,6 +565,14 @@ function Compiler(source) {
 				this.tokens.splice(x, 0, value);
 			}
 		}
+		else if (token == ':calc') {
+			var name = this.checkName(this.next(), "calculated constant");
+			if (this.next() != '{') { throw "Expected '{' for calculated constant '"+name+"'."; }
+			var value = this.parseCalc(name);
+			if (this.next() != '}') { throw "Expected '}' for calculated constant '"+name+"'."; }
+			this.constants[name] = value;
+		}
+		else if (token == ":byte")   { this.data(this.shortValue()); }
 		else if (token == ":org")    { this.hereaddr = this.constantValue(); }
 		else if (token == ";")       { this.inst(0x00, 0xEE); }
 		else if (token == "return")  { this.inst(0x00, 0xEE); }

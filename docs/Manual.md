@@ -172,6 +172,24 @@ This generates code equivalent to the following:
 
 Macros must be defined before expansion, and macro definitions may not be nested, but macro invocations may appear within macro definitions.
 
+Sometimes there is an arithmetic relationship between constants in your program. Rather than computing them by hand, the `:calc` command allows you to perform calculations at compile time. It takes a name, followed by a `{`, a sequence of numbers, constant references, binary operators, unary operators or parentheses, and finally a terminal `}`. The name is assigned to the result of evaluating the expression within curly braces. The following operators are available:
+
+	unary:  - ~ ! sin cos tan exp log abs sqrt sign ceil floor
+	binary: - + * / % & | ^ << >> pow min max
+
+Additionally, the mathematical constants `E` and `PI` are usable, and the constant `HERE` indicates the address of the compiled ROM at the time of evaluation. Note that as with all Octo commands, the tokens of a `:calc` expression must be separated by whitespace. Bitwise operations are performed as if arguments were 32-bit signed integers, and otherwise they are treated as floating-point. When referenced, calculated constants are truncated to integegral values as appropriate. Order of evaluation is strictly right-to-left unless overridden by parentheses. The following expressions are equivalent:
+
+	:calc foo { 2 * 3 + baz }
+	:calc foo { 2 * ( 3 + baz ) }
+
+When using `:calc` and `:macro` together, it is often useful to write the contents of some constant to the ROM; this can be done with `:byte`:
+
+	:macro with-complement X {
+		:calc Y { 0xFF & ~ X }
+		:byte X
+		:byte Y
+	}
+
 SuperChip
 ---------
 SuperChip or SCHIP is a set of extended Chip8 instructions. Octo can emulate these instructions and will indicate if any such instructions are used in an assembled program. The SuperChip instructions are as follows:

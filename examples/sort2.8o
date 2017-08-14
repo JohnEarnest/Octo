@@ -7,8 +7,8 @@
 ###########################################
 
 :const SIZE   16
-:const SIZE-1 15
-:const LIMIT   7 # (SIZE/2)+1
+:calc  SIZE-1 { SIZE - 1 }
+:calc  LIMIT  { ( SIZE / 2 ) + 1 }
 
 :alias left-val  v0
 :alias right-val v1
