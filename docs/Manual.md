@@ -177,7 +177,7 @@ Sometimes there is an arithmetic relationship between constants in your program.
 	unary:  - ~ ! sin cos tan exp log abs sqrt sign ceil floor
 	binary: - + * / % & | ^ << >> pow min max
 
-Additionally, the mathematical constants `E` and `PI` are usable, and the constant `HERE` indicates the address of the compiled ROM at the time of evaluation. Note that as with all Octo commands, the tokens of a `:calc` expression must be separated by whitespace. Bitwise operations are performed as if arguments were 32-bit signed integers, and otherwise they are treated as floating-point. When referenced, calculated constants are truncated to integegral values as appropriate. Order of evaluation is strictly right-to-left unless overridden by parentheses. The following expressions are equivalent:
+Additionally, the mathematical constants `E` and `PI` are usable, and the constant `HERE` indicates the address immediately following the end of the compiled ROM at the time of evaluation. Note that as with all Octo commands, the tokens of a `:calc` expression must be separated by whitespace. Bitwise operations are performed as if arguments were 32-bit signed integers, and otherwise they are treated as floating-point. When referenced, calculated constants are truncated to integegral values as appropriate. Order of evaluation is strictly right-to-left unless overridden by parentheses. The following expressions are equivalent:
 
 	:calc foo { 2 * 3 + baz }
 	:calc foo { 2 * ( 3 + baz ) }

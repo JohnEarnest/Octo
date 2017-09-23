@@ -33,7 +33,7 @@
 		:calc val2 { 56 + 16 * cos rads } :byte val2
 	}
 
-	 # expand S2 2*8*8 times for a 256-byte table:
+	# expand S2 2*8*8 times for a 256-byte table:
 	:macro S1 { S2 S2 S2 S2 S2 S2 S2 S2 }
 	:macro S0 { S1 S1 S1 S1 S1 S1 S1 S1 }
 	S0 S0
