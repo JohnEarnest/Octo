@@ -55,6 +55,7 @@ void ret();
 void jump0(const uint16_t a);
 void toggle(const bool source, const uint16_t target, const uint8_t layer);
 void sprite(const uint8_t x, const uint8_t y, const uint8_t len);
+void skip();
 void tick();
 void keyevent(SDL_Event e);
 
@@ -278,6 +279,11 @@ void sprite(const uint8_t x, const uint8_t y, const uint8_t len) {
 	});
 }
 
+void skip() {
+	const uint16_t op = static_cast<uint16_t>(m[pc] << 8) | m[pc + 1];
+	pc += (op == 0xF000) ? 4 : 2;
+}
+
 void tick() {
 	// decode fields
 	const uint16_t op  = static_cast<uint16_t>(m[pc] << 8) | m[pc + 1];
@@ -294,8 +300,8 @@ void tick() {
 	if (op == 0x0000)            { running = false;                 } // halt
 	if (op == 0x00E0)            { memset(p, 0, sizeof(p)); return; } // clear
 	if (op == 0x00EE)            { ret();                   return; } // return
-	if ((op & 0xF0FF) == 0xE09E) { pc += 2 *  k[vx & 0xF];  return; } // if -key
-	if ((op & 0xF0FF) == 0xE0A1) { pc += 2 * !k[vx & 0xF];  return; } // if key
+	if ((op & 0xF0FF) == 0xE09E) { if( k[vx & 0xF]) skip(); return; } // if -key
+	if ((op & 0xF0FF) == 0xE0A1) { if(!k[vx & 0xF]) skip(); return; } // if key
 	if (op == 0x00FD)            { running = false;                 } // exit 
 	if (op == 0x00FE) { h = false; memset(p, 0, sizeof(p)); return; } // lores
 	if (op == 0x00FF) { h = true;  memset(p, 0, sizeof(p)); return; } // hires
@@ -377,13 +383,13 @@ void tick() {
 	switch(o) {
 		case 0x1: pc = nnn;                  break;
 		case 0x2: call(nnn);                 break;
-		case 0x3: if (vx == nn) { pc += 2; } break;
-		case 0x4: if (vx != nn) { pc += 2; } break;
-		case 0x5: if (vx == vy) { pc += 2; } break;
+		case 0x3: if (vx == nn) { skip(); }  break;
+		case 0x4: if (vx != nn) { skip(); }  break;
+		case 0x5: if (vx == vy) { skip(); }  break;
 		case 0x6: vx = nn;                   break;
 		case 0x7: vx += nn;                  break;
 		case 0x8: math(x, y, n);             break;
-		case 0x9: if (vx != vy) { pc += 2; } break;
+		case 0x9: if (vx != vy) { skip(); }  break;
 		case 0xA: i = nnn;                   break;
 		case 0xB: jump0(nnn);                break;
 		case 0xC: vx = rand() & nn;          break;

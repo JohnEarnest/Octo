@@ -301,6 +301,11 @@ function Emulator() {
 		haltBreakpoint("machine code is not supported.");
 	}
 
+	this.skip = function() {
+		var op = (this.m[this.pc  ] << 8) | this.m[this.pc+1];
+		this.pc += (op == 0xF000) ? 4 : 2;
+	}
+
 	this.opcode = function() {
 		// Increment profilining data
 		this.profile_data[this.pc] = (this.profile_data[this.pc] || 0) + 1;
@@ -333,12 +338,12 @@ function Emulator() {
 		}
 		if ((op & 0xF0FF) == 0xE09E) {
 			// if -key
-			if (keymap[this.v[x]] in this.keys) { this.pc += 2; }
+			if (keymap[this.v[x]] in this.keys) { this.skip(); }
 			return;
 		}
 		if ((op & 0xF0FF) == 0xE0A1) {
 			// if key
-			if (!(keymap[this.v[x]] in this.keys)) { this.pc += 2; }
+			if (!(keymap[this.v[x]] in this.keys)) { this.skip(); }
 			return;
 		}
 		if ((op & 0xFFF0) == 0x00C0) {
@@ -444,13 +449,13 @@ function Emulator() {
 			case 0x0: this.machine(nnn);                            break;
 			case 0x1: this.pc = nnn;                                break;
 			case 0x2: this.call(nnn);                               break;
-			case 0x3: if (this.v[x] == nn)        { this.pc += 2; } break;
-			case 0x4: if (this.v[x] != nn)        { this.pc += 2; } break;
-			case 0x5: if (this.v[x] == this.v[y]) { this.pc += 2; } break;
+			case 0x3: if (this.v[x] == nn)        { this.skip(); }  break;
+			case 0x4: if (this.v[x] != nn)        { this.skip(); }  break;
+			case 0x5: if (this.v[x] == this.v[y]) { this.skip(); }  break;
 			case 0x6: this.v[x] = nn;                               break;
 			case 0x7: this.v[x] = (this.v[x] + nn) & 0xFF;          break;
 			case 0x8: this.math(x, y, n);                           break;
-			case 0x9: if (this.v[x] != this.v[y]) { this.pc += 2; } break;
+			case 0x9: if (this.v[x] != this.v[y]) { this.skip(); }  break;
 			case 0xA: this.i = nnn;                                 break;
 			case 0xB: this.jump0(nnn);                              break;
 			case 0xC: this.v[x] = (Math.random()*256)&nn;           break;

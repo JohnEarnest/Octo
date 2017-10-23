@@ -51,6 +51,8 @@ The design of Chip8 instructions with immediate addresses such as `jump` limit C
 
 Compiles into a header instruction `0xF000` followed by a pair of bytes `0xNNNN` which specify the value to store in `i`. The semantics of `i` remain identical to their normal behavior.
 
+The conditional skip instructions `0xEN9E` (`if -key then`), `0xENA1` (`if key then`), `0x3XNN` (`if vx == NN then`), `0x4XNN` (`if vx != NN then`), `0x5XY0` (`if vx == vy then`) and `0x9XY0` (`if vx != NN`) will skip over this double-wide instruction, rather than skipping halfway through it.
+
 Bitplanes
 ---------
 Chip8 has a unique XOR-drawing approach to graphics which provides interesting challenges and solutions. However, with only 2 colors available there are many interesting kinds of games which cannot feasibly be rendered- for example, puzzle games where color matching is a key mechanic such as _Puyo-Puyo_ or _Dr. Mario_. It would be nice to augment Chip8 with the ability to draw a few additional colors without losing the unique flavor of its graphics drawing mode.
