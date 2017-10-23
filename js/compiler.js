@@ -194,6 +194,15 @@ function Compiler(source) {
 		return "0123456789ABCDEF".indexOf(name[1]) >= 0;
 	}
 
+	this.isSkipInstruction = function(opcode) {
+		return (opcode & 0xf000) == 0x3000 || //3xkk SE Vx, imm8
+			(opcode & 0xf000) == 0x4000 || //4xkk SNE Vx, imm8
+			(opcode & 0xf00f) == 0x5000 || //5xy0 SE Vx, Vy
+			(opcode & 0xf00f) == 0x9000 || //5xy0 SNE Vx, Vy
+			(opcode & 0xf0ff) == 0xe09e || //Ex9E SKP Vx
+			(opcode & 0xf0ff) == 0xe0a1 ;  //ExA1 SKNP Vx
+	}
+
 	this.register = function(name) {
 		if (!name) { name = this.next(); }
 		if (!this.isRegister(name)) {
@@ -407,6 +416,12 @@ function Compiler(source) {
 			}
 			else if (o == "long") {
 				this.xo = true;
+				var here = this.here() - 0x200 - 2; //previous 2 bytes
+				if (here >= 0) {
+					var opcode = (this.rom[here] << 8) | this.rom[here + 1];
+					if (this.isSkipInstruction(opcode))
+						throw "skip instruction before long assignment will execute address argument as instruction. See https://github.com/JohnEarnest/Octo/issues/67";
+				}
 				var addr = this.veryWideValue();
 				this.inst(0xF0, 0x00);
 				this.inst((addr>>8)&0xFF, addr&0xFF);
