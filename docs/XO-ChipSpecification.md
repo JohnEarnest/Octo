@@ -41,7 +41,7 @@ Reads or writes proceed in the order the register arguments are provided. Thus, 
 	load v0 v3   # load 4 bytes sequentially
 	save v3 v0   # write them back in reversed order
 
-These instructions also provide another useful function. Unlike normal `load` and `store`, they do not postincrement `i`. The `i` postincrement is useful in some situations but inconvenient in others. When a postincrement is desired the standard `load` and `store` instructions may be used, and when it is not desired a programmer may substitute the ranged version specifying `v0` as the minimum range.
+These instructions also provide another useful function. Unlike normal `load` and `save`, they do not postincrement `i`. The `i` postincrement is useful in some situations but inconvenient in others. When a postincrement is desired the standard `load` and `save` instructions may be used, and when it is not desired a programmer may substitute the ranged version specifying `v0` as the minimum range.
 
 Extended Memory
 ---------------
