@@ -241,6 +241,7 @@ function Compiler(source) {
 		"scroll-down":true, "scroll-right":true, "scroll-left":true,
 		"lores":true, "hires":true, "loadflags":true, "saveflags":true, "i":true,
 		"audio":true, "plane":true, "scroll-up":true, ":macro":true, ":calc":true, ":byte":true,
+		":offset": true,
 	};
 
 	this.checkName = function(name, kind) {
@@ -523,6 +524,11 @@ function Compiler(source) {
 			var a = this.wideValue();
 			this.inst(0x60 | this.aliases["unpack-hi"], (v << 4) | (a >> 8));
 			this.inst(0x60 | this.aliases["unpack-lo"], a);
+		}
+		else if (token == ":offset") {
+			var a = this.veryWideValue();
+			this.data(a >> 8);
+			this.data(a & 0xff);
 		}
 		else if (token == ":breakpoint") { this.breakpoints[this.here()] = this.next(); }
 		else if (token == ":proto")  { this.next(); } // deprecated.
