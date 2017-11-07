@@ -10,6 +10,8 @@
 		<button type="button" onClick="run()">Run</button>
 		<button type="button" onClick="compile()">Compile</button>
 		<button type="button" onClick="share()">Share</button>
+		<input type="file" id="sourceinput" accept='.8o' onchange="updateSource()" style="display:none">
+		<button type="button" onclick="uploadSource()">Open</button>
 		<select id="examples" onchange="loadExample()">
 			<option value="">Examples...</option>
 		</select>

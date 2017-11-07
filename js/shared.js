@@ -28,7 +28,7 @@ function unpackOptions(emulator, options) {
 	]
 	for (var x = 0; x < flags.length; x++) {
 		var flag = flags[x];
-		if (options[flag]) { emulator[flag] = options[flag]; }
+		if (flag in options) { emulator[flag] = options[flag]; }
 	}
 }
 
