@@ -112,24 +112,20 @@ function renderDisplay(emulator) {
 			&& arrayEqual(c.last.colors, colors)) {
 		return;
 	}
-	c.last = {
-		colors: colors,
-		p: [emulator.p[0].slice(), emulator.p[1].slice()]
-	};
-
 	var g = c.getContext("2d");
 	getTransform(emulator, g);
-	g.fillStyle = emulator.backgroundColor;
-	g.fillRect(0, 0, c.width, c.height);
 	var max    = emulator.hires ? 128*64      : 64*32;
 	var stride = emulator.hires ? 128         : 64;
 	var size   = emulator.hires ? scaleFactor : scaleFactor*2;
+	var lastPixels = c.last !== undefined? c.last.p: [[], []]
 
 	for(var z = 0; z < max; z++) {
-		var color = getColor(emulator.p[0][z] + (emulator.p[1][z] * 2));
-		if (color == emulator.backColor) {
-			continue;  // it's pointless to draw the background color
+		var oldColorIdx = lastPixels[0][z] + (lastPixels[1][z] << 1);
+		var colorIdx = emulator.p[0][z] + (emulator.p[1][z] << 1);
+		if (oldColorIdx === colorIdx) {
+			continue;
 		}
+		var color = getColor(colorIdx);
 		g.fillStyle = color;
 		g.fillRect(
 			Math.floor(z%stride)*size,
@@ -137,6 +133,11 @@ function renderDisplay(emulator) {
 			size, size
 		);
 	}
+
+	c.last = {
+		colors: colors,
+		p: [emulator.p[0].slice(), emulator.p[1].slice()]
+	};
 }
 
 ////////////////////////////////////
