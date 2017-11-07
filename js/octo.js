@@ -188,6 +188,22 @@ function share() {
 	}));
 }
 
+function uploadSource() {
+	document.getElementById("sourceinput").click();
+}
+
+function updateSource() {
+	var file = document.getElementById("sourceinput").files[0];
+	var reader = new FileReader();
+
+	reader.onload = function(event) {
+		var input  = document.getElementById("input");
+		input.value = event.target.result;
+	}
+
+	reader.readAsText(file);
+}
+
 function runGist() {
 	var xhr = new XMLHttpRequest();
 	var gistId = location.search.match(/gist=(\w+)/);
