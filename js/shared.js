@@ -114,24 +114,27 @@ function renderDisplay(emulator) {
 	}
 	var g = c.getContext("2d");
 	getTransform(emulator, g);
-	var max    = emulator.hires ? 128*64      : 64*32;
-	var stride = emulator.hires ? 128         : 64;
+	var w      = emulator.hires ? 128         : 64;
+	var h      = emulator.hires ? 64          : 32;
 	var size   = emulator.hires ? scaleFactor : scaleFactor*2;
 	var lastPixels = c.last !== undefined? c.last.p: [[], []]
 
-	for(var z = 0; z < max; z++) {
-		var oldColorIdx = lastPixels[0][z] + (lastPixels[1][z] << 1);
-		var colorIdx = emulator.p[0][z] + (emulator.p[1][z] << 1);
-		if (oldColorIdx === colorIdx) {
-			continue;
+	var z = 0;
+	for(var y = 0; y < h; ++y) {
+		for(var x = 0; x < w; ++x, ++z) {
+			var oldColorIdx = lastPixels[0][z] + (lastPixels[1][z] << 1);
+			var colorIdx = emulator.p[0][z] + (emulator.p[1][z] << 1);
+			if (oldColorIdx === colorIdx) {
+				continue;
+			}
+			var color = getColor(colorIdx);
+			g.fillStyle = color;
+			g.fillRect(
+				x * size,
+				y * size,
+				size, size
+			);
 		}
-		var color = getColor(colorIdx);
-		g.fillStyle = color;
-		g.fillRect(
-			Math.floor(z%stride)*size,
-			Math.floor(z/stride)*size,
-			size, size
-		);
 	}
 
 	c.last = {
