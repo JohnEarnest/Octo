@@ -119,23 +119,19 @@ function renderDisplay(emulator) {
 	var size   = emulator.hires ? scaleFactor : scaleFactor*2;
 	var lastPixels = c.last !== undefined? c.last.p: [[], []]
 
+	g.scale(size, size)
 	var z = 0;
 	for(var y = 0; y < h; ++y) {
 		for(var x = 0; x < w; ++x, ++z) {
 			var oldColorIdx = lastPixels[0][z] + (lastPixels[1][z] << 1);
 			var colorIdx = emulator.p[0][z] + (emulator.p[1][z] << 1);
-			if (oldColorIdx === colorIdx) {
-				continue;
+			if (oldColorIdx !== colorIdx) {
+				g.fillStyle = getColor(colorIdx);
+				g.fillRect(x, y, 1, 1);
 			}
-			var color = getColor(colorIdx);
-			g.fillStyle = color;
-			g.fillRect(
-				x * size,
-				y * size,
-				size, size
-			);
 		}
 	}
+	g.scale(1, 1) //restore scale to 1,1 just in case
 
 	c.last = {
 		colors: colors,
