@@ -351,7 +351,7 @@ function Emulator() {
 			var rowSize = this.hires ? 128 : 64;
 			for(var layer = 0; layer < 2; layer++) {
 				if ((this.plane & (layer+1)) == 0) { continue; }
-				for(var z = this.p[layer].length; z >= 0; z--) {
+				for(var z = this.p[layer].length - 1; z >= 0; z--) {
 					this.p[layer][z] = (z >= rowSize * n) ? this.p[layer][z - (rowSize * n)] : 0;
 				}
 			}
