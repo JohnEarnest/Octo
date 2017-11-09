@@ -107,36 +107,39 @@ function renderDisplay(emulator) {
 	// Canvas rendering can be expensive. Exit out early if nothing has changed.
 	// NOTE: toggling emulator.hires changes emulator.p dimensions.
 	var colors = [emulator.backColor, emulator.fillColor, emulator.fillColor2, emulator.blendColor];
-	if (c.last !== undefined
-			&& arrayEqual(c.last.p[0], emulator.p[0]) && arrayEqual(c.last.p[1], emulator.p[1])
-			&& arrayEqual(c.last.colors, colors)) {
-		return;
+	if (c.last !== undefined) {
+		if (arrayEqual(c.last.p[0], emulator.p[0]) && arrayEqual(c.last.p[1], emulator.p[1])
+				&& arrayEqual(c.last.colors, colors)) {
+			return;
+		}
+		if (c.last.p[0].length != emulator.p[0].length)
+			c.last = undefined
 	}
+	var g = c.getContext("2d");
+	getTransform(emulator, g);
+	var w      = emulator.hires ? 128         : 64;
+	var h      = emulator.hires ? 64          : 32;
+	var size   = emulator.hires ? scaleFactor : scaleFactor*2;
+	var lastPixels = c.last !== undefined? c.last.p: [[], []]
+
+	g.scale(size, size)
+	var z = 0;
+	for(var y = 0; y < h; ++y) {
+		for(var x = 0; x < w; ++x, ++z) {
+			var oldColorIdx = lastPixels[0][z] + (lastPixels[1][z] << 1);
+			var colorIdx = emulator.p[0][z] + (emulator.p[1][z] << 1);
+			if (oldColorIdx !== colorIdx) {
+				g.fillStyle = getColor(colorIdx);
+				g.fillRect(x, y, 1, 1);
+			}
+		}
+	}
+	g.scale(1, 1) //restore scale to 1,1 just in case
+
 	c.last = {
 		colors: colors,
 		p: [emulator.p[0].slice(), emulator.p[1].slice()]
 	};
-
-	var g = c.getContext("2d");
-	getTransform(emulator, g);
-	g.fillStyle = emulator.backgroundColor;
-	g.fillRect(0, 0, c.width, c.height);
-	var max    = emulator.hires ? 128*64      : 64*32;
-	var stride = emulator.hires ? 128         : 64;
-	var size   = emulator.hires ? scaleFactor : scaleFactor*2;
-
-	for(var z = 0; z < max; z++) {
-		var color = getColor(emulator.p[0][z] + (emulator.p[1][z] * 2));
-		if (color == emulator.backColor) {
-			continue;  // it's pointless to draw the background color
-		}
-		g.fillStyle = color;
-		g.fillRect(
-			Math.floor(z%stride)*size,
-			Math.floor(z/stride)*size,
-			size, size
-		);
-	}
 }
 
 ////////////////////////////////////
