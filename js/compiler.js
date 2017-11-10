@@ -511,7 +511,8 @@ Compiler.prototype.parseTerminal = function(name) {
 	if (this.next() != ')') { throw "Expected ')' for calculated constant '"+name+"'."; }
 	return value;
 }
-this.parseCalc = function(name) {
+
+Compiler.prototype.parseCalc = function(name) {
 	// UNARY expression | terminal BINARY expression | terminal
 	if (this.peek() in unaryFunc) {
 		return unaryFunc[this.next()](this.parseCalc(name));
