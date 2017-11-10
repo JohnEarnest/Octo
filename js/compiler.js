@@ -89,19 +89,21 @@ function tokenize(text) {
 
 function DebugInfo(source) {
 	this.lines = source.split('\n');
-	this.posToLine = function(pos) {
-		var i;
-		for (i = 0; i < this.lines.length; i++) {
-			pos -= this.lines[i].length + 1;
-			if (pos <= 0)
-				break;
-		}
-		return i;
-	}
 	this.locs = {}; // map<addr, line>
-	this.mapAddr = function(addr, pos) {
-		this.locs[addr] = this.posToLine(pos);
+}
+
+DebugInfo.prototype.mapAddr = function(addr, pos) {
+	this.locs[addr] = this.posToLine(pos);
+}
+
+DebugInfo.prototype.posToLine = function(pos) {
+	var i;
+	for (i = 0; i < this.lines.length; i++) {
+		pos -= this.lines[i].length + 1;
+		if (pos <= 0)
+			break;
 	}
+	return i;
 }
 
 var unaryFunc = {
