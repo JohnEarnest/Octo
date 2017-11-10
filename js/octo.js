@@ -861,19 +861,19 @@ function haltBreakpoint(breakName) {
 	var dbg = emulator.metadata.dbginfo;
 
 	// scan backwards & forwards in memory as long as addrs map to nearby lines
-	var pcline = dbg.locs[emulator.pc];
+	var pcline = dbg.getLine(emulator.pc);
 	var memlo = emulator.pc, memhi = emulator.pc;
-	while (dbg.locs[memlo - 1] > pcline - 8) memlo--;
-	while (dbg.locs[memhi + 1] < pcline + 8) memhi++;
+	while (dbg.getLine(memlo - 1) > pcline - 8) memlo--;
+	while (dbg.getLine(memhi + 1) < pcline + 8) memhi++;
 
 	var ind = memlo;
 	regdump += '<br><table class="debugger"><tr><td>addr</td><td>data</td><td style="width:40em">source</td></tr>\n';
-	for (var line = dbg.locs[memlo]; line <= dbg.locs[memhi]; line++) {
+	for (var line = dbg.getLine(memlo); line <= dbg.getLine(memhi); ++line) {
 		if (dbg.lines[line].match(/^\s*$/)) continue;  // skip empty lines
-		if (dbg.locs[ind] == line) {
-			regdump += dbg.locs[ind] == pcline ? '<tr class="debugger-searchline">' : '<tr>';
+		if (dbg.getLine(ind) === line) {
+			regdump += dbg.getLine(ind) === pcline ? '<tr class="debugger-searchline">' : '<tr>';
 			regdump += "<td>" + hexFormat(ind).slice(2) + "</td><td>";
-			for (; dbg.locs[ind] == line; ind++)
+			for (; dbg.getLine(ind) === line; ind++)
 				regdump += hexFormat(emulator.m[ind]).slice(2);
 			regdump += "</td>";
 		} else {
