@@ -154,6 +154,7 @@ function Compiler(source) {
 	this.hereaddr = 0x200;
 
 	this.pos = null;
+	this.currentToken = 0
 
 	this.data = function(a) {
 		if (typeof this.rom[this.hereaddr-0x200] != "undefined") {
@@ -163,11 +164,12 @@ function Compiler(source) {
 		if (this.pos) this.dbginfo.mapAddr(this.hereaddr, this.pos[1]);
 		this.hereaddr++;
 	}
+	this.end = function() { return this.currentToken >= this.tokens.length }
 
 	this.tokens = tokenize(source);
-	this.next = function()    { this.pos = this.tokens[0]; this.tokens.splice(0, 1); return this.pos[0]; }
-	this.raw  = function()    { this.pos = this.tokens[0]; this.tokens.splice(0, 1); return this.pos; }
-	this.peek = function()    { return this.tokens[0][0]; }
+	this.next = function()    { this.pos = this.tokens[this.currentToken++]; return this.pos[0]; }
+	this.raw  = function()    { this.pos = this.tokens[this.currentToken++]; return this.pos; }
+	this.peek = function()    { return this.tokens[this.currentToken][0]; }
 	this.here = function()    { return this.hereaddr; }
 	this.inst = function(a,b) { this.data(a); this.data(b); }
 
@@ -390,11 +392,11 @@ function Compiler(source) {
 
 	this.controlToken = function() {
 		// ignore a condition
-		var op = this.tokens[1][0];
+		var op = this.tokens[this.currentToken + 1][0];
 		var index = 3;
 		if (op == "key" || op == "-key") { index = 2; }
-		if (index >= this.tokens.length) { index = this.tokens.length-1; }
-		return this.tokens[index];
+		if (index + this.currentToken >= this.tokens.length) { index = this.tokens.length - this.currentToken - 1; }
+		return this.tokens[index + this.currentToken];
 	}
 
 	this.iassign = function(token) {
@@ -535,13 +537,13 @@ function Compiler(source) {
 		else if (token == ":macro")  {
 			var name = this.checkName(this.next(), "macro");
 			var args = [];
-			while(this.peek() != '{' && this.tokens.length > 0) {
+			while(this.peek() != '{' && !this.end()) {
 				args.push(this.checkName(this.next(), "macro argument"));
 			}
 			if (this.next() != '{') { throw "Expected '{' for definition of macro '"+name+"'."; }
 			var body = [];
 			var depth = 1;
-			while(this.tokens.length > 0) {
+			while(!this.end()) {
 				if (this.peek() == '{') { depth += 1; }
 				if (this.peek() == '}') { depth -= 1; }
 				if (depth == 0) { break; }
@@ -554,7 +556,7 @@ function Compiler(source) {
 			var macro = this.macros[token];
 			var bindings = {};
 			for (var x = 0; x < macro.args.length; x++) {
-				if (this.tokens.length == 0) {
+				if (this.end()) {
 					throw "Not enough arguments for expansion of macro '"+token+"'";
 				}
 				bindings[macro.args[x]] = this.raw();
@@ -562,7 +564,7 @@ function Compiler(source) {
 			for (var x = 0; x < macro.body.length; x++) {
 				var chunk = macro.body[x];
 				var value = (chunk[0] in bindings) ? bindings[chunk[0]] : chunk;
-				this.tokens.splice(x, 0, value);
+				this.tokens.splice(x + this.currentToken, 0, value);
 			}
 		}
 		else if (token == ':calc') {
@@ -580,7 +582,7 @@ function Compiler(source) {
 		else if (token == "bcd")     { this.inst(0xF0 | this.register(), 0x33); }
 		else if (token == "save")    {
 			var reg = this.register();
-			if (this.tokens.length > 0 && this.peek() == "-") {
+			if (!this.end() && this.peek() == "-") {
 				this.expect("-");
 				this.xo = true;
 				this.inst(0x50 | reg, (this.register() << 4) | 0x02);
@@ -591,7 +593,7 @@ function Compiler(source) {
 		}
 		else if (token == "load") {
 			var reg = this.register();
-			if (this.tokens.length > 0 && this.peek() == "-") {
+			if (!this.end() && this.peek() == "-") {
 				this.expect("-");
 				this.xo = true;
 				this.inst(0x50 | reg, (this.register() << 4) | 0x03);
@@ -711,7 +713,7 @@ function Compiler(source) {
 		this.aliases["unpack-lo"]    = 0x1;
 
 		this.inst(0, 0); // reserve a jump slot
-		while(this.tokens.length > 0) {
+		while(!this.end()) {
 			if (typeof this.peek() == "number") {
 				var nn = this.next();
 				if (nn < -128 || nn > 255) {
