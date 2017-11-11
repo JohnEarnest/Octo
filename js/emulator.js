@@ -123,6 +123,12 @@ function Emulator() {
 		// initialise memory with a new array to ensure that it is of the right size and is initiliased to 0
 		this.m = this.enableXO ? new Uint8Array(0x10000) : new Uint8Array(0x1000);
 
+		this.p = [[], []];
+		if (this.enableXO)
+			for(var z = 0; z < 64*128; z++) { this.p[0][z] = 0; this.p[1][z] = 0; }
+		else
+			for(var z = 0; z < 32*64; z++) { this.p[0][z] = 0; this.p[1][z] = 0; }
+
 		// initialize memory
 		for(var z = 0; z < 32*64;          z++) { this.p[0][z] = 0; this.p[1][z] = 0; }
 		for(var z = 0; z < font.length;    z++) { this.m[z] = font[z]; }
