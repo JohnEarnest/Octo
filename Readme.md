@@ -31,6 +31,7 @@ Third-party tools and references:
 - [HP48 SuperChip](https://github.com/Chromatophore/HP48-Superchip) research into the quirks and behavior of SuperChip.
 - [Sublime Text syntax definitions](https://github.com/mattmikolay/octo-sublime)
 - [Atom syntax definitions](https://github.com/james0x0A/language-octo)
+- [Emacs syntax definitions](https://github.com/cryon/octo-mode)
 - [Vim syntax definitions](https://github.com/jackiekircher/vim-chip8)
 - [VSCode syntax definitions/integration](https://github.com/hoovercj/vscode-octo)
 - [OctoFont](https://github.com/jdeeny/octofont) .TTF font converter.
