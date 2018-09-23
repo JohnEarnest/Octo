@@ -35,7 +35,7 @@ Third-party tools and references:
 - [Vim syntax definitions](https://github.com/jackiekircher/vim-chip8)
 - [VSCode syntax definitions/integration](https://github.com/hoovercj/vscode-octo)
 - [OctoFont](https://github.com/jdeeny/octofont) .TTF font converter.
-- [wernsey chip8](https://github.com/wernsey/chip8]) an alternative assembler/disassembler.
+- [wernsey chip8](https://github.com/wernsey/chip8) an alternative assembler/disassembler.
 
 Third-party games, programs and libraries:
 
