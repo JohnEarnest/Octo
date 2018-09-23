@@ -142,6 +142,7 @@ function reset() {
 }
 
 var sharingBaseUrl = 'https://vectorland.nfshost.com/storage/octo/';
+var lastLoadedKey  = null;
 function ajax(method, url, payload, then) {
 	var x = new XMLHttpRequest();
 	x.open(method, url);
@@ -160,6 +161,7 @@ function showError(message) {
 
 function share() {
 	var payload = {
+		key:     lastLoadedKey,
 		program: document.getElementById("input").value,
 		options: {
 			"tickrate"        : emulator.tickrate,
@@ -187,6 +189,7 @@ function share() {
 
 function runShared(key) {
 	ajax('GET', sharingBaseUrl + key, null, function(result, s) {
+		lastLoadedKey = key;
 		document.getElementById("input").value = result.program;
 		var framerateNum = result.options.tickrate | 0;
 		var framerateEl = document.getElementById("framerate");
