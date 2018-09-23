@@ -141,51 +141,64 @@ function reset() {
 	stopAudio();
 }
 
+var sharingBaseUrl = 'https://vectorland.nfshost.com/storage/octo/';
+function ajax(method, url, payload, then) {
+	var x = new XMLHttpRequest();
+	x.open(method, url);
+	x.onreadystatechange = function() {
+		if (x.readyState != 4) return;
+		if (method == 'GET' && x.status == 404) { showError('Unable to retrieve key.'); return; }
+		then(JSON.parse(x.responseText), x.status);
+	};
+	x.send(payload ? JSON.stringify(payload) : null);
+}
+function showError(message) {
+	var status = document.getElementById("status");
+	status.style.backgroundColor = "darkred";
+	status.innerHTML = message;
+}
+
 function share() {
-	// cribbed from increpare/Puzzlescript/js/toolbar.js
-	var xhr = new XMLHttpRequest();
-	xhr.open('POST', 'https://api.github.com/gists');
-	xhr.onreadystatechange = function() {
-		if (xhr.readyState !== 4) { return; }
-		var result = JSON.parse(xhr.responseText);
-		if (xhr.status === 403) {
-			alert(result.message);
-		}
-		else if (xhr.status !== 200 && xhr.status !== 201) {
-			alert("HTTP Error "+ xhr.status + ' - ' + xhr.statusText);
-		}
-		else {
-			window.location.href = window.location.href.replace(/(index.html|\?gist=.*)*$/, 'index.html?gist=' + result.id);
-		}
-	}
-	var prog = document.getElementById("input").value;
-	var options = JSON.stringify({
-		"tickrate"        : emulator.tickrate,
-		"fillColor"       : emulator.fillColor,
-		"fillColor2"      : emulator.fillColor2,
-		"blendColor"      : emulator.blendColor,
-		"backgroundColor" : emulator.backgroundColor,
-		"buzzColor"       : emulator.buzzColor,
-		"quietColor"      : emulator.quietColor,
-		"shiftQuirks"     : emulator.shiftQuirks,
-		"loadStoreQuirks" : emulator.loadStoreQuirks,
-		"vfOrderQuirks"   : emulator.vfOrderQuirks,
-		"clipQuirks"      : emulator.clipQuirks,
-		"jumpQuirks"      : emulator.jumpQuirks,
-		"enableXO"        : emulator.enableXO,
-		"screenRotation"  : emulator.screenRotation,
+	var payload = {
+		program: document.getElementById("input").value,
+		options: {
+			"tickrate"        : emulator.tickrate,
+			"fillColor"       : emulator.fillColor,
+			"fillColor2"      : emulator.fillColor2,
+			"blendColor"      : emulator.blendColor,
+			"backgroundColor" : emulator.backgroundColor,
+			"buzzColor"       : emulator.buzzColor,
+			"quietColor"      : emulator.quietColor,
+			"shiftQuirks"     : emulator.shiftQuirks,
+			"loadStoreQuirks" : emulator.loadStoreQuirks,
+			"vfOrderQuirks"   : emulator.vfOrderQuirks,
+			"clipQuirks"      : emulator.clipQuirks,
+			"jumpQuirks"      : emulator.jumpQuirks,
+			"enableXO"        : emulator.enableXO,
+			"screenRotation"  : emulator.screenRotation,
+		},
+	};
+	ajax('POST', sharingBaseUrl, payload, function(r, s) {
+		if (r.error) { showError(r.error); return; }
+		var l = window.location.href.replace(/(index\.html|\?key=.*)*$/, 'index.html?key=' + r.key);
+		window.location.href = l;
 	});
-	xhr.send(JSON.stringify({
-		"description" : "Octo Chip8 Program",
-		"public" : true,
-		"files": {
-			"readme.txt" : {
-				"content": "Play this game by pasting the program into http://johnearnest.github.io/Octo/"
-			},
-			"prog.ch8" : { "content": prog },
-			"options.json": { "content": options }
+}
+
+function runShared(key) {
+	ajax('GET', sharingBaseUrl + key, null, function(result, s) {
+		document.getElementById("input").value = result.program;
+		var framerateNum = result.options.tickrate | 0;
+		var framerateEl = document.getElementById("framerate");
+		framerateEl.value = framerateNum;
+		emulator.tickrate = (framerateEl.value == "") ? framerateNum : framerateEl.value;
+		unpackOptions(emulator, result.options);
+		if (emulator.enableXO) {
+			document.getElementById("enableXO").checked = true;
+			setEnableXO();
 		}
-	}));
+		run();
+	});
 }
 
 function uploadSource() {
@@ -205,6 +218,8 @@ function updateSource() {
 }
 
 function runGist() {
+	var key = location.search.match(/key=([a-zA-Z0-9-_]+)/);
+	if (key) { runShared(key[1]); return; }
 	var xhr = new XMLHttpRequest();
 	var gistId = location.search.match(/gist=(\w+)/);
 	if (!gistId) { return; }

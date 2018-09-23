@@ -69,10 +69,11 @@ The Octo assembler can also be used as a command-line tool via a [Node.js](http:
 
 The `--decompile` option can be used to send an existing Chip8 binary through Octo's general-purpose decompiler.
 
-Embedded Mode
--------------
+Sharing Your Programs
+---------------------
+Octo has a `share` feature which stores source code and configuration metadata and produces a URL you can share with others. By default, Octo stores programs in its own backend, indexed based on a `key`. Alternatively, you can store your program in a GitHub gist and specify a `gist` argument in the Octo URL. The example below demonstrates the structure Octo expects in a Gist.
 
-Octo has a `share` feature which stores source code and configuration metadata in Github gists. Following one of these links will run the program and then you can back out into the Octo IDE. Alternatively, you can use these urls to embed a Chip8 emulator in an `iframe` on your websites:
+You can also use the `gist` id or `key` to embed a Chip8 emulator in an `iframe` on your websites:
 
 	<iframe
 		src="http://johnearnest.github.io/Octo/embed.html?scale=2&gist=f3685a75817cde6d5c0d"
