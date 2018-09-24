@@ -53,44 +53,56 @@
 				intervalHandle = setInterval(render, 1000/60);
 			}
 
-			function runGist() {
-				var xhr = new XMLHttpRequest();
-				var gistId = location.search.match(/gist=(\w+)/);
-				if (!gistId) { return; }
-				xhr.open('GET', 'https://api.github.com/gists/' + gistId[1]);
-				xhr.onreadystatechange = function() {
-					if (xhr.readyState != 4) { return; }
-					var result = JSON.parse(xhr.responseText);
-					unpackOptions(emulator, JSON.parse(result.files["options.json"].content));
-					setRenderTarget(parseInt(scaleArg[1]), "target");
-
-					if (result.files["compiled.ch8"]) {
-						// when using a proxy for gist, it is possible to
-						// pre-compile roms to save time on page load.
-						// the content of this file node should be a JSON array of bytes.
-						run({ rom : result.files["compiled.rom"].content });
-					}
-					else {
-						var compiler = new Compiler(result.files["prog.ch8"].content);
-						try { compiler.go(); }
-						catch(error) {
-							document.write("Compiler error: " + error);
-							return;
-						}
-						run({ rom : compiler.rom });
-					}
+			function ajax(method, url, payload, then) {
+				var x = new XMLHttpRequest();
+				x.open(method, url);
+				x.onreadystatechange = function() {
+					if (x.readyState != 4) return;
+					if (method == 'GET' && x.status == 404) { showError('Unable to retrieve key.'); return; }
+					then(JSON.parse(x.responseText), x.status);
+				};
+				x.send(payload ? JSON.stringify(payload) : null);
+			}
+			function compileAndRun(program, options) {
+				unpackOptions(emulator, options);
+				setRenderTarget(parseInt(scaleArg[1]), 'target');
+				var compiler = new Compiler(program);
+				try { compiler.go(); }
+				catch(error) {
+					document.write("Compiler error: " + error);
+					return;
 				}
-				xhr.send();
+				run({ rom : compiler.rom });
+			}
+			function runShared(key) {
+				ajax('GET', 'https://vectorland.nfshost.com/storage/octo/' + key, null, function(result, s) {
+					compileAndRun(
+						result.program,
+						result.options
+					);
+				});
+			}
+			function runGist(id) {
+				ajax('GET', 'https://api.github.com/gists/' + id, null, function(result, s) {
+					compileAndRun(
+						result.files["prog.ch8"].content,
+						JSON.parse(result.files["options.json"].content)
+					);
+				});
 			}
 
 			function setup() {
-				if (!(location.search.match(/gist=(\w+)/))) {
-					document.write("No gist ID specified.");
-					return;
-				}
 				scaleArg = location.search.match(/scale=([0-9]+)/);
 				if (!scaleArg) { scaleArg = {1:"5"}; }
-				runGist();
+				if (location.search.match(/gist=(\w+)/)) {
+					runGist(location.search.match(/gist=(\w+)/)[1]);
+				}
+				else if (location.search.match(/key=([a-zA-Z0-9-_]+)/)) {
+					runShared(location.search.match(/key=([a-zA-Z0-9-_]+)/)[1]);
+				}
+				else {
+					document.write("No gist ID or key specified.");
+				}
 			}
 			window.onload = setup;
 		</script>
