@@ -174,10 +174,12 @@ Macros must be defined before expansion, and macro definitions may not be nested
 
 Sometimes there is an arithmetic relationship between constants in your program. Rather than computing them by hand, the `:calc` command allows you to perform calculations at compile time. It takes a name, followed by a `{`, a sequence of numbers, constant references, binary operators, unary operators or parentheses, and finally a terminal `}`. The name is assigned to the result of evaluating the expression within curly braces. The following operators are available:
 
-	unary:  - ~ ! sin cos tan exp log abs sqrt sign ceil floor
-	binary: - + * / % & | ^ << >> pow min max
+	unary:  - ~ ! sin cos tan exp log abs sqrt sign ceil floor @
+	binary: - + * / % & | ^ << >> pow min max < <= == != >= >
 
-Additionally, the mathematical constants `E` and `PI` are usable, and the constant `HERE` indicates the address immediately following the end of the compiled ROM at the time of evaluation. Note that as with all Octo commands, the tokens of a `:calc` expression must be separated by whitespace. Bitwise operations are performed as if arguments were 32-bit signed integers, and otherwise they are treated as floating-point. When referenced, calculated constants are truncated to integegral values as appropriate. Order of evaluation is strictly right-to-left unless overridden by parentheses. The following expressions are equivalent:
+The unary operator `@` looks up an address in the compiled ROM at the time of evaluation. Logical operators return `0` or `1` to indicate false or true, respectively. Additionally, the mathematical constants `E` and `PI` are usable, and the constant `HERE` indicates the address immediately following the end of the compiled ROM at the time of evaluation.
+
+Note that as with all Octo commands, the tokens of a `:calc` expression must be separated by whitespace. Bitwise operations are performed as if arguments were 32-bit signed integers, and otherwise they are treated as floating-point. When referenced, calculated constants are truncated to integegral values as appropriate. Order of evaluation is strictly right-to-left unless overridden by parentheses. The following expressions are equivalent:
 
 	:calc foo { 2 * 3 + baz }
 	:calc foo { 2 * ( 3 + baz ) }
@@ -189,6 +191,8 @@ When using `:calc` and `:macro` together, it is often useful to write the conten
 		:byte X
 		:byte Y
 	}
+
+For convenience and brevity, if `:byte` is immediately followed by `{` the expression is computed as with `:calc` and compiled as a byte, without defining an intermediate constant.
 
 SuperChip
 ---------

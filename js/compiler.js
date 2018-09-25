@@ -107,7 +107,7 @@ function DebugInfo(source) {
 var unaryFunc = {
 	'-'    : function(x) { return -x; },
 	'~'    : function(x) { return ~x; },
-	'!'    : function(x) { return !x; },
+	'!'    : function(x) { return +!x; },
 	'sin'  : function(x) { return Math.sin(x);   },
 	'cos'  : function(x) { return Math.cos(x);   },
 	'tan'  : function(x) { return Math.tan(x);   },
@@ -118,6 +118,7 @@ var unaryFunc = {
 	'sign' : function(x) { return Math.sign(x);  },
 	'ceil' : function(x) { return Math.ceil(x);  },
 	'floor': function(x) { return Math.floor(x); },
+	'@'    : function(x,m) { return m[(0|x)-0x200]||0; },
 };
 var binaryFunc = {
 	'-'    : function(x,y) { return x-y; },
@@ -133,6 +134,12 @@ var binaryFunc = {
 	'pow'  : function(x,y) { return Math.pow(x, y); },
 	'min'  : function(x,y) { return Math.min(x, y); },
 	'max'  : function(x,y) { return Math.max(x, y); },
+	'<'    : function(x,y) { return +(x<y); },
+	'>'    : function(x,y) { return +(x>y); },
+	'<='   : function(x,y) { return +(x<=y); },
+	'>='   : function(x,y) { return +(x>=y); },
+	'=='   : function(x,y) { return +(x==y); },
+	'!='   : function(x,y) { return +(x!=y); },
 };
 
 function Compiler(source) {
@@ -504,7 +511,7 @@ function Compiler(source) {
 	this.parseCalc = function(name) {
 		// UNARY expression | terminal BINARY expression | terminal
 		if (this.peek() in unaryFunc) {
-			return unaryFunc[this.next()](this.parseCalc(name));
+			return unaryFunc[this.next()](this.parseCalc(name), this.rom);
 		}
 		var t = this.parseTerminal(name);
 		if (this.peek() in binaryFunc) {
@@ -513,6 +520,12 @@ function Compiler(source) {
 		else {
 			return t;
 		}
+	}
+	this.parseCalulated = function(name) {
+		if (this.next() != '{') { throw "Expected '{' for calculated constant '"+name+"'."; }
+		var value = this.parseCalc(name);
+		if (this.next() != '}') { throw "Expected '}' for calculated constant '"+name+"'."; }
+		return value;
 	}
 
 	this.instruction = function(token) {
@@ -567,12 +580,11 @@ function Compiler(source) {
 		}
 		else if (token == ':calc') {
 			var name = this.checkName(this.next(), "calculated constant");
-			if (this.next() != '{') { throw "Expected '{' for calculated constant '"+name+"'."; }
-			var value = this.parseCalc(name);
-			if (this.next() != '}') { throw "Expected '}' for calculated constant '"+name+"'."; }
-			this.constants[name] = value;
+			this.constants[name] = this.parseCalulated(name);
 		}
-		else if (token == ":byte")   { this.data(this.shortValue()); }
+		else if (token == ":byte") {
+			this.data(this.peek() == '{' ? this.parseCalulated('ANONYMOUS') : this.shortValue());
+		}
 		else if (token == ":org")    { this.hereaddr = this.constantValue(); }
 		else if (token == ";")       { this.inst(0x00, 0xEE); }
 		else if (token == "return")  { this.inst(0x00, 0xEE); }
