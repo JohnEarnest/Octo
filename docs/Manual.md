@@ -27,6 +27,8 @@ In the following descriptions, `vx` and `vy` refer to some register name (v0-vF)
 	 7 8 9 E     a s d f
 	 A 0 B F     z x c v
 
+For convenience, Octo predefines constants beginning with `OCTO_KEY_` for each keyboard key with the value of the corresponding Chip8 key. For example, `OCTO_KEY_W` has a value of `5`.
+
 Statements
 ----------
 

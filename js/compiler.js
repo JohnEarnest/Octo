@@ -159,7 +159,24 @@ function Compiler(source) {
 	this.protos    = {}; // map<name, list<addr>>
 	this.longproto = {}; // set<name, true>
 	this.aliases   = {}; // map<name, registernum>
-	this.constants = {}; // map<name, token>
+	this.constants = {   // map<name, token>
+		'OCTO_KEY_1': 0x1,
+		'OCTO_KEY_2': 0x2,
+		'OCTO_KEY_3': 0x3,
+		'OCTO_KEY_4': 0xC,
+		'OCTO_KEY_Q': 0x4,
+		'OCTO_KEY_W': 0x5,
+		'OCTO_KEY_E': 0x6,
+		'OCTO_KEY_R': 0xD,
+		'OCTO_KEY_A': 0x7,
+		'OCTO_KEY_S': 0x8,
+		'OCTO_KEY_D': 0x9,
+		'OCTO_KEY_F': 0xE,
+		'OCTO_KEY_Z': 0xA,
+		'OCTO_KEY_X': 0x0,
+		'OCTO_KEY_C': 0xB,
+		'OCTO_KEY_V': 0xF,
+	};
 	this.macros    = {}; // map<name, {args, body}>
 	this.hasmain = true;
 	this.schip = false;
@@ -261,7 +278,7 @@ Compiler.prototype.reservedNames = {
 };
 
 Compiler.prototype.checkName = function(name, kind) {
-	if (name in this.reservedNames) {
+	if (name in this.reservedNames || name.indexOf('OCTO_') == 0) {
 		throw "The name '"+name+"' is reserved and cannot be used for a "+kind+".";
 	}
 	return name;
