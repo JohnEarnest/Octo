@@ -1,0 +1,4 @@
+.DS_Store
+tools/Doct/doct.o
+tools/Doct/doct
+tools/Doct/rom.h

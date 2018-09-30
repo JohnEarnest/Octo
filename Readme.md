@@ -20,6 +20,7 @@ General information:
 - [Beginner's Guide](https://github.com/JohnEarnest/Octo/blob/gh-pages/docs/BeginnersGuide.md)
 - [Intermediate Guide](https://github.com/JohnEarnest/Octo/blob/gh-pages/docs/IntermediateGuide.md)
 - [Programming Techniques Guide](https://github.com/JohnEarnest/Octo/blob/gh-pages/docs/Chip8%20Programming.md)
+- [Metaprogramming Cookbook](https://github.com/JohnEarnest/Octo/blob/gh-pages/docs/MetaProgramming.md)
 - [SuperChip Extensions](https://github.com/JohnEarnest/Octo/blob/gh-pages/docs/SuperChip.md)
 - [XO-Chip Extensions](https://github.com/JohnEarnest/Octo/tree/gh-pages/docs/XO-ChipSpecification.md)
 - [Octo Programming Google Group](https://groups.google.com/forum/#!forum/octo-programming)
