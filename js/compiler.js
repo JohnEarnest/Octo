@@ -198,6 +198,7 @@ Compiler.prototype.data = function(a) {
 	this.hereaddr++;
 }
 
+Compiler.prototype.rewind = function()  { this.currentToken = 0; }
 Compiler.prototype.end = function()     { return this.currentToken >= this.tokens.length }
 Compiler.prototype.next = function()    { this.pos = this.tokens[this.currentToken++]; return this.pos[0]; }
 Compiler.prototype.raw  = function()    { this.pos = this.tokens[this.currentToken++]; return this.pos; }
@@ -570,9 +571,8 @@ Compiler.prototype.instruction = function(token) {
 	else if (token == ":proto")  { this.next(); } // deprecated.
 	else if (token == ":alias")  { this.aliases[this.checkName(this.next(), "alias")] = this.register(); }
 	else if (token == ":const")  {
-		var name = this.checkName(this.next(), "constant");
-		if (name in this.constants) { throw "The name '"+name+"' has already been defined."; }
-		this.constants[name] = this.constantValue();
+		this.next(); //skip name
+		this.constantValue(); //skip value
 	}
 	else if (token == ":macro")  {
 		var name = this.checkName(this.next(), "macro");
@@ -750,6 +750,16 @@ Compiler.prototype.go = function() {
 	this.aliases["compare-temp"] = 0xE;
 	this.aliases["unpack-hi"]    = 0x0;
 	this.aliases["unpack-lo"]    = 0x1;
+
+	while(!this.end()) {
+		var token = this.next();
+		if (token === ":const") {
+			var name = this.checkName(this.next(), "constant");
+			if (name in this.constants) { throw "The name '"+name+"' has already been defined."; }
+			this.constants[name] = this.constantValue();
+		}
+	}
+	this.rewind()
 
 	this.inst(0, 0); // reserve a jump slot
 	while(!this.end()) {
