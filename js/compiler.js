@@ -744,8 +744,14 @@ Compiler.prototype.instruction = function(token) {
 
 Compiler.prototype.parseConst = function() {
 	var name = this.checkName(this.next(), "constant");
-	if (name in this.constants) { throw "The name '"+name+"' has already been defined."; }
-	this.constants[name] = this.constantValue();
+	var value = this.constantValue();
+	if (name in this.constants) {
+		if (value !== this.constants[name])
+			throw "The name '" + name + "' has already been defined.";
+		else
+			return //allow redefinition with the same type and value
+	}
+	this.constants[name] = value
 }
 
 Compiler.prototype.go = function() {
