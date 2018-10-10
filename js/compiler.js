@@ -571,26 +571,22 @@ Compiler.prototype.instruction = function(token) {
 	else if (token == ":proto")  { this.next(); } // deprecated.
 	else if (token == ":alias")  { this.aliases[this.checkName(this.next(), "alias")] = this.register(); }
 	else if (token == ":const")  {
-		this.next(); //skip name
-		this.constantValue(); //skip value
+		this.parseConst();
 	}
 	else if (token == ":macro")  {
-		var name = this.checkName(this.next(), "macro");
-		var args = [];
+		this.next() //skip name
 		while(this.peek() != '{' && !this.end()) {
-			args.push(this.checkName(this.next(), "macro argument"));
+			this.next(); //skip argument
 		}
 		if (this.next() != '{') { throw "Expected '{' for definition of macro '"+name+"'."; }
-		var body = [];
 		var depth = 1;
 		while(!this.end()) {
 			if (this.peek() == '{') { depth += 1; }
 			if (this.peek() == '}') { depth -= 1; }
 			if (depth == 0) { break; }
-			body.push(this.raw());
+			this.raw() //skip token
 		}
 		if (this.next() != '}') { throw "Expected '}' for definition of macro '"+name+"'."; }
-		this.macros[name] = { args: args, body: body };
 	}
 	else if (token in this.macros) {
 		var macro = this.macros[token];
@@ -746,6 +742,12 @@ Compiler.prototype.instruction = function(token) {
 	}
 }
 
+Compiler.prototype.parseConst = function() {
+	var name = this.checkName(this.next(), "constant");
+	if (name in this.constants) { throw "The name '"+name+"' has already been defined."; }
+	this.constants[name] = this.constantValue();
+}
+
 Compiler.prototype.go = function() {
 	this.aliases["compare-temp"] = 0xE;
 	this.aliases["unpack-hi"]    = 0x0;
@@ -754,9 +756,24 @@ Compiler.prototype.go = function() {
 	while(!this.end()) {
 		var token = this.next();
 		if (token === ":const") {
-			var name = this.checkName(this.next(), "constant");
-			if (name in this.constants) { throw "The name '"+name+"' has already been defined."; }
-			this.constants[name] = this.constantValue();
+			this.parseConst();
+		} else if (token === ":macro") {
+			var name = this.checkName(this.next(), "macro");
+			var args = [];
+			while(this.peek() != '{' && !this.end()) {
+				args.push(this.checkName(this.next(), "macro argument"));
+			}
+			if (this.next() != '{') { throw "Expected '{' for definition of macro '"+name+"'."; }
+			var body = [];
+			var depth = 1;
+			while(!this.end()) {
+				if (this.peek() == '{') { depth += 1; }
+				if (this.peek() == '}') { depth -= 1; }
+				if (depth == 0) { break; }
+				body.push(this.raw());
+			}
+			if (this.next() != '}') { throw "Expected '}' for definition of macro '"+name+"'."; }
+			this.macros[name] = { args: args, body: body };
 		}
 	}
 	this.rewind()
