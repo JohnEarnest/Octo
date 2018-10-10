@@ -524,7 +524,7 @@ Compiler.prototype.parseTerminal = function(name) {
 	if (x == 'PI'  ) { this.next(); return Math.PI; }
 	if (x == 'E'   ) { this.next(); return Math.E; }
 	if (x == 'HERE') { this.next(); return this.hereaddr; }
-	if (typeof x == "number") { return this.next(); }
+	if (+x == +x) { return +this.next(); }
 	if (x in this.constants)  { return this.constants[this.next()]; }
 	if (x in this.dict)       { return this.dict[this.next()]; }
 	if (x in this.protos) {
