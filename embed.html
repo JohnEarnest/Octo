@@ -3,7 +3,7 @@
 		<title>Octo Embeddable</title>
 	</head>
 	<body style="margin:0px; padding:0px;">
-		<canvas id="target" width="640" height="320" style="position: absolute; left: 50%; top: 50%;"></canvas>
+		<canvas id="target" width="512" height="256" style="position: absolute; left: 50%; top: 50%;"></canvas>
 		<script src="js/compiler.js"></script>
 		<script src="js/emulator.js"></script>
 		<script src="js/shared.js"></script>
@@ -93,7 +93,7 @@
 
 			function setup() {
 				scaleArg = location.search.match(/scale=([0-9]+)/);
-				if (!scaleArg) { scaleArg = {1:"5"}; }
+				if (!scaleArg) { scaleArg = {1:"4"}; }
 				if (location.search.match(/gist=(\w+)/)) {
 					runGist(location.search.match(/gist=(\w+)/)[1]);
 				}

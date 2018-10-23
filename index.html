@@ -5,26 +5,32 @@
 </head>
 
 <body>
-	<div class="menubar">
+	<div class="menubar"><script>var lastvals=[]; function insetval(a,b){lastvals[a]=b};function ingetval(a){return lastvals[a]}</script>
 		<a href="https://github.com/JohnEarnest/Octo"><img src="images/logo.png" style="padding-right: 30px;vertical-align: middle;"/></a>
-		<button type="button" onClick="run()">Run</button>
-		<button type="button" onClick="compile()">Compile</button>
-		<button type="button" onClick="share()">Share</button>
 		<input type="file" id="sourceinput" accept='.8o' onchange="updateSource()" style="display:none">
 		<button type="button" onclick="uploadSource()">Open</button>
+		<button type="button" onClick="run()">Compile & Run</button>
+		<button type="button" onClick="share()">Share</button>
 		<select id="examples" onchange="loadExample()">
 			<option value="">Examples...</option>
 		</select>
-		<select id="framerate" onchange="framerate()">
-			<option value="7">7 Cycles/Frame</option>
-			<option value="15">15 Cycles/Frame</option>
-			<option value="20" selected="selected">20 Cycles/Frame</option>
-			<option value="30">30 Cycles/Frame</option>
-			<option value="100">100 Cycles/Frame</option>
-			<option value="200">200 Cycles/Frame</option>
-			<option value="500">500 Cycles/Frame</option>
-			<option value="1000">1000 Cycles/Frame</option>
-		</select>
+
+		<input id="frateslider" type="range" min="0" max="1000" value="20" class="slider"
+		oninput="getElementById('framerate').value=value;framerate()"style="height:12px;width:64px"/>
+		<input id="framerate" list="frameratelist" value="20" style="width:64px" onfocus="insetval(0,value);
+		value=''" onblur="if(value==''){value=ingetval(0)}framerate(); getElementById('frateslider').value=value"/>
+		<datalist id="frameratelist">
+			<option value="0">cycles/frame</option>
+			<option value="7">cycles/frame</option>
+			<option value="15">cycles/frame</option>
+			<option value="20">cycles/frame</option>
+			<option value="30">cycles/frame</option>
+			<option value="100">cycles/frame</option>
+			<option value="200">cycles/frame</option>
+			<option value="500">cycles/frame</option>
+			<option value="1000">cycles/frame</option>
+		</datalist>
+		
 		<button type="button" onClick="toggleManual();">Manual</button>
 		<button type="button" onClick="toggleOptions();">Options</button>
 		<button type="button" onClick="toggleSpriteEditor();">Sprite Editor</button>
@@ -133,7 +139,7 @@
 					<option value='classic'>Octo Classic&#8482;</option>
 					<option value='["#FF0000","#FFFF00","#FFFFFF","#000000","#990000","#330000"]'>Hot Dog Stand</option>
 					<option value='["#306230","#8BAC0F","#9BBC0F","#0F380F","#333333","#000000"]'>Pea Soup LCD</option>
-					<option value='["#000000","#FFFFFF","#666666","#AAAAAA","#666666","#000000"]'>Grayscale</option>
+					<option value='["#555555","#AAAAAA","#FFFFFF","#000000","#7F7F7F","#3F3F3F"]'>Grayscale</option>
 					<option value='["#00FF00","#FF0000","#FFFF00","#000000","#999900","#333300"]'>CGA 0</option>
 					<option value='["#FF00FF","#00FFFF","#FFFFFF","#000000","#990099","#330033"]'>CGA 1</option>
 				</select>
@@ -201,9 +207,13 @@
 						<td>Format the numeric operand of <tt>random n</tt> as binary</td>
 					</tr>
 				</table>
-				<h3>File Output</h3>
-				<button type="button" onclick="saveSourceFile()">Save .8o Source</button>
-				<button type="button" onclick="saveBinaryFile()">Save .ch8 File</button>
+				<h3>File Output</h3><table><tr><td>Save Chip-8 binary file:</td></tr><tr><td>
+				<input id="binarysave" type="text" value="Output.ch8" style="width:100%"></input></td><td>
+				<button type="button" onclick="saveBinaryFile()">Save .ch8</button>
+				</td></tr><tr><td>Source & configuration:</td></tr><tr><td>
+				<input id="sourcesave" type="text" value="Program.8o" style="width:100%"></input></td>
+				<td><button type="button" onclick="saveSourceFile()">Save .8o</button>
+				</td></tr></table>
 			</div>
 
 			<div id="audiotools" class="rightpanel" style="display:none">
@@ -312,6 +322,12 @@
 				style="padding-left: 10px;"
 			/>
 			<img
+				title="reset emulation"
+				src="images/reset.png"
+				onclick="reload()"
+				style="padding-left: 10px;"
+			/>
+			<img
 				id="continueButton"
 				title="continue"
 				src="images/continue.png"
@@ -320,7 +336,7 @@
 			/>
 		</div>
 
-		<div class="debugger" id="registerView" style="display:none">
+		<div class="debugger" id="registerView" style="display:none; width:100%">
 			register display.
 		</div>
 	</div>
