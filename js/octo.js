@@ -7,6 +7,7 @@
 ////////////////////////////////////
 
 var zeroes = "00000000";
+var romdata
 
 function maskFormat(mask) {
 	if (emulator.maskFormatOverride) { return binaryFormat(mask);  }
@@ -34,6 +35,12 @@ function hexFormat(num) {
 	var hex  = num.toString(16).toUpperCase();
 	var pad0 = zeroPad(hex.length, 2);
 	return "0x" + pad0 + hex;
+}
+
+function rawHexFormat(num,len) {
+	var hex  = num.toString(16).toUpperCase();
+	var pad0 = zeroPad(hex.length, len);
+	return pad0 + hex;
 }
 
 function binaryFormat(num) {
@@ -116,14 +123,14 @@ function compile() {
 }
 
 function runRom(rom) {
-	if (rom === null) { return; }
+	if (rom === null) { return }  romdata=rom
 	if (intervalHandle != null) { reset(); }
 	emulator.exitVector = reset;
 	emulator.importFlags = function() { return JSON.parse(localStorage.getItem("octoFlagRegisters")); }
 	emulator.exportFlags = function(flags) { localStorage.setItem("octoFlagRegisters", JSON.stringify(flags)); }
 	emulator.buzzTrigger = function(ticks, remainingTicks) { playPattern(ticks, emulator.pattern, remainingTicks); }
 	emulator.init(rom);
-	setRenderTarget(5, "target");
+	setRenderTarget(12, "target");
 	audioSetup();
 	document.getElementById("emulator").style.display = "inline";
 	document.getElementById("emulator").style.backgroundColor = emulator.quietColor;
@@ -140,6 +147,10 @@ function reset() {
 	clearBreakpoint();
 	stopAudio();
 }
+
+function reinit() {  emulator.init()  }
+
+function reload() {  emulator.init(romdata)  }
 
 var sharingBaseUrl = 'https://vectorland.nfshost.com/storage/octo/';
 var lastLoadedKey  = null;
@@ -213,10 +224,21 @@ function updateSource() {
 	var reader = new FileReader();
 
 	reader.onload = function(event) {
-		var input  = document.getElementById("input");
-		input.value = event.target.result;
+		var result = event.target.result
+		try {  result = JSON.parse(result)
+			document.getElementById("input").value = result.program;
+			var framerateNum = result.options.tickrate | 0;
+			var framerateEl = document.getElementById("framerate");
+				framerateEl.value = framerateNum; emulator.tickrate = framerateNum;
+				document.getElementById("frateslider").value = framerateNum
+			unpackOptions(emulator, result.options);
+			if (emulator.enableXO) {
+				document.getElementById("enableXO").checked = true;
+				setEnableXO();
+		}}catch{
+			document.getElementById("input").value = result
+		}
 	}
-
 	reader.readAsText(file);
 }
 
@@ -253,8 +275,9 @@ function runGist() {
 //
 ////////////////////////////////////
 
-function render() {
-	for(var z = 0; (z < emulator.tickrate) && (!emulator.waiting); z++) {
+function render() { emulator.interrupt = false;
+	for(var z = 0; (z < emulator.tickrate) && (!emulator.waiting)
+		&& (!emulator.interrupt); z++) {
 		if (emulator.breakpoint != true) {
 			emulator.tick();
 			if (emulator.pc in emulator.metadata.breakpoints) {
@@ -266,10 +289,11 @@ function render() {
 			}
 		}
 	}
-	if (emulator.breakpoint != true) {
+	//It is unnecessary to suck timers when stepping opcode executions.
+	//if (emulator.breakpoint != true) { 
 		if (emulator.dt > 0) { emulator.dt--; }
 		if (emulator.st > 0) { emulator.st--; }
-	}
+	//}
 	renderDisplay(emulator);
 	if (emulator.halted) { return; }
 	document.getElementById("emulator").style.backgroundColor = (emulator.st > 0) ? emulator.buzzColor : emulator.quietColor;
@@ -288,33 +312,8 @@ function keyDown(event) {
 			}
 		}
 	}
-}
-
-function keyUp(event) {
-	if (event.keyCode in emulator.keys) {
-		delete emulator.keys[event.keyCode];
-		if (event.keyCode in keymapInverse) {
-			var keyElement = document.getElementById(
-				'0x' + keymapInverse[event.keyCode].toString(16).toUpperCase()
-			);
-			keyElement.className = keyElement.className.replace('active', '');
-		}
-	}
-
-	// Reset emulator
-	if (event.keyCode == 27) { reset(); }
-
-	// Halt / Continue
-	if (event.keyCode == 73) { // i
-		if (emulator.breakpoint) {
-			clearBreakpoint();
-		}
-		else {
-			haltBreakpoint("user interrupt");
-		}
-	}
-
-	// Single Step
+	
+		// Single Step
 	if (event.keyCode == 79) { // o
 		if (emulator.breakpoint) {
 			emulator.tick();
@@ -354,6 +353,37 @@ function keyUp(event) {
 				haltBreakpoint("stepping over");
 			}
 
+		}
+	}
+}
+
+function keyUp(event) {
+	if (event.keyCode in emulator.keys) {
+		delete emulator.keys[event.keyCode];
+		if (event.keyCode in keymapInverse) {
+			var keyElement = document.getElementById(
+				'0x' + keymapInverse[event.keyCode].toString(16).toUpperCase()
+			);
+			keyElement.className = keyElement.className.replace('active', '');
+		}
+	}
+
+	// Emulator exit        (escape)
+	if (event.keyCode ==  27) { reset();  }
+	
+	// Reset only states    (backspace)
+	if (event.keyCode ==   8) { reinit(); }
+	
+	// ROM reload and reset (return key)
+    if (event.keyCode ==  13) { reload(); }
+
+	// Halt / Continue
+	if (event.keyCode == 73) { // i
+		if (emulator.breakpoint) {
+			clearBreakpoint();
+		}
+		else {
+			haltBreakpoint("user interrupt");
 		}
 	}
 
@@ -791,6 +821,7 @@ var curBreakName;
 
 var regNumFormat = {
 	"pc": "hex",
+	"op": "hex",
 	"i" : "hex",
 	0x0 : "hex",
 	0x1 : "hex",
@@ -843,6 +874,11 @@ function getLabel(address) {
 	return " (" + bestname + " + " + (address - besta) + ")";
 }
 
+function getOpcode(opcode) {
+	return " " + formatInstruction(
+	emulator.m[opcode],emulator.m[opcode+1])
+}
+
 function formatAliases(id) {
 	var names = [];
 	for(var key in emulator.metadata.aliases) {
@@ -861,15 +897,24 @@ function haltBreakpoint(breakName) {
 	var regs   = document.getElementById("registerView");
 	button.style.display = "inline";
 	regs.style.display = "inline";
-	var regdump =
+	var regdump = "<table style='width:100%'><tr><td>" +
 		"<span>tick count: " + emulator.tickCounter + "</span><br>" +
 		"<span>breakpoint: " + breakName + "</span><br>" +
-		"<span onClick=\"cycleNumFormat('pc');\">pc := " + numericFormat(emulator.pc, regNumFormat["pc"]) + getLabel(emulator.pc) + "</span><br>" +
-		"<span onClick=\"cycleNumFormat('i');\">i := " + numericFormat(emulator.i, regNumFormat["i"]) + getLabel(emulator.i) + "</span><br>";
+		"<span onClick=\"cycleNumFormat('pc');\">pC := " + numericFormat(emulator.pc, regNumFormat["pc"]) + getLabel(emulator.pc) + "</span><br>" +
+		"<span onClick=\"cycleNumFormat('op');\">oP := " + numericFormat(emulator.opc, regNumFormat["op"]) + getOpcode(emulator.pc) + "</span><br>" +
+		"<span onClick=\"cycleNumFormat('i');\">mI := " + numericFormat(emulator.i, regNumFormat["i"]) + getLabel(emulator.i) + "</span><br>";
 	for(var k = 0; k <= 0xF; k++) {
 		var hex = k.toString(16).toUpperCase();
-		regdump += "<span onClick=\"cycleNumFormat('"+ k + "');\">v" + hex + " := " + numericFormat(emulator.v[k], regNumFormat[k]) + formatAliases(k) + "</span><br>";
-	}
+		regdump += "<span onClick=\"cycleNumFormat('"+ k + "');\">v" + hex + " := " + numericFormat(emulator.v[k], regNumFormat[k]) + ", " + binaryFormat(emulator.v[k]) + " ---" + formatAliases(k) + "</span><br>";
+	}  regdump += "</td><td style='float:right;padding-right:4em'>"
+	
+	var mdIWidth  = 16;  var mdIHeigt  = 20;  var Iaddr = (emulator.i&0xFFF0)-64; Iaddr *= Iaddr>0
+	regdump += "<span>Memory dump at indexer (I)</span><br><table><tr><td>Addr<td>";
+	for(var x=0;x<mdIWidth;x++){regdump+="<td>"+("0123456789ABCDEF")[(Iaddr+x)%mdIWidth]+"</td>"}
+	for(var y=0;y<mdIHeigt;y++){regdump+="</tr><td>"+rawHexFormat(Iaddr+y*mdIWidth,4)+"</td><td></td>";
+	for(var x=0;x<mdIWidth;x++){  var k = rawHexFormat(emulator.m[x+Iaddr+y*mdIWidth],2)
+	if (x+Iaddr+y*mdIWidth>>1==emulator.i>>1){k="<u>"+k+"</u>"} regdump+="<td>"+k+"</td>"}}
+	regdump += "</tr></table></tr></table><style>#registerView table tr td{color:white}</style>"
 
 	regdump += "<br>inferred stack trace:<br>";
 	for(var x = 0; x < emulator.r.length; x++) {

@@ -125,6 +125,8 @@ var unaryFunc = {
 	'sign' : function(x) { return Math.sign(x);  },
 	'ceil' : function(x) { return Math.ceil(x);  },
 	'floor': function(x) { return Math.floor(x); },
+	'round'  : function(x) { return Math.round(x); },
+	'random' : function(x) { return Math.random()*x; },
 	'@'    : function(x,m) { return m[(0|x)-0x200]||0; },
 };
 var binaryFunc = {
@@ -136,17 +138,17 @@ var binaryFunc = {
 	'&'    : function(x,y) { return x&y; },
 	'|'    : function(x,y) { return x|y; },
 	'^'    : function(x,y) { return x^y; },
+	'<'    : function(x,y) { return +(x<y); },
+	'>'    : function(x,y) { return +(x>y); },
+	'=='   : function(x,y) { return +(x==y); },
+	'!='   : function(x,y) { return +(x!=y); },
+	'<='   : function(x,y) { return +(x<=y); },
+	'>='   : function(x,y) { return +(x>=y); },
 	'<<'   : function(x,y) { return x<<y; },
 	'>>'   : function(x,y) { return x>>y; },
 	'pow'  : function(x,y) { return Math.pow(x, y); },
 	'min'  : function(x,y) { return Math.min(x, y); },
 	'max'  : function(x,y) { return Math.max(x, y); },
-	'<'    : function(x,y) { return +(x<y); },
-	'>'    : function(x,y) { return +(x>y); },
-	'<='   : function(x,y) { return +(x<=y); },
-	'>='   : function(x,y) { return +(x>=y); },
-	'=='   : function(x,y) { return +(x==y); },
-	'!='   : function(x,y) { return +(x!=y); },
 };
 
 function Compiler(source) {
@@ -273,7 +275,7 @@ Compiler.prototype.reservedNames = {
 	"begin":true, "else":true, "end":true, "jump":true, "jump0":true,
 	"native":true, "sprite":true, "loop":true, "while":true, "again":true,
 	"scroll-down":true, "scroll-right":true, "scroll-left":true,
-	"lores":true, "hires":true, "loadflags":true, "saveflags":true, "i":true,
+	"lores":true, "hires":true, "xhires": true, "loadflags":true, "saveflags":true, "i":true,
 	"audio":true, "plane":true, "scroll-up":true, ":macro":true, ":calc":true, ":byte":true,
 };
 
@@ -471,10 +473,22 @@ Compiler.prototype.vassign = function(reg, token) {
 	else if ("|="  == token) { this.fourop(0x8, reg, this.register(), 0x1); }
 	else if ("&="  == token) { this.fourop(0x8, reg, this.register(), 0x2); }
 	else if ("^="  == token) { this.fourop(0x8, reg, this.register(), 0x3); }
-	else if ("-="  == token) { this.fourop(0x8, reg, this.register(), 0x5); }
+	else if ("-="  == token) { 
+		if (this.isRegister()) { this.fourop(0x8, reg, this.register(), 0x5); }
+		else                   { this.inst(0x70 | reg, 256-this.shortValue()); } }
 	else if ("=-"  == token) { this.fourop(0x8, reg, this.register(), 0x7); }
-	else if (">>=" == token) { this.fourop(0x8, reg, this.register(), 0x6); }
-	else if ("<<=" == token) { this.fourop(0x8, reg, this.register(), 0xE); }
+	else if (">>=" == token) {
+		if (emulator.loadStoreQuirks) {
+			this.fourop(0x8, reg, reg, 0x6); }
+		else {
+			this.fourop(0x8, reg, this.register(), 0x6); }
+		}
+	else if ("<<=" == token) {
+		if (emulator.loadStoreQuirks) {
+			this.fourop(0x8, reg, reg, 0xE); }
+		else {
+			this.fourop(0x8, reg, this.register(), 0xE); }
+		}
 	else {
 		throw "Unrecognized operator '"+token+"'.";
 	}
@@ -718,6 +732,7 @@ Compiler.prototype.instruction = function(token) {
 	}
 	else if (token == "scroll-down")  { this.schip = true; this.inst(0x00, 0xC0 | this.tinyValue()); }
 	else if (token == "scroll-up")    { this.xo    = true; this.inst(0x00, 0xD0 | this.tinyValue()); }
+	else if (token == "xhires")       { this.xo    = true; this.inst(0x00, 0xFA); }
 	else if (token == "scroll-right") { this.schip = true; this.inst(0x00, 0xFB); }
 	else if (token == "scroll-left")  { this.schip = true; this.inst(0x00, 0xFC); }
 	else if (token == "exit")         { this.schip = true; this.inst(0x00, 0xFD); }

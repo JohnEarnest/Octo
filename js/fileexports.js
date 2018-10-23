@@ -19,8 +19,7 @@ function saveBinaryFile() {
 	// the file.
 	var rawData = new Uint8Array(prog.rom);
 	var blob = new Blob([rawData], {type: "application/octet-stream"});
-	saveAs(blob, "output.ch8");
-
+	saveAs(blob, document.getElementById("binarysave").value);
 }
 
 ////////////////////////////////////
@@ -31,6 +30,26 @@ function saveBinaryFile() {
 
 function saveSourceFile() {
 	var input  = document.getElementById("input");
-	var blob = new Blob([input.value], {type: "text/plain;charset=utf-8"})
-	saveAs(blob, "source.8o")
+	var payload = {
+		program: document.getElementById("input").value,
+		options: {
+			"tickrate"        : emulator.tickrate,
+			"fillColor"       : emulator.fillColor,
+			"fillColor2"      : emulator.fillColor2,
+			"blendColor"      : emulator.blendColor,
+			"backgroundColor" : emulator.backgroundColor,
+			"buzzColor"       : emulator.buzzColor,
+			"quietColor"      : emulator.quietColor,
+			"shiftQuirks"     : emulator.shiftQuirks,
+			"loadStoreQuirks" : emulator.loadStoreQuirks,
+			"vfOrderQuirks"   : emulator.vfOrderQuirks,
+			"clipQuirks"      : emulator.clipQuirks,
+			"jumpQuirks"      : emulator.jumpQuirks,
+			"enableXO"        : emulator.enableXO,
+			"screenRotation"  : emulator.screenRotation,
+		},
+	};
+	var blob = new Blob([JSON.stringify(payload)],{type: "text/plain;charset=utf-8"})
+	//new Blob([input.value], {type: "text/plain;charset=utf-8"})
+	saveAs(blob, document.getElementById("sourcesave").value)
 }

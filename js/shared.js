@@ -6,8 +6,9 @@
 //
 ////////////////////////////////////
 
-var scaleFactor = 5;
+var scaleFactor = 12;
 var renderTarget = "target";
+var ov = 0;
 
 function unpackOptions(emulator, options) {
 	var flags = [
@@ -28,7 +29,7 @@ function unpackOptions(emulator, options) {
 	]
 	for (var x = 0; x < flags.length; x++) {
 		var flag = flags[x];
-		if (flag in options) { emulator[flag] = options[flag]; }
+		if (options[flag]) { emulator[flag] = options[flag]; }
 	}
 }
 
@@ -40,10 +41,10 @@ function setRenderTarget(scale, canvas) {
 	// Remove any existing previous delta frame so first frame is always drawn:
 	c.last = undefined;
 
-	var w  = scaleFactor * 128;
-	var h  = scaleFactor *  64;
-	var wm = (scaleFactor * -64) + "px";
-	var hm = (scaleFactor * -32) + "px";
+	var w  = scaleFactor * 64;
+	var h  = scaleFactor *  32;
+	var wm = (scaleFactor * -32) + "px";
+	var hm = (scaleFactor * -16) + "px";
 
 	if (emulator.screenRotation == 90 || emulator.screenRotation == 270) {
 		c.width  = h;
@@ -101,46 +102,57 @@ function getColor(id) {
 	throw "invalid color: " + id;
 }
 
-function renderDisplay(emulator) {
-	var c = document.getElementById(renderTarget);
+function renderDisplay(emulator) { ov=0
+	if(emulator.g[0]!=0){
+		var c = document.getElementById(renderTarget);
 
-	// Canvas rendering can be expensive. Exit out early if nothing has changed.
-	// NOTE: toggling emulator.hires changes emulator.p dimensions.
-	var colors = [emulator.backColor, emulator.fillColor, emulator.fillColor2, emulator.blendColor];
-	if (c.last !== undefined) {
-		if (arrayEqual(c.last.p[0], emulator.p[0]) && arrayEqual(c.last.p[1], emulator.p[1])
-				&& arrayEqual(c.last.colors, colors)) {
-			return;
-		}
-		if (c.last.p[0].length != emulator.p[0].length)
-			c.last = undefined
-	}
-	var g = c.getContext("2d");
-	getTransform(emulator, g);
-	var w      = emulator.hires ? 128         : 64;
-	var h      = emulator.hires ? 64          : 32;
-	var size   = emulator.hires ? scaleFactor : scaleFactor*2;
-	var lastPixels = c.last !== undefined? c.last.p: [[], []]
+		// Canvas rendering can be expensive. Exit out early if nothing has changed.
+		// NOTE: toggling emulator.hires changes emulator.p dimensions.
+		var colors = [emulator.backColor,emulator.fillColor,emulator.fillColor2,emulator.blendColor];
+		//if (c.last !== undefined
+		//		&& arrayEqual(c.last.p[0], emulator.p[0]) && arrayEqual(c.last.p[1], emulator.p[1])
+		//		&& arrayEqual(c.last.colors, colors)) {return;}
+		//c.last = { colors: colors, p: [emulator.p[0].slice(), emulator.p[1].slice()]};
 
-	g.scale(size, size)
-	var z = 0;
-	for(var y = 0; y < h; ++y) {
-		for(var x = 0; x < w; ++x, ++z) {
-			var oldColorIdx = lastPixels[0][z] + (lastPixels[1][z] << 1);
-			var colorIdx = emulator.p[0][z] + (emulator.p[1][z] << 1);
-			if (oldColorIdx !== colorIdx) {
-				g.fillStyle = getColor(colorIdx);
-				g.fillRect(x, y, 1, 1);
+		var g = c.getContext("2d");
+		getTransform(emulator, g);
+
+		var stride = 64<<emulator.rexp;
+		var size   = scaleFactor>>emulator.rexp;
+		
+		if(emulator.g[0]<2){
+			var max   = emulator.g[1]+2;
+			for(var i = 2,pl; i < max; i++){
+				var z = emulator.g[i]; emulator.p[3][z]=0;
+				pl = emulator.p[0][z] + (emulator.p[1][z] * 2);
+				if(emulator.p[2][z]!=pl){  emulator.p[2][z]=pl;
+					g.fillStyle = getColor(pl);
+					g.fillRect(
+						Math.floor(z%stride)*size,
+						Math.floor(z/stride)*size,
+						size, size
+					); ov += 1;
+				}
+			}
+		}else{
+			var max   = (64<<emulator.rexp)*(32<<emulator.rexp);
+			for(var z = 0,pl; z < max; z++) {  emulator.p[3][z] = 0;
+				pl = emulator.p[0][z] + (emulator.p[1][z] * 2);
+				if(emulator.p[2][z]!=pl){  emulator.p[2][z]=pl;
+					g.fillStyle = getColor(pl);
+					g.fillRect(
+						Math.floor(z%stride)*size,
+						Math.floor(z/stride)*size,
+						size, size
+					); ov += 1;
+				}
 			}
 		}
+		emulator.g = [0,0];
 	}
-	g.scale(1, 1) //restore scale to 1,1 just in case
-
-	c.last = {
-		colors: colors,
-		p: [emulator.p[0].slice(), emulator.p[1].slice()]
-	};
 }
+
+function awe(ss,cc){console.log(ss)}
 
 ////////////////////////////////////
 //

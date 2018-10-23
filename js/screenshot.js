@@ -23,8 +23,8 @@ function getSVGColor(id) {
 }
 
 function screenToSVG(emulator, width, height) {
-	var max    = emulator.hires ? 128*64 : 64*32;
-	var stride = emulator.hires ? 128    : 64;
+	var max    = (64<<emulator.rexp)*(32<<emulator.rexp);
+	var stride = 64<<emulator.rexp;
 	var xsize = width  / stride;
 	var ysize = height / (stride/2);
 

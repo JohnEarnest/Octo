@@ -63,6 +63,12 @@ var bigfont = [
 	0xFF, 0xFF, 0xC0, 0xC0, 0xFF, 0xFF, 0xC0, 0xC0, 0xC0, 0xC0  // F
 ];
 
+function hexFormat(num) {
+	var hex  = num.toString(16).toUpperCase();
+	var pad0 = zeroPad(hex.length, 2);
+	return "0x" + pad0 + hex;
+}
+
 ////////////////////////////////////
 //
 //   The Chip8 Interpreter:
@@ -90,19 +96,22 @@ function Emulator() {
 	this.numericFormatStr   = "default";
 
 	// interpreter state
-	this.p  = [[],[]];  // pixels
+	this.p  = [[],[],[],[]];  // pixels, 0: chip8, 1: xochip, 2: last, 3: pixel refresh flag.
 	this.m  = [];       // memory (bytes)
 	this.r  = [];       // return stack
 	this.v  = [];       // registers
+	this.g  = [2,0];    // partial pixel refresh list, 0 state, 1 num of lists, 2... pixel indexes
 	this.pc = 0;        // program counter
 	this.i  = 0;        // index register
 	this.dt = 0;        // delay timer
 	this.st = 0;        // sound timer
-	this.hires = false; // are we in SuperChip high res mode?
+	this.rexp = 0;      // resolution exponent by power 2
 	this.flags = [];    // semi-persistent hp48 flag vars
 	this.pattern = [];  // audio pattern buffer
 	this.plane = 1;     // graphics plane
 	this.profile_data = {};
+	this.opc = 0;
+	this.interrupt
 
 	// control/debug state
 	this.keys = {};       // track keys which are pressed
@@ -116,35 +125,37 @@ function Emulator() {
 	// external interface stubs
 	this.exitVector  = function() {}                                   // fired by 'exit'
 	this.importFlags = function() { return [0, 0, 0, 0, 0, 0, 0, 0]; } // load persistent flags
-	this.exportFlags = function(flags) {}                              // save persistent flags
+	this.rexportFlags = function(flags) {}                              // save persistent flags
 	this.buzzTrigger = function(ticks, remainingTicks) {}                              // fired when buzzer played
 
 	this.init = function(rom) {
-		// initialise memory with a new array to ensure that it is of the right size and is initiliased to 0
-		this.m = this.enableXO ? new Uint8Array(0x10000) : new Uint8Array(0x1000);
-
-		this.p = [[], []];
-		if (this.enableXO)
-			for(var z = 0; z < 64*128; z++) { this.p[0][z] = 0; this.p[1][z] = 0; }
-		else
-			for(var z = 0; z < 32*64; z++) { this.p[0][z] = 0; this.p[1][z] = 0; }
-
-		// initialize memory
-		for(var z = 0; z < 32*64;          z++) { this.p[0][z] = 0; this.p[1][z] = 0; }
-		for(var z = 0; z < font.length;    z++) { this.m[z] = font[z]; }
-		for(var z = 0; z < bigfont.length; z++) { this.m[z + font.length] = bigfont[z]; }
-		for(var z = 0; z < rom.rom.length; z++) { this.m[0x200+z] = rom.rom[z]; }
-		for(var z = 0; z < 16;             z++) { this.v[z] = 0; }
+		if (rom != null){  // Overwrite existing memory if need to be loaded
+			this.metadata = rom;
+			// initialise memory with a new array to ensure that it is of the right size and is initiliased to 0
+			this.m = this.enableXO ? new Uint8Array(0x10000) : new Uint8Array(0x1000);
+	
+			// initialize memory
+			for(var z = 0; z < font.length;    z++) { this.m[z] = font[z]; }
+			for(var z = 0; z < bigfont.length; z++) { this.m[z + font.length] = bigfont[z]; }
+			for(var z = 0; z < rom.rom.length; z++) { this.m[0x200+z] = rom.rom[z]; }
+			for(var z = 0; z < 16;             z++) { this.v[z] = 0; }
+		}
+		// initialize display and sound
+		for(var z = 0; z < 32*64;          z++) {
+			this.p[0][z] = 0 ; this.p[1][z] = 0 ;
+			this.p[2][z] =null; this.p[3][z] = 0 }
 		for(var z = 0; z < 16;             z++) { this.pattern[z] = 0; }
 
 		// initialize interpreter state
 		this.r = [];
+		this.g = [2,0];
+		this.rexp = 0;
 		this.pc = 0x200;
 		this.i  = 0;
 		this.dt = 0;
 		this.st = 0;
-		this.hires = false;
 		this.plane = 1;
+		this.opc = 0;
 
 		// initialize control/debug state
 		this.keys = {};
@@ -153,7 +164,6 @@ function Emulator() {
 		this.halted = false;
 		this.breakpoint = false;
 		this.stack_breakpoint = -1;
-		this.metadata = rom;
 		this.tickCounter = 0;
 		this.profile_data = {};
 	}
@@ -166,43 +176,13 @@ function Emulator() {
 		}
 	}
 
-	this.math = function(x, y, op) {
-		// basic arithmetic opcodes
-		switch(op) {
-			case 0x0: this.v[x]  = this.v[y]; break;
-			case 0x1: this.v[x] |= this.v[y]; break;
-			case 0x2: this.v[x] &= this.v[y]; break;
-			case 0x3: this.v[x] ^= this.v[y]; break;
-			case 0x4:
-				var t = this.v[x]+this.v[y];
-				this.writeCarry(x, t, (t > 0xFF));
-				break;
-			case 0x5:
-				var t = this.v[x]-this.v[y];
-				this.writeCarry(x, t, (this.v[x] >= this.v[y]));
-				break;
-			case 0x7:
-				var t = this.v[y]-this.v[x];
-				this.writeCarry(x, t, (this.v[y] >= this.v[x]));
-				break;
-			case 0x6:
-				if (this.shiftQuirks) { y = x; }
-				var t = this.v[y] >> 1;
-				this.writeCarry(x, t, (this.v[y] & 0x1));
-				break;
-			case 0xE:
-				if (this.shiftQuirks) { y = x; }
-				var t = this.v[y] << 1;
-				this.writeCarry(x, t, ((this.v[y] >> 7) & 0x1));
-				break;
-			default:
-				haltBreakpoint("unknown math opcode "+op);
-		}
-	}
-
 	this.misc = function(x, rest) {
 		// miscellaneous opcodes
 		switch(rest) {
+			case 0x00:
+			// long memory reference
+				this.i = ((this.m[this.pc] << 8) | (this.m[this.pc+1])) & 0xFFFF;
+				this.pc += 2; break;
 			case 0x01:
 				this.plane = (x & 0x3);
 				break;
@@ -211,7 +191,7 @@ function Emulator() {
 					this.pattern[z] = this.m[this.i+z];
 				}
 				break;
-			case 0x07: this.v[x] = this.dt; break;
+			case 0x07: this.v[x] = this.dt; if(this.dt>0){this.interrupt=true} break;
 			case 0x0A: this.waiting = true; this.waitReg = x; break;
 			case 0x15: this.dt = this.v[x]; break;
 			case 0x18: this.buzzTrigger(this.v[x], this.st); this.st = this.v[x]; break;
@@ -233,7 +213,7 @@ function Emulator() {
 				break;
 			case 0x75:
 				for(var z = 0; z <= x; z++) { this.flags[z] = this.v[z]; }
-				this.exportFlags(this.flags);
+				this.rexportFlags(this.flags);
 				break;
 			case 0x85:
 				this.flags = this.importFlags();
@@ -247,239 +227,126 @@ function Emulator() {
 		}
 	}
 
-	this.sprite = function sprite(x, y, len) {
-		this.v[0xF] = 0x0;
-		var rowSize = this.hires ? 128 : 64;
-		var colSize = this.hires ?  64 : 32;
-		var i = this.i;
-		for(var layer = 0; layer < 2; layer++) {
-			if ((this.plane & (layer+1)) == 0) { continue; }
-			if (len == 0) {
-				// draw a SuperChip 16x16 sprite
-				for(var a = 0; a < 16; a++) {
-					for(var b = 0; b < 16; b++) {
-						var target = ((x+b) % rowSize) + ((y+a) % colSize)*rowSize;
-						var source = ((this.m[i+(a*2)+(b > 7 ? 1:0)] >> (7-(b%8))) & 0x1) != 0;
-						if (this.clipQuirks) {
-							if ((x%rowSize)+b>=rowSize || (y%colSize)+a>=colSize) { source = 0; }
-						}
-						if (!source) { continue; }
-						if (this.p[layer][target]) { this.p[layer][target] = 0; this.v[0xF] = 0x1; }
-						else { this.p[layer][target] = 1; }
-					}
+	this.sprite = function sprite(x,y,h){
+		var rows = 64<<this.rexp;  var cols = 32<<this.rexp;
+		var sres = rows*cols; var wide = h==0?16:h; var carry=0;
+		var indx = this.i; if(this.g[0]==0){this.g[0]=1}
+		for(var layr=0;layr<2;layr++){if(((this.plane&(layr+1))==0)){continue}
+			var yplt=(y*rows)%(sres);for(var slic=0;slic<wide;slic++){
+				for(var part=0;part<1+(h==0);part++){var vbyt=this.m[indx++];
+					for(var plot=part*8;vbyt!=0;plot++){var pixl=vbyt&128;
+						if(pixl!=0){var hng=((x+plot)%rows)+yplt;
+							pixl=this.p[layr][hng];this.p[layr][hng]=1-pixl
+							if(this.p[3][hng]==0){this.p[3][hng]=1;
+								this.g[2+(this.g[1]++)]=hng}
+						if(pixl!=0){carry=1}}
+					vbyt=(vbyt<<1)&255}
 				}
-				i += 32;
-			}
-			else {
-				// draw a Chip8 8xN sprite
-				for(var a = 0; a < len; a++) {
-					for(var b = 0; b < 8; b++) {
-						var target = ((x+b) % rowSize) + ((y+a) % colSize)*rowSize;
-						var source = ((this.m[i+a] >> (7-b)) & 0x1) != 0;
-						if (this.clipQuirks) {
-							if ((x%rowSize)+b>=rowSize || (y%colSize)+a>=colSize) { source = 0; }
-						}
-						if (!source) { continue; }
-						if (this.p[layer][target]) { this.p[layer][target] = 0; this.v[0xF] = 0x1; }
-						else { this.p[layer][target] = 1; }
-					}
-				}
-				i += len;
-			}
+			yplt=(yplt+rows)%(sres)}
 		}
-	}
-
-	this.call = function(nnn) {
-		if (this.r.length >= 12) {
-			haltBreakpoint("call stack overflow.");
-		}
-		this.r.push(this.pc);
-		this.pc = nnn
-	}
-
-	this.jump0 = function(nnn) {
-		if (this.jumpQuirks) { this.pc = nnn + this.v[(nnn >> 8)&0xF];  }
-		else                 { this.pc = nnn + this.v[0]; }
-	}
-
-	this.machine = function(nnn) {
-		if (nnn == 0x000) { this.halted = true; return; }
-		haltBreakpoint("machine code is not supported.");
-	}
-
-	this.skip = function() {
-		var op = (this.m[this.pc  ] << 8) | this.m[this.pc+1];
-		this.pc += (op == 0xF000) ? 4 : 2;
-	}
-
+	this.v[15]=carry}
+	
+	this.halt = function() {haltBreakpoint("halted");}
+	
+	this.opmath = [
+		/*8xy0*/(()=>{this.v[(this.opc>>8)&0xF]  = this.v[(this.opc>>4)&0xF]}),
+		/*8xy1*/(()=>{this.v[(this.opc>>8)&0xF] |= this.v[(this.opc>>4)&0xF]}),
+		/*8xy2*/(()=>{this.v[(this.opc>>8)&0xF] &= this.v[(this.opc>>4)&0xF]}),
+		/*8xy3*/(()=>{this.v[(this.opc>>8)&0xF] ^= this.v[(this.opc>>4)&0xF]}),
+		/*8xy4*/(()=>{var t=this.v[(this.opc>>8)&0xF]+this.v[(this.opc>>4)&0xF];
+			this.writeCarry((this.opc>>8)&0xF,t,(t>0xFF))}),
+		/*8xy5*/(()=>{var t=this.v[(this.opc>>8)&0xF]-this.v[(this.opc>>4)&0xF];
+			this.writeCarry((this.opc>>8)&0xF,t,(this.v[(this.opc>>8)&0xF]>=this.v[(this.opc>>4)&0xF]))}),
+		/*8xy6*/(()=>{var a=8;if(this.shiftQuirks){a-=4}var t=this.v[(this.opc>>4)&0xF]>>1;
+			this.writeCarry((this.opc>>a)&0xF,t,(this.v[(this.opc>>4)&0xF]&0x1))}),
+		/*8xy7*/(()=>{var t=this.v[(this.opc>>4)&0xF]-this.v[(this.opc>>8)&0xF];
+			this.writeCarry((this.opc>>8)&0xF,t,(this.v[(this.opc>>4)&0xF]>=this.v[(this.opc>>8)&0xF]))}),
+			this.halt,this.halt,this.halt,this.halt,this.halt,this.halt,
+		/*8xyE*/(()=>{var a=8;if(this.shiftQuirks){a-=4}var t=this.v[(this.opc>>4)&0xF]<<1;
+			this.writeCarry((this.opc>>a)&0xF,t,((this.v[(this.opc>>4)&0xF]>>7)&0x1))}),this.halt];
+			
+	this.opmachine = [
+		this.halt,this.halt,this.halt,this.halt,this.halt,this.halt,
+		this.halt,this.halt,this.halt,this.halt,this.halt,this.halt,
+		/*00Cn*/(()=>{var rowSize=64<<this.rexp;var n=this.opc&0xF;
+			for(var layer=0;layer<2;layer++){if ((this.plane&(layer+1))==0){continue}
+			this.g[0]=2;for(var z=this.p[layer].length;z>=0;z--){
+			this.p[layer][z]=(z>=rowSize*n)?this.p[layer][z-(rowSize*n)]:0}}}),
+		/*00Dn*/(()=>{var rowSize=64<<this.rexp;var n=this.opc&0xF;
+			for(var layer=0;layer<2;layer++){if((this.plane&(layer+1))== 0){continue}
+			this.g[0]=2;for(var z=0;z<this.p[layer].length;z++){
+			this.p[layer][z]=(z<(this.p[layer].length-rowSize*n))?this.p[layer][z+(rowSize*n)]:0}}}),
+		/*00En*/(()=>{var n=this.opc&0xF;
+			/*00EE*/if(n==14){this.pc=this.r.pop()}
+			/*00E0*/else if(n==0){for(var layer=0;layer<2;layer++){if((this.plane&(layer+1))==0){continue}
+			this.g[0]=2;for(var z=0;z<this.p[layer].length;z++){this.p[layer][z]=0}}}else{this.halt}}),
+		/*00Fn*/(()=>{if(this.opc&0xF<10){this.halt}[
+			/*00FA*/(()=>{this.rexp=2;this.p=[[],[],[],[]];this.g[0]=2;for(var z=0;z<256*128;z++){
+				this.p[0][z]=0;this.p[1][z]=0,this.p[2][z]=null,this.p[3][z]=0}}),
+			/*00FB*/(()=>{var rowSize=64<<this.rexp;this.g[0]=2;for(var layer=0;layer<2;layer++){
+				if((this.plane&(layer+1))==0){continue}for(var a=0;a<this.p[layer].length;a+=rowSize){
+					for(var b=rowSize-1;b>=0;b--){this.p[layer][a+b]=(b>3)?this.p[layer][a+b-4]:0}}}}),
+			/*00FC*/(()=>{var rowSize=64<<this.rexp;this.g[0]=2;for(var layer=0;layer<2;layer++){
+				if((this.plane&(layer+1))==0){continue}for(var a=0;a<this.p[layer].length;a+=rowSize){
+					for(var b=0;b<rowSize;b++){this.p[layer][a+b]=(b<rowSize-4)?this.p[layer][a+b+4]:0}}}}),
+			/*00FD*/(()=>{this.halted=true;this.exitVector()}),
+			/*00FE*/(()=>{this.rexp=0;this.p=[[],[],[],[]];this.g[0]=2;for(var z=0;z<32*64;z++){
+				this.p[0][z]=0;this.p[1][z]=0,this.p[2][z]=null,this.p[3][z]=0}}),
+			/*00FF*/(()=>{this.rexp=1;this.p=[[],[],[],[]];this.g[0]=2;for(var z=0;z<64*128;z++){
+				this.p[0][z]=0;this.p[1][z]=0,this.p[2][z]=null,this.p[3][z]=0}})
+			][(this.opc&0xF)-10]()})
+		];
+	
+	this.exec = [
+		/*0xnn*/(()=>{if(((this.opc>>8)&0xF)>0){haltBreakpoint("machine code unsupported!")}
+			this.opmachine[(this.opc>>4)&0xF]()}),
+		/*1nnn*/(()=>{this.pc=this.opc&0xFFF}),
+		/*2nnn*/(()=>{if(this.r.length>=16){this.halt()};this.r.push(this.pc);this.pc=this.opc&0xFFF}),
+		/*3xnn*/(()=>{if(this.v[(this.opc>>8)&0xF]==(this.opc&0xFF)){this.pc+=2}}),
+		/*4xnn*/(()=>{if(this.v[(this.opc>>8)&0xF]!=(this.opc&0xFF)){this.pc+=2}}),
+		/*5xyn*/(()=>{var n=this.opc&0xf;
+			/*5xy0*/if(n==0){if(this.v[(this.opc>>8)&0xF]==this.v[(this.opc>>4)&0xF]){this.pc+=2}}
+			/*5xy2*/else{var x=(this.opc>>8)&0xF; var y=(this.opc>>4)&0xF; var dist=Math.abs(x-y);
+						if(n==2){if(x<y){for(var z=0;z<=dist;z++){this.m[this.i+z]=this.v[x+z]}}
+							else{for(var z=0;z<=dist;z++){this.m[this.i+z]=this.v[x-z]}}}
+			/*5xy3*/else{if(n==3){if(x<y){for(var z=0;z<=dist;z++){this.v[x+z]=this.m[this.i+z]}}
+						else{for(var z=0;z<=dist;z++){this.v[x-z]=this.m[this.i+z]}}}
+					else{haltBreakpoint("unknown opcode: "+hexFormat(this.opc))}}}}),
+		/*6xnn*/(()=>{this.v[(this.opc>>8)&0xF]=this.opc&0xFF}),
+		/*7xnn*/(()=>{this.v[(this.opc>>8)&0xF]=(this.v[(this.opc>>8)&0xF]+this.opc&0xFF)&0xFF}),
+		/*8xyn*/(()=>{this.opmath[this.opc&0xF]()}),
+		/*9xy0*/(()=>{if(this.v[(this.opc>>8)&0xF]!=this.v[(this.opc>>4)&0xF]){this.pc+=2}}),
+		/*Annn*/(()=>{this.i=this.opc&0xFFF}),
+		/*Bnnn*/(()=>{var nnn=this.opc&0xFFF;if(this.jumpQuirks){
+			this.pc=nnn+this.v[(nnn>>8)&0xF]}else{this.pc=nnn+this.v[0]}}),
+		/*Cxnn*/(()=>{this.v[(this.opc>>8)&0xF]=(Math.random()*256)&this.opc&0xFF}),
+		/*Dxyn*/(()=>{this.sprite(this.v[(this.opc>>8)&0xF],this.v[(this.opc>>4)&0xF],this.opc&0xF)}),
+		/*Exnn*/(()=>{if(this.opc&0xF00!=0){this.halt};var a=this.opc&0xFF;
+			/*Ex9E*/if(a==0x9E){if(keymap[this.v[(this.opc>>8)&0xF]] in this.keys){this.pc+=2}}else
+			/*ExA1*/if(a==0xA1){if(!(keymap[this.v[(this.opc>>8)&0xF]] in this.keys)){this.pc+=2}}else{this.halt}}),
+		/*Fxnn*/(()=>{this.misc((this.opc>>8)&0xF,this.opc&0xFF)})];
+	
 	this.opcode = function() {
 		// Increment profilining data
 		this.profile_data[this.pc] = (this.profile_data[this.pc] || 0) + 1;
 
-		// decode the current opcode
-		var op  = (this.m[this.pc  ] << 8) | this.m[this.pc+1];
-		var o   = (this.m[this.pc  ] >> 4) & 0x00F;
-		var x   = (this.m[this.pc  ]     ) & 0x00F;
-		var y   = (this.m[this.pc+1] >> 4) & 0x00F;
-		var n   = (this.m[this.pc+1]     ) & 0x00F;
-		var nn  = (this.m[this.pc+1]     ) & 0x0FF;
-		var nnn = op & 0xFFF;
-		this.pc += 2;
-
-		// execute a simple opcode
-		if (op == 0x00E0) {
-			// clear
-			for(var layer = 0; layer < 2; layer++) {
-				if ((this.plane & (layer+1)) == 0) { continue; }
-				for(var z = 0; z < this.p[layer].length; z++) {
-					this.p[layer][z] = 0;
-				}
-			}
-			return;
-		}
-		if (op == 0x00EE) {
-			// return
-			this.pc = this.r.pop();
-			return;
-		}
-		if ((op & 0xF0FF) == 0xE09E) {
-			// if -key
-			if (keymap[this.v[x]] in this.keys) { this.skip(); }
-			return;
-		}
-		if ((op & 0xF0FF) == 0xE0A1) {
-			// if key
-			if (!(keymap[this.v[x]] in this.keys)) { this.skip(); }
-			return;
-		}
-		if ((op & 0xFFF0) == 0x00C0) {
-			// scroll down n pixels
-			var rowSize = this.hires ? 128 : 64;
-			for(var layer = 0; layer < 2; layer++) {
-				if ((this.plane & (layer+1)) == 0) { continue; }
-				for(var z = this.p[layer].length - 1; z >= 0; z--) {
-					this.p[layer][z] = (z >= rowSize * n) ? this.p[layer][z - (rowSize * n)] : 0;
-				}
-			}
-			return;
-		}
-		if ((op & 0xFFF0) == 0x00D0) {
-			// scroll up n pixels
-			var rowSize = this.hires ? 128 : 64;
-			for(var layer = 0; layer < 2; layer++) {
-				if ((this.plane & (layer+1)) == 0) { continue; }
-				for(var z = 0; z < this.p[layer].length; z++) {
-					this.p[layer][z] = (z < (this.p[layer].length - rowSize * n)) ? this.p[layer][z + (rowSize * n)] : 0;
-				}
-			}
-			return;
-		}
-		if (op == 0x00FB) {
-			// scroll right 4 pixels
-			var rowSize = this.hires ? 128 : 64;
-			for(var layer = 0; layer < 2; layer++) {
-				if ((this.plane & (layer+1)) == 0) { continue; }
-				for(var a = 0; a < this.p[layer].length; a += rowSize) {
-					for(var b = rowSize-1; b >= 0; b--) {
-						this.p[layer][a + b] = (b > 3) ? this.p[layer][a + b - 4] : 0;
-					}
-				}
-			}
-			return;
-		}
-		if (op == 0x00FC) {
-			// scroll left 4 pixels
-			var rowSize = this.hires ? 128 : 64;
-			for(var layer = 0; layer < 2; layer++) {
-				if ((this.plane & (layer+1)) == 0) { continue; }
-				for(var a = 0; a < this.p[layer].length; a += rowSize) {
-					for(var b = 0; b < rowSize; b++) {
-						this.p[layer][a + b] = (b < rowSize - 4) ? this.p[layer][a + b + 4] : 0;
-					}
-				}
-			}
-			return;
-		}
-		if (op == 0x00FD) {
-			// exit
-			this.halted = true;
-			this.exitVector();
-			return;
-		}
-		if (op == 0x00FE) {
-			// lores
-			this.hires = false;
-			this.p = [[], []];
-			for(var z = 0; z < 32*64; z++) { this.p[0][z] = 0; this.p[1][z] = 0; }
-			return;
-		}
-		if (op == 0x00FF) {
-			// hires
-			this.hires = true;
-			this.p = [[], []];
-			for(var z = 0; z < 64*128; z++) { this.p[0][z] = 0; this.p[1][z] = 0; }
-			return;
-		}
-		if (op == 0xF000) {
-			// long memory reference
-			this.i = ((this.m[this.pc] << 8) | (this.m[this.pc+1])) & 0xFFFF;
-			this.pc += 2;
-			return;
-		}
-
-		if (o == 0x5 && n != 0) {
-			if (n == 2) {
-				// save range
-				var dist = Math.abs(x - y);
-				if (x < y) { for(var z = 0; z <= dist; z++) { this.m[this.i+z] = this.v[x+z]; }}
-				else       { for(var z = 0; z <= dist; z++) { this.m[this.i+z] = this.v[x-z]; }}
-				return;
-			}
-			else if (n == 3) {
-				// load range
-				var dist = Math.abs(x - y);
-				if (x < y) { for(var z = 0; z <= dist; z++) { this.v[x+z] = this.m[this.i+z]; }}
-				else       { for(var z = 0; z <= dist; z++) { this.v[x-z] = this.m[this.i+z]; }}
-				return;
-			}
-			else {
-				haltBreakpoint("unknown opcode "+op);
-			}
-		}
-		if (o == 0x9 && n != 0) {
-			haltBreakpoint("unknown opcode "+op);
-		}
-
-		// dispatch complex opcodes
-		switch(o) {
-			case 0x0: this.machine(nnn);                            break;
-			case 0x1: this.pc = nnn;                                break;
-			case 0x2: this.call(nnn);                               break;
-			case 0x3: if (this.v[x] == nn)        { this.skip(); }  break;
-			case 0x4: if (this.v[x] != nn)        { this.skip(); }  break;
-			case 0x5: if (this.v[x] == this.v[y]) { this.skip(); }  break;
-			case 0x6: this.v[x] = nn;                               break;
-			case 0x7: this.v[x] = (this.v[x] + nn) & 0xFF;          break;
-			case 0x8: this.math(x, y, n);                           break;
-			case 0x9: if (this.v[x] != this.v[y]) { this.skip(); }  break;
-			case 0xA: this.i = nnn;                                 break;
-			case 0xB: this.jump0(nnn);                              break;
-			case 0xC: this.v[x] = (Math.random()*256)&nn;           break;
-			case 0xD: this.sprite(this.v[x], this.v[y], n);         break;
-			case 0xF: this.misc(x, nn);                             break;
-			default: haltBreakpoint("unknown opcode "+o);
-		}
+		// start opcode executing through table dispatches
+		this.opc=(this.m[this.pc++]<<8)|this.m[this.pc++];
+		//console.log(hexFormat(this.opc));
+		this.exec[(this.opc>>12)&0xF]()
 	}
+
 
 	this.tick = function() {
 		if (this.halted) { return; }
 		this.tickCounter++;
-		try {
+		this.opcode()
+		/*try {
 			this.opcode();
 		}
 		catch(err) {
 			console.log("halted: " + err);
 			this.halted = true;
-		}
+		}*/
 	}
 }
