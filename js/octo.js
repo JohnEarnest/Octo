@@ -204,6 +204,7 @@ function runShared(key) {
 		document.getElementById("input").value = result.program;
 		var framerateNum = result.options.tickrate | 0;
 		var framerateEl = document.getElementById("framerate");
+		document.getElementById("frateslider").value = framerateNum
 		framerateEl.value = framerateNum;
 		emulator.tickrate = (framerateEl.value == "") ? framerateNum : framerateEl.value;
 		unpackOptions(emulator, result.options);
@@ -257,6 +258,7 @@ function runGist() {
 			var framerateNum = options["tickrate"]|0;
 			var framerateEl = document.getElementById("framerate");
 			framerateEl.value = framerateNum;
+			document.getElementById("frateslider").value = framerateNum
 			emulator.tickrate = (framerateEl.value == "") ? framerateNum : framerateEl.value;
 			unpackOptions(emulator, options);
 			if (emulator.enableXO) {
