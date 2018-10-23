@@ -883,8 +883,9 @@ function getLabel(address) {
 }
 
 function getOpcode(opcode) {
-	return " " + formatInstruction(
-	emulator.m[opcode],emulator.m[opcode+1])
+	return " " +
+	formatInstruction(
+	opcode>>8,opcode&255)
 }
 
 function formatAliases(id) {
@@ -909,7 +910,7 @@ function haltBreakpoint(breakName) {
 		"<span>tick count: " + emulator.tickCounter + "</span><br>" +
 		"<span>breakpoint: " + breakName + "</span><br>" +
 		"<span onClick=\"cycleNumFormat('pc');\">pC := " + numericFormat(emulator.pc, regNumFormat["pc"]) + getLabel(emulator.pc) + "</span><br>" +
-		"<span onClick=\"cycleNumFormat('op');\">oP := " + numericFormat(emulator.opc, regNumFormat["op"]) + getOpcode(emulator.pc) + "</span><br>" +
+		"<span onClick=\"cycleNumFormat('op');\">oP := " + numericFormat(emulator.opc, regNumFormat["op"]) + getOpcode(emulator.opc) + "</span><br>" +
 		"<span onClick=\"cycleNumFormat('i');\">mI := " + numericFormat(emulator.i, regNumFormat["i"]) + getLabel(emulator.i) + "</span><br>";
 	for(var k = 0; k <= 0xF; k++) {
 		var hex = k.toString(16).toUpperCase();
