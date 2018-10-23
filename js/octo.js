@@ -296,8 +296,14 @@ function render() { emulator.interrupt = false;
 		if (emulator.dt > 0) { emulator.dt--; }
 		if (emulator.st > 0) { emulator.st--; }
 	//}
-	renderDisplay(emulator);
-	if (emulator.halted) { return; }
+	for(var n=0,kwh=0;n<16;n++){kwh=kwh+rawHexFormat(emulator.pattern[n],2)}
+	var whz = emulator.g[0]==2?(64<<emulator.rexp)*(32<<emulator.rexp):emulator.g[1];
+	renderDisplay(emulator);document.getElementById("statusin").innerHTML =
+	/*"<table><tr><td>tested pixels</td><td>: </td><td>" + whz + "</td></tr>" +
+	"<tr><td>overwritten pixels</td><td>: </td><td>" + ov +"</td></tr>" +
+	"<tr><td>executed opcode</td><td>: </td><td>" + */ z /* + "</td></tr>" +
+	"<tr><td>XO-Chip audio buffer</td><td>: </td><td>" + kwh + "</td></tr></table>" */
+	renderDisplay(emulator);  if (emulator.halted) { return; }
 	document.getElementById("emulator").style.backgroundColor = (emulator.st > 0) ? emulator.buzzColor : emulator.quietColor;
 }
 
@@ -907,10 +913,10 @@ function haltBreakpoint(breakName) {
 		"<span onClick=\"cycleNumFormat('i');\">mI := " + numericFormat(emulator.i, regNumFormat["i"]) + getLabel(emulator.i) + "</span><br>";
 	for(var k = 0; k <= 0xF; k++) {
 		var hex = k.toString(16).toUpperCase();
-		regdump += "<span onClick=\"cycleNumFormat('"+ k + "');\">v" + hex + " := " + numericFormat(emulator.v[k], regNumFormat[k]) + ", " + binaryFormat(emulator.v[k]) + " ---" + formatAliases(k) + "</span><br>";
+		regdump += "<span onClick=\"cycleNumFormat('"+ k + "');\">v" + hex + " := " + numericFormat(emulator.v[k], regNumFormat[k]) + " --- " + formatAliases(k) + "</span><br>";
 	}  regdump += "</td><td style='float:right;padding-right:4em'>"
 	
-	var mdIWidth  = 16;  var mdIHeigt  = 20;  var Iaddr = (emulator.i&0xFFF0)-64; Iaddr *= Iaddr>0
+	var mdIWidth  = 16;  var mdIHeigt  = 16;  var Iaddr = (emulator.i&0xFFF0)-128; Iaddr *= Iaddr>0
 	regdump += "<span>Memory dump at indexer (I)</span><br><table><tr><td>Addr<td>";
 	for(var x=0;x<mdIWidth;x++){regdump+="<td>"+("0123456789ABCDEF")[(Iaddr+x)%mdIWidth]+"</td>"}
 	for(var y=0;y<mdIHeigt;y++){regdump+="</tr><td>"+rawHexFormat(Iaddr+y*mdIWidth,4)+"</td><td></td>";
@@ -944,7 +950,7 @@ function haltBreakpoint(breakName) {
 		} else {
 			regdump += "<tr><td></td><td></td>"
 		}
-		regdump += "<td><pre>" + escapeHtml(dbg.lines[line]) + "</pre></td></tr>\n";
+		regdump += "<td><pre style='margin:0'>" + escapeHtml(dbg.lines[line]) + "</pre></td></tr>\n";
 	}
 
 	regs.innerHTML = regdump;
