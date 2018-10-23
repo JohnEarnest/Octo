@@ -125,7 +125,7 @@ function Emulator() {
 	// external interface stubs
 	this.exitVector  = function() {}                                   // fired by 'exit'
 	this.importFlags = function() { return [0, 0, 0, 0, 0, 0, 0, 0]; } // load persistent flags
-	this.rexportFlags = function(flags) {}                              // save persistent flags
+	this.exportFlags = function(flags) {}                              // save persistent flags
 	this.buzzTrigger = function(ticks, remainingTicks) {}                              // fired when buzzer played
 
 	this.init = function(rom) {
@@ -213,7 +213,7 @@ function Emulator() {
 				break;
 			case 0x75:
 				for(var z = 0; z <= x; z++) { this.flags[z] = this.v[z]; }
-				this.rexportFlags(this.flags);
+				this.exportFlags(this.flags);
 				break;
 			case 0x85:
 				this.flags = this.importFlags();
