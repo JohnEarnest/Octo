@@ -137,6 +137,7 @@ function runRom(rom) {
 	window.addEventListener("keydown", keyDown, false);
 	window.addEventListener("keyup"  , keyUp  , false);
 	intervalHandle = setInterval(render, 1000/60);
+	//limitLoop(render, 60);
 }
 
 function reset() {
@@ -306,6 +307,32 @@ function render() { emulator.interrupt = false;
 	renderDisplay(emulator);  if (emulator.halted) { return; }
 	document.getElementById("emulator").style.backgroundColor = (emulator.st > 0) ? emulator.buzzColor : emulator.quietColor;
 }
+
+// https://gist.github.com/addyosmani/5434533
+// rAF
+window.requestAnimationFrame = function() {
+    return window.requestAnimationFrame ||
+		window.webkitRequestAnimationFrame ||
+		window.mozRequestAnimationFrame ||
+		window.msRequestAnimationFrame ||
+		window.oRequestAnimationFrame ||
+		function(f) {
+			window.setTimeout(f,1000/60);
+		}
+}();
+var limitLoop = function (fn, fps) {
+    var then = new Date().getTime();
+    var interval = 1000 / 60;
+    return (function loop(time){
+        requestAnimationFrame(loop);
+        var now = new Date().getTime();
+        var delta = now - then;
+        if (delta > interval) {
+            then = now - (delta % interval);
+            fn(frames);
+        }
+    }(0));
+};
 
 function keyDown(event) {
 	if (!(event.keyCode in emulator.keys)) {
@@ -904,25 +931,29 @@ function formatAliases(id) {
 function haltBreakpoint(breakName) {
 	var button = document.getElementById("continueButton");
 	var regs   = document.getElementById("registerView");
+	var curopcode = (emulator.m[emulator.pc]<<8)|emulator.m[emulator.pc+1]
 	button.style.display = "inline";
 	regs.style.display = "inline";
 	var regdump = "<table style='width:100%'><tr><td>" +
 		"<span>tick count: " + emulator.tickCounter + "</span><br>" +
 		"<span>breakpoint: " + breakName + "</span><br>" +
 		"<span onClick=\"cycleNumFormat('pc');\">pC := " + numericFormat(emulator.pc, regNumFormat["pc"]) + getLabel(emulator.pc) + "</span><br>" +
-		"<span onClick=\"cycleNumFormat('op');\">oP := " + numericFormat(emulator.opc, regNumFormat["op"]) + getOpcode(emulator.opc) + "</span><br>" +
+		"<span onClick=\"cycleNumFormat('op');\">oP := " + numericFormat(curopcode, regNumFormat["op"]) + getOpcode(curopcode) + "</span><br>" +
 		"<span onClick=\"cycleNumFormat('i');\">mI := " + numericFormat(emulator.i, regNumFormat["i"]) + getLabel(emulator.i) + "</span><br>";
 	for(var k = 0; k <= 0xF; k++) {
 		var hex = k.toString(16).toUpperCase();
 		regdump += "<span onClick=\"cycleNumFormat('"+ k + "');\">v" + hex + " := " + numericFormat(emulator.v[k], regNumFormat[k]) + " --- " + formatAliases(k) + "</span><br>";
 	}  regdump += "</td><td style='float:right;padding-right:4em'>"
 	
-	var mdIWidth  = 16;  var mdIHeigt  = 16;  var Iaddr = (emulator.i&0xFFF0)-128; Iaddr *= Iaddr>0
-	regdump += "<span>Memory dump at indexer (I)</span><br><table><tr><td>Addr<td>";
+	var mdIWidth  = 16;  var mdIHeigt  = 16;  var Iaddr = (emulator.i&0xFF00); Iaddr *= Iaddr>0
+	regdump += "<span>Memory dump at indexer (I)</span><br><table><tr><td>Addr<td>"; var w = ""
 	for(var x=0;x<mdIWidth;x++){regdump+="<td>"+("0123456789ABCDEF")[(Iaddr+x)%mdIWidth]+"</td>"}
 	for(var y=0;y<mdIHeigt;y++){regdump+="</tr><td>"+rawHexFormat(Iaddr+y*mdIWidth,4)+"</td><td></td>";
-	for(var x=0;x<mdIWidth;x++){  var k = rawHexFormat(emulator.m[x+Iaddr+y*mdIWidth],2)
-	if (x+Iaddr+y*mdIWidth>>1==emulator.i>>1){k="<u>"+k+"</u>"} regdump+="<td>"+k+"</td>"}}
+	for(var x=0;x<mdIWidth;x++){  var l = x+Iaddr+y*mdIWidth; var k = rawHexFormat(emulator.m[l],2)
+	if ((l>=emulator.mlsr[1])&&(l<=emulator.mlsr[2])){w="style='background-color:"+
+    (["#AAFF44","#44AAFF"])[emulator.mlsr[0]]+";color:#000000'"}else{if(l==emulator.i){
+	w="style='background-color:#FFFFFF;color:#000000'"}else{w=""}}
+	regdump+="<td "+w+">"+k+"</td>"}}
 	regdump += "</tr></table></tr></table><style>#registerView table tr td{color:white}</style>"
 
 	regdump += "<br>inferred stack trace:<br>";
@@ -945,8 +976,11 @@ function haltBreakpoint(breakName) {
 		if (dbg.getLine(ind) === line) {
 			regdump += dbg.getLine(ind) === pcline ? '<tr class="debugger-searchline">' : '<tr>';
 			regdump += "<td>" + hexFormat(ind).slice(2) + "</td><td>";
-			for (; dbg.getLine(ind) === line; ind++)
+			for (; dbg.getLine(ind) === line; ind++) {
+				if (ind==emulator.pc) {
+					regdump += "<b style='background-color:#FFFFFF;color:#000000'>" }
 				regdump += hexFormat(emulator.m[ind]).slice(2);
+			    if (ind==emulator.pc+1) { regdump += "</b>" } }
 			regdump += "</td>";
 		} else {
 			regdump += "<tr><td></td><td></td>"

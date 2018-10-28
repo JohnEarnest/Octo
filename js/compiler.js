@@ -121,6 +121,9 @@ var unaryFunc = {
 	'exp'  : function(x) { return Math.exp(x);   },
 	'log'  : function(x) { return Math.log(x);   },
 	'abs'  : function(x) { return Math.abs(x);   },
+	'asin' : function(x) { return Math.asin(x);  },
+	'acos' : function(x) { return Math.acos(x);  },
+	'atan' : function(x) { return Math.atan(x);  },
 	'sqrt' : function(x) { return Math.sqrt(x);  },
 	'sign' : function(x) { return Math.sign(x);  },
 	'ceil' : function(x) { return Math.ceil(x);  },
@@ -478,13 +481,13 @@ Compiler.prototype.vassign = function(reg, token) {
 		else                   { this.inst(0x70 | reg, 256-this.shortValue()); } }
 	else if ("=-"  == token) { this.fourop(0x8, reg, this.register(), 0x7); }
 	else if (">>=" == token) {
-		if (emulator.loadStoreQuirks) {
+		if (emulator.loadStoreQuirks) {  var k = this.register()
 			this.fourop(0x8, reg, reg, 0x6); }
 		else {
 			this.fourop(0x8, reg, this.register(), 0x6); }
 		}
-	else if ("<<=" == token) {
-		if (emulator.loadStoreQuirks) {
+	else if ("<<=" == token) { 
+		if (emulator.loadStoreQuirks) {  var k = this.register()
 			this.fourop(0x8, reg, reg, 0xE); }
 		else {
 			this.fourop(0x8, reg, this.register(), 0xE); }
