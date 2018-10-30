@@ -254,7 +254,11 @@ function runGist() {
 	xhr.onreadystatechange = function() {
 		if (xhr.readyState == 4 && (xhr.status == 200 || xhr.status !== 201)) {
 			var result = JSON.parse(xhr.responseText);
-			document.getElementById("input").value = result.files["prog.ch8"].content;
+			try{
+				document.getElementById("input").value = result.files["source.8o"].content;
+			}catch{
+				document.getElementById("input").value = result.files["prog.ch8"].content;
+			}
 			var options = JSON.parse(result.files["options.json"].content);
 			var framerateNum = options["tickrate"]|0;
 			var framerateEl = document.getElementById("framerate");
