@@ -29,7 +29,7 @@ function unpackOptions(emulator, options) {
 	]
 	for (var x = 0; x < flags.length; x++) {
 		var flag = flags[x];
-		if (options[flag]) { emulator[flag] = options[flag]; }
+		if (flag in options) { emulator[flag] = options[flag]; }
 	}
 }
 
@@ -151,8 +151,6 @@ function renderDisplay(emulator) { ov=0
 		emulator.g = [0,0];
 	}
 }
-
-function awe(ss,cc){console.log(ss)}
 
 ////////////////////////////////////
 //
