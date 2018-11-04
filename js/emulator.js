@@ -120,6 +120,7 @@ function Emulator() {
 	this.waitReg = -1;    // destination register of an awaited key
 	this.halted = false;
 	this.breakpoint = false;
+	this.dtchk = false;
 	this.metadata = {};
 	this.tickCounter = 0;
 
@@ -163,6 +164,7 @@ function Emulator() {
 		this.waiting = false;
 		this.waitReg = -1;
 		this.halted = false;
+		this.dtchk = false;
 		this.breakpoint = false;
 		this.stack_breakpoint = -1;
 		this.tickCounter = 0;
@@ -192,9 +194,10 @@ function Emulator() {
 					this.pattern[z] = this.m[this.i+z];
 				}
 				break;
-			case 0x07: this.v[x] = this.dt; if(this.dt>0){this.interrupt=true} break;
+			case 0x07: this.v[x] = this.dt; if(this.dtchk){
+				       this.interrupt=true;this.dtchk=false} break;
 			case 0x0A: this.waiting = true; this.waitReg = x; break;
-			case 0x15: this.dt = this.v[x]; break;
+			case 0x15: this.dt = this.v[x];this.dtchk=true; break;
 			case 0x18: this.buzzTrigger(this.v[x], this.st); this.st = this.v[x]; break;
 			case 0x1E: this.i = (this.i + this.v[x])&0xFFFF; break;
 			case 0x29: this.i = ((this.v[x] & 0xF) * 5); break;

@@ -136,15 +136,16 @@ function runRom(rom) {
 	document.getElementById("emulator").style.backgroundColor = emulator.quietColor;
 	window.addEventListener("keydown", keyDown, false);
 	window.addEventListener("keyup"  , keyUp  , false);
-	intervalHandle = setInterval(render, 1000/60);
-	//limitLoop(render, 60);
+	//intervalHandle = setInterval(render, 1000/60);
+	intervalHandle = limitLoop(render, 60);
 }
 
 function reset() {
 	document.getElementById("emulator").style.display = "none";
 	window.removeEventListener("keydown", keyDown, false);
 	window.removeEventListener("keyup"  , keyUp  , false);
-	window.clearInterval(intervalHandle);
+	//window.clearInterval(intervalHandle);
+	window.cancelAnimationFrame(intervalHandle);
 	clearBreakpoint();
 	stopAudio();
 }
@@ -301,12 +302,12 @@ function render() { emulator.interrupt = false;
 		if (emulator.dt > 0) { emulator.dt--; }
 		if (emulator.st > 0) { emulator.st--; }
 	//}
-	for(var n=0,kwh=0;n<16;n++){kwh=kwh+rawHexFormat(emulator.pattern[n],2)}
+	for(var n=0,kwh="";n<16;n++){kwh=kwh+" "+rawHexFormat(emulator.v[n],2)}
 	var whz = emulator.g[0]==2?(64<<emulator.rexp)*(32<<emulator.rexp):emulator.g[1];
-	renderDisplay(emulator);document.getElementById("statusin").innerHTML =
+	renderDisplay(emulator);document.getElementById("statusin").innerHTML = kwh + "<br>" + z
 	/*"<table><tr><td>tested pixels</td><td>: </td><td>" + whz + "</td></tr>" +
 	"<tr><td>overwritten pixels</td><td>: </td><td>" + ov +"</td></tr>" +
-	"<tr><td>executed opcode</td><td>: </td><td>" + */ z /* + "</td></tr>" +
+	"<tr><td>executed opcode</td><td>: </td><td>" +  z  + "</td></tr>" +
 	"<tr><td>XO-Chip audio buffer</td><td>: </td><td>" + kwh + "</td></tr></table>" */
 	renderDisplay(emulator);  if (emulator.halted) { return; }
 	document.getElementById("emulator").style.backgroundColor = (emulator.st > 0) ? emulator.buzzColor : emulator.quietColor;
@@ -328,7 +329,7 @@ var limitLoop = function (fn, fps) {
     var then = new Date().getTime();
     var interval = 1000 / 60;
     return (function loop(time){
-        requestAnimationFrame(loop);
+        intervalHandle = requestAnimationFrame(loop);
         var now = new Date().getTime();
         var delta = now - then;
         if (delta > interval) {
