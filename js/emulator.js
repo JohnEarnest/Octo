@@ -194,7 +194,7 @@ function Emulator() {
 					this.pattern[z] = this.m[this.i+z];
 				}
 				break;
-			case 0x07: this.v[x] = this.dt; if(this.dtchk){
+			case 0x07: this.v[x] = this.dt; if(this.dtchk&&this.dt>0){
 				       this.interrupt=true;this.dtchk=false} break;
 			case 0x0A: this.waiting = true; this.waitReg = x; break;
 			case 0x15: this.dt = this.v[x];this.dtchk=true; break;
