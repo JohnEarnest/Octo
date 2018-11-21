@@ -58,7 +58,7 @@ function formatInstruction(a, nn) {
 	if (op == 0x00FE)           { return "lores"; } // schip
 	if (op == 0x00FF)           { return "hires"; } // schip
 	if (o == 0x1)               { return "jump " + name(lnames, nnn); }
-	if (o == 0x2)               { return name(snames, nnn); }
+	if (o == 0x2)               { return nnn in snames ? name(snames, nnn) : ':call ' + hexFormat(nnn); }
 	if (o == 0x3)               { return "if " + vx + " != " + numericFormat(nn) + " then"; }
 	if (o == 0x4)               { return "if " + vx + " == " + numericFormat(nn) + " then"; }
 	if (o == 0x5 && n == 0x0)   { return "if " + vx + " != " + vy + " then"; }

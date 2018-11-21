@@ -9,27 +9,31 @@
 var scaleFactor = 5;
 var renderTarget = "target";
 
+const optionFlags = [
+	"tickrate",
+	"fillColor",
+	"fillColor2",
+	"blendColor",
+	"backgroundColor",
+	"buzzColor",
+	"quietColor",
+	"shiftQuirks",
+	"loadStoreQuirks",
+	"vfOrderQuirks",
+	"clipQuirks",
+	"vBlankQuirks",
+	"jumpQuirks",
+	"enableXO",
+	"screenRotation",
+]
 function unpackOptions(emulator, options) {
-	var flags = [
-		"tickrate",
-		"fillColor",
-		"fillColor2",
-		"blendColor",
-		"backgroundColor",
-		"buzzColor",
-		"quietColor",
-		"shiftQuirks",
-		"loadStoreQuirks",
-		"vfOrderQuirks",
-		"clipQuirks",
-		"jumpQuirks",
-		"enableXO",
-		"screenRotation",
-	]
-	for (var x = 0; x < flags.length; x++) {
-		var flag = flags[x];
-		if (flag in options) { emulator[flag] = options[flag]; }
-	}
+	optionFlags.forEach(x => { if (x in options) emulator[x] = options[x] })
+	emulator.enableXO = 1 // legacy option, force on
+}
+function packOptions(emulator) {
+	const r = {}
+	optionFlags.forEach(x => r[x] = emulator[x])
+	return r
 }
 
 function setRenderTarget(scale, canvas) {
@@ -48,14 +52,10 @@ function setRenderTarget(scale, canvas) {
 	if (emulator.screenRotation == 90 || emulator.screenRotation == 270) {
 		c.width  = h;
 		c.height = w;
-		c.style.marginLeft = hm;
-		c.style.marginTop  = wm;
 	}
 	else {
 		c.width  = w;
 		c.height = h;
-		c.style.marginLeft = wm;
-		c.style.marginTop  = hm;
 	}
 }
 

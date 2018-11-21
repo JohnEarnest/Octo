@@ -2,8 +2,12 @@
 	<head>
 		<title>Octo Embeddable</title>
 	</head>
-	<body style="margin:0px; padding:0px;">
-		<canvas id="target" width="640" height="320" style="position: absolute; left: 50%; top: 50%;"></canvas>
+	<style>
+		body        { margin:0px;padding:0px; }
+		body canvas { width:100%;height:100%; }
+	</style>
+	<body>
+		<canvas id="target" width="640" height="320"></canvas>
 		<script src="js/compiler.js"></script>
 		<script src="js/emulator.js"></script>
 		<script src="js/shared.js"></script>

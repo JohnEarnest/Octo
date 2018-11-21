@@ -275,6 +275,7 @@ Compiler.prototype.reservedNames = {
 	"scroll-down":true, "scroll-right":true, "scroll-left":true,
 	"lores":true, "hires":true, "loadflags":true, "saveflags":true, "i":true,
 	"audio":true, "plane":true, "scroll-up":true, ":macro":true, ":calc":true, ":byte":true,
+	":call":true,
 };
 
 Compiler.prototype.checkName = function(name, kind) {
@@ -740,6 +741,9 @@ Compiler.prototype.instruction = function(token) {
 	}
 	else if (this.isRegister(token)) {
 		this.vassign(this.register(token), this.next());
+	}
+	else if (token == ":call") {
+		this.immediate(0x20, this.wideValue(this.next()));
 	}
 	else {
 		this.immediate(0x20, this.wideValue(token));

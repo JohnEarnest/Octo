@@ -84,7 +84,8 @@ function Emulator() {
 	this.vfOrderQuirks      = false;
 	this.clipQuirks         = false;
 	this.jumpQuirks         = false;
-	this.enableXO           = false;
+	this.vBlankQuirks       = false;
+	this.enableXO           = true;
 	this.screenRotation     = 0;
 	this.maskFormatOverride = true;
 	this.numericFormatStr   = "default";
@@ -108,7 +109,7 @@ function Emulator() {
 	this.keys = {};       // track keys which are pressed
 	this.waiting = false; // are we waiting for a keypress?
 	this.waitReg = -1;    // destination register of an awaited key
-	this.halted = false;
+	this.halted = true;
 	this.breakpoint = false;
 	this.metadata = {};
 	this.tickCounter = 0;

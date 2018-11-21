@@ -1,342 +1,740 @@
 <html>
 <head>
-	<title>Octo</title>
-	<link rel="stylesheet" href="css/styles.css">
+	<script src='lib/codemirror/codemirror.min.js'></script>
+	<script src='lib/codemirror/octomode.js'></script>
+  <script src='lib/filesaver.js'></script>
+  <script src='js/emulator.js'></script>
+  <script src='js/compiler.js'></script>
+  <script src='js/decompiler.js'></script>
+  <script src='js/shared.js'></script>
+  <script src='js/util.js'></script>
+  <script src='js/sharing.js'></script>
+
+	<link rel='stylesheet' href='lib/codemirror/codemirror.min.css'>
+	<link rel='stylesheet' href='lib/codemirror/monokai.css'>
 </head>
 
 <body>
-	<div class="menubar">
-		<a href="https://github.com/JohnEarnest/Octo"><img src="images/logo.png" style="padding-right: 30px;vertical-align: middle;"/></a>
-		<button type="button" onClick="run()">Run</button>
-		<button type="button" onClick="compile()">Compile</button>
-		<button type="button" onClick="share()">Share</button>
-		<input type="file" id="sourceinput" accept='.8o' onchange="updateSource()" style="display:none">
-		<button type="button" onclick="uploadSource()">Open</button>
-		<select id="examples" onchange="loadExample()">
-			<option value="">Examples...</option>
-		</select>
-		<select id="framerate" onchange="framerate()">
-			<option value="7">7 Cycles/Frame</option>
-			<option value="15">15 Cycles/Frame</option>
-			<option value="20" selected="selected">20 Cycles/Frame</option>
-			<option value="30">30 Cycles/Frame</option>
-			<option value="100">100 Cycles/Frame</option>
-			<option value="200">200 Cycles/Frame</option>
-			<option value="500">500 Cycles/Frame</option>
-			<option value="1000">1000 Cycles/Frame</option>
-		</select>
-		<button type="button" onClick="toggleManual();">Manual</button>
-		<button type="button" onClick="toggleOptions();">Options</button>
-		<button type="button" onClick="toggleSpriteEditor();">Sprite Editor</button>
-		<button type="button" onClick="toggleAudioEditor();" class="xofeature" style="display:none" class="xofeature" style="display:none" >Audio Editor</button>
-		<button type="button" onClick="toggleBinaryTools();">Binary Tools</button>
-	</div>
+  <div id='header'>
+    <img src='images/logo.png'/>
+    <input type="file" id="maininput" style="display:none">
+    <div class='head' id='main-run'>Run</div>
+    <div class='head' id='main-open'>Open</div>
+    <div class='head' id='main-save'>Share</div>
+    <div class='menu' id='main-examples'>
+      <div class='head'>Examples</div>
+      <ul>
+        <li>loading...</li>
+      <ul>
+    </div>
+    <div class='menu' id='main-speed'>
+      <div class='head'>Speed</div>
+      <ul>
+        <li data-value='7'>7 Cycles/Frame</li>
+        <li data-value='15'>15 Cycles/Frame</li>
+        <li data-value='20'>20 Cycles/Frame</li>
+        <li data-value='30'>30 Cycles/Frame</li>
+        <li data-value='100'>100 Cycles/Frame</li>
+        <li data-value='200'>200 Cycles/Frame</li>
+        <li data-value='500'>500 Cycles/Frame</li>
+        <li data-value='1000'>1000 Cycles/Frame</li>
+        <li data-value='20000'>Ludicrous Speed</li>
+      </ul>
+    </div>
+    <div class='spacer'></div>
+    <div id='show-manual'>Manual</div>
+    <div id='show-toolbox'>Toolbox</div>
+  </div>
 
-	<div style="padding-bottom: 40px; position: relative; height: 100%;">
-		<center>
-			<div id="manual" class="leftpanel" style="display:none">
-				<h3>Manual</h3>
-				<iframe src="https://johnearnest.github.io/Octo/docs/Manual.html" width="450" height="100%"></iframe>
-			</div>
+  <div id='main'>
+    <div id='editor'></div>
 
-			<textarea id="input"  rows="40" cols="100" spellcheck="false">
-# Chip8 is a virtual machine designed in 1977 for programming video games.
-# Octo is a high level assembler, disassembler and simulator for Chip8.
-# Click 'Run' and then press ASWD to move the sprite around the screen.
-# Click the Octo logo for source, documentation and examples.
+    <div id='manual'>
+      <iframe src="https://johnearnest.github.io/Octo/docs/Manual.html"></iframe>
+    </div>
 
-:alias px v3
-:alias py v4
+    <div id='toolbox'>
+      <div data-panel='sprite' class='tool-header'>Sprite Editor</div>
+      <div data-panel='sprite' class='tool-body'>
+        <div class='buttonbar'>
+          <div id='sprite-16'>16x16 Sprite</div>
+          <div id='sprite-color'>Color Sprite</div>
+          <div id='sprite-left'>&lt;&lt;1</div>
+          <div id='sprite-right'>&gt;&gt;1</div>
+          <div id='sprite-up'>&and;</div>
+          <div id='sprite-down'>&or;</div>
+          <div id='sprite-clear'>Clear</div>
+        </div>
+        <div id='sprite-palette'>
+          <span data-value='0'>Background</span>
+          <span data-value='1'>Foreground 1</span>
+          <span data-value='2'>Foreground 2</span>
+          <span data-value='3'>Blended</span>
+        </div>
+        <div class='preview-container'>
+          <canvas id='sprite-draw'></canvas>
+        </div>
+        <div id='sprite-editor'></div>
+      </div>
 
-: main
-	px := random 0b0011111
-	py := random 0b0001111
-	i  := person
-	sprite px py 8
+      <div data-panel='audio' class='tool-header'>Audio Editor</div>
+      <div data-panel='audio' class='tool-body'>
+        <h1>Audio Pattern</h1>
+        <div id='audio-error'></div>
+        <div class='preview-container'>
+          <canvas id='audio-pattern-view' width='256' height='32'></canvas>
+        </div>
+        <div id='audio-pattern-editor'></div>
+        <div class='buttonbar'>
+          <div id='audio-play'  >Play</div>
+          <div id='audio-random'>Randomize</div>
+          <div id='audio-clear' >Clear</div>
+          <div id='audio-left'  >&lt;&lt;1</div>
+          <div id='audio-right' >&gt;&gt;1</div>
+          <div id='audio-not'>NOT</div>
+        </div>
 
-	loop
-		# erase the player, update its position and then redraw:
-		sprite px py 8
-		v0 := 5   if v0 key then py += -1 # keyboard W
-		v0 := 8   if v0 key then py +=  1 # keyboard S
-		v0 := 7   if v0 key then px += -1 # keyboard A
-		v0 := 9   if v0 key then px +=  1 # keyboard D
-		sprite px py 8
+        <h1>Blend With Pattern</h1>
+        <div id='audio-blend-editor'></div>
+        <div class='buttonbar'>
+          <div id='audio-and'>AND</div>
+          <div id='audio-or'>OR</div>
+          <div id='audio-xor'>XOR</div>
+          <div id='audio-swap'>Swap With Pattern</div>
+        </div>
 
-		# lock the framerate of this program via the delay timer:
-		loop
-			vf := delay
-			if vf != 0 then
-		again
-		vf := 3
-		delay := vf
-	again
+        <h1>Tone Generator</h1>
+        <div class='preview-container'>
+          <canvas id='audio-tone-view' width='256' height='32'></canvas>
+        </div>
+        <div id='audio-tone-editor'></div>
+        <div id='audio-tone-group'>
+          <div class='pair'>Frequency: <input id='audio-freq' value='440'> Hz</div>
+          <div class='pair'>Cutoff: <input id='audio-cutoff' value='128'></div>
+          <div id='audio-toblend' class='button'>To Blend</div>
+          <div id='audio-topat' class='button'>To Pattern</div>
+        </div>
+      </div>
 
-: person
-	0x70 0x70 0x20 0x70 0xA8 0x20 0x50 0x50
-</textarea>
-			<div id="spriteEditor" class="rightpanel" style="display:none">
-				<h3>Sprite Editor</h3>
-				<center>
-					Click and drag to draw.<br/>
-					Right-click and drag to erase.<br/><br/>
-					<input type="checkbox" id="spriteEditorSize" onchange="setSpriteEditorSize();">
-					<label for="spriteEditorSize">16x16 mode</label>
-					<br/>
-					<div class="xofeature" style="display:none">
-					<input type="checkbox" id="spriteEditorColor" onchange="setSpriteEditorColor();">
-					<label for="spriteEditorColor">Color mode</label>
-					</div>
-					<br/>
-					<canvas id="spriteEditorPalette" width="200px" height="25px" style="display:none;"></canvas><br/>
-					<canvas id="draw" width="200" height="375" style="border:1px solid;"></canvas><br/>
-					<textarea id="spriteData" rows="3" cols="25" onchange="editHex();" onkeyup="editHex();"></textarea>
-				</center>
-			</div>
+      <div data-panel='binary' class='tool-header'>Binary Tools</div>
+      <div data-panel='binary' class='tool-body'>
+        <h1>Binary Input</h1>
+        <input type="file" id="fileinput" style="display:none">
+        <div id='binary-editor'></div>
+        <div class='buttonbar'>
+          <div id='binary-open'>Open <tt>.ch8</tt>...</div>
+          <div id='binary-decompile'>Decompile</div>
+          <div id='binary-run'>Run</div>
+        </div>
+        <h1>Decompiler Mode</h1>
+        <div id='decompiler-mode'>
+          <span data-value='raw'>Raw</span>
+          <span data-value='static'>Static Analysis</span>
+        </div>
+        <h1>Decompiler Numeric Format</h1>
+        <div id='decompiler-numbers'>
+          <span data-value='bin'>Binary</span>
+          <span data-value='dec'>Decimal</span>
+          <span data-value='hex'>Hexadecimal</span>
+        </div>
+        <h1>File Output</h1>
+        <div class='buttonbar'>
+          <div id='binary-save-8o'>Save <tt>.8o</tt></div>
+          <div id='binary-save-ch8'>Save <tt>.ch8</tt></div>
+        </div>
+      </div>
 
-			<div id="options" class="rightpanel" style="display:none">
-				<h3>Colors</h3>
-				<table border=0>
-					<tr>
-						<td>Background</td>
-						<td><input type="text" size="7" id="backEdit" onchange="editBack();" onkeyup="editBack();"></td>
-						<td bgcolor="0xFF0000" id="backSample"  >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
-					</tr>
-					<tr>
-						<td>Foreground 1</td>
-						<td><input type="text" size="7" id="foreEdit1" onchange="editFore1();" onkeyup="editFore1();"></td>
-						<td bgcolor="0xFF0000" id="foreSample1"  >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
-					</tr>
-					<tr class="xofeature" style="display:none">
-						<td>Foreground 2 (XO-Chip)</td>
-						<td><input type="text" size="7" id="foreEdit2" onchange="editFore2();" onkeyup="editFore2();"></td>
-						<td bgcolor="0xFF0000" id="foreSample2"  >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
-					</tr>
-					<tr class="xofeature" style="display:none">
-						<td>Blended (XO-Chip)</td>
-						<td><input type="text" size="7" id="blendEdit" onchange="editBlend();" onkeyup="editBlend();"></td>
-						<td bgcolor="0xFF0000" id="blendSample"  >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
-					</tr>
-					<tr>
-						<td>Buzzer</td>
-						<td><input type="text" size="7" id="buzzEdit" onchange="editBuzz();" onkeyup="editBuzz();"></td>
-						<td bgcolor="0xFF0000" id="buzzSample"  >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
-					</tr>
-					<tr>
-						<td>Silence</td>
-						<td><input type="text" size="7" id="silentEdit" onchange="editSilent();" onkeyup="editSilent();"></td>
-						<td bgcolor="0xFF0000" id="silentSample"  >&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>
-					</tr>
-				</table>
-				<select id="palettePreset" onChange="palettePreset();">
-					<option value="">Palette Presets...</option>
-					<option value='classic'>Octo Classic&#8482;</option>
-					<option value='["#FF0000","#FFFF00","#FFFFFF","#000000","#990000","#330000"]'>Hot Dog Stand</option>
-					<option value='["#306230","#8BAC0F","#9BBC0F","#0F380F","#333333","#000000"]'>Pea Soup LCD</option>
-					<option value='["#000000","#FFFFFF","#666666","#AAAAAA","#666666","#000000"]'>Grayscale</option>
-					<option value='["#00FF00","#FF0000","#FFFF00","#000000","#999900","#333300"]'>CGA 0</option>
-					<option value='["#FF00FF","#00FFFF","#FFFFFF","#000000","#990099","#330033"]'>CGA 1</option>
-				</select>
+      <div data-panel='color' class='tool-header'>Colors</div>
+      <div data-panel='color' class='tool-body'>
+        <h1>Palette</h1>
+        <table id='color-table'>
+          <tr><td>Background  </td><td><input></td><td class='swatch'></td></tr>
+          <tr><td>Foreground 1</td><td><input></td><td class='swatch'></td></tr>
+          <tr><td>Foreground 2</td><td><input></td><td class='swatch'></td></tr>
+          <tr><td>Blended     </td><td><input></td><td class='swatch'></td></tr>
+          <tr><td>Buzzer      </td><td><input></td><td class='swatch'></td></tr>
+          <tr><td>Silence     </td><td><input></td><td class='swatch'></td></tr>
+        </table>
+        <h1>Presets</h1>
+        <div id='palette-presets'>
+          <span data-value='octo'>Octo Classic&#8482;</span>
+          <span data-value='lcd'>LCD</span>
+          <span data-value='hotdog'>Hot Dog</span>
+          <span data-value='gray'>Gray</span>
+          <span data-value='cga0'>CGA 0</span>
+          <span data-value='cga1'>CGA 1</span>
+        </div>
+      </div>
 
-				<h3>Misc</h3>
-				Screen Rotation:
-				<select id="screenRotation" onChange="editRotation();">
-					<option value="0" selected="selected">0</option>
-					<option value="90">90</option>
-					<option value="180">180</option>
-					<option value="270">270</option>
-				</select>
+      <div data-panel='options' class='tool-header'>Options</div>
+      <div data-panel='options' class='tool-body'>
+        <h1>Compatibility</h1>
+        <div id='compat-shift'>
+          <span><tt>&lt;&lt;=</tt> and <tt>&gt;&gt;=</tt> modify <tt>vx</tt> in place and ignore <tt>vy</tt>.</span>
+        </div>
+        <div id='compat-load'>
+          <span><tt>load</tt> and <tt>store</tt> operations leave <tt>i</tt> unchanged.</span>
+        </div>
+        <div id='compat-vf'>
+          <span>arithmetic results write to <tt>vf</tt> after status flag.</span>
+        </div>
+        <div id='compat-clip'>
+          <span>clip sprites at screen edges instead of wrapping.</span>
+        </div>
+        <div id='compat-jump0'>
+          <span>4 high bits of target address determines the offset register of <tt>jump0</tt> instead of <tt>v0</tt>.</span>
+        </div>
+        <div id='compat-vblank'>
+          <span>vblank after drawing sprites.</span>
+        </div>
+        <h1>Maximum ROM Size (bytes)</h1>
+        <div id='max-size'>
+          <span data-value='3215'>3216 (VIP)</span>
+          <span data-value='3583'>3583 (SCHIP)</span>
+          <span data-value='3584'>3584</span>
+          <span data-value='65024'>65024</span>
+        </div>
+        <h1>Compatibility Profile</h1>
+        <div id='compatibility-profile'>
+          <span data-value='chip8'>VIP</span>
+          <span data-value='schip'>SCHIP</span>
+          <span data-value='octo'>Octo</span>
+          <span data-value='xo'>XO-Chip</span>
+        </div>
+        <h1>Screen Rotation</h1>
+        <div id='screen-rotation'>
+          <span data-value='0'>0&deg;</span>
+          <span data-value='90'>90&deg;</span>
+          <span data-value='180'>180&deg;</span>
+          <span data-value='270'>270&deg;</span>
+        </div>
+      </div>
 
-				<h3>Compatibility</h3>
-				<table>
-					<tr>
-						<td><input type="checkbox" id="shiftQuirks" onchange="setQuirks('shiftQuirks');"></td>
-						<td><tt>&lt;&lt;=</tt> and <tt>&gt;&gt;=</tt> modify <tt>vx</tt> in place and ignore <tt>vy</tt>.</td>
-					</tr>
-					<tr>
-						<td><input type="checkbox" id="loadStoreQuirks" onchange="setQuirks('loadStoreQuirks');"></td>
-						<td><tt>load</tt> and <tt>store</tt> operations leave <tt>i</tt> unchanged.</td>
-					</tr>
-					<tr>
-						<td><input type="checkbox" id="vfOrderQuirks" onchange="setQuirks('vfOrderQuirks');"></td>
-						<td>arithmetic results write to <tt>vf</tt> after status flag.</td>
-					</tr>
-					<tr>
-						<td><input type="checkbox" id="clipQuirks" onchange="setQuirks('clipQuirks');"></td>
-						<td>clip sprites at screen edges instead of wrapping</td>
-					</tr>
-					<tr>
-						<td><input type="checkbox" id="jumpQuirks" onchange="setQuirks('jumpQuirks');"></td>
-						<td>4 high bits of target address determines the offset register of <tt>jump0</tt> instead of <tt>v0</tt></td>
-					</tr>
-					<tr>
-						<td><input type="checkbox" id="enableXO" onchange="setEnableXO();"></td>
-						<td>enable XO-Chip extended instruction set.</td>
-					</tr>
-				</table>
-			</div>
+    </div>
+  </div>
 
-			<div id="bintools" class="rightpanel" style="display:none">
-				<h3>Binary Tools</h3>
-				Note that decompilation can be slow.<br/>
-				Enter a byte array:<br/>
-				<textarea id="decompileInput" rows="6" cols="40">[0xD0, 0x15, 0x70, 0x04, 0x40, 0x40, 0x71, 0x05, 0x40, 0x40, 0x60, 0x00, 0x12, 0x00]</textarea><br/>
-				<button type="button" onclick="decompileStart()">Decompile</button>
-				<button type="button" onclick="decompileRun()">Run</button>
-				<button type="button" onclick="decompileFile()">Open File...</button>
-				<input type="file" id="fileinput" onchange="decompileRequestLoad()" style="display:none">
-				<h3>Decompiler Options</h3>
-				<select id="numericFormat" onchange="setNumericFormat();">
-					<option value='default'>Numeric Format</option>
-					<option value='hex'>Hexadecimal</option>
-					<option value='dec'>Decimal</option>
-					<option value='bin'>Binary</option>
-				</select>
-				<table>
-					<tr>
-						<td><input type="checkbox" id="rawDisassembly"/></td><td>Raw Disassembly (no analysis)</td>
-					</tr>
-					<tr>
-						<td><input type="checkbox" id="maskOverride" onchange="setMaskFormatOverride();"></td>
-						<td>Format the numeric operand of <tt>random n</tt> as binary</td>
-					</tr>
-				</table>
-				<h3>File Output</h3>
-				<button type="button" onclick="saveSourceFile()">Save .8o Source</button>
-				<button type="button" onclick="saveBinaryFile()">Save .ch8 File</button>
-			</div>
+  <div id='output'>
+    <div id='output-header'>
+      <span>Compiled Program<span>
+      <span id='collapse-out' title='Hide compiler output'>&or;</span>
+    </div>
+  </div>
 
-			<div id="audiotools" class="rightpanel" style="display:none">
-				<h3>Audio Editor</h3>
-				Enter a pattern of 16 bytes:<br>
-				<canvas id="drawAudio" width="256" height="32"></canvas></br>
-				<textarea id="audioPattern" rows="4" cols="40" spellcheck="false" onchange="editAudioHex('audioPattern');" onkeyup="editAudioHex('audioPattern');"></textarea><br>
-				<select id="audioPreset" onchange="presetAudio();">
-					<option value="">Choose a preset...</option>
-					<option value="0xFF 0xFF 0xFF 0xFF 0xFF 0xFF 0xFF 0xFF 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00">1/2 Duty Square Wave</option>
-					<option value="0xFF 0xFF 0xFF 0xFF 0x00 0x00 0x00 0x00 0xFF 0xFF 0xFF 0xFF 0x00 0x00 0x00 0x00">1/4 Duty Square Wave</option>
-					<option value="0xFF 0xFF 0x00 0x00 0xFF 0xFF 0x00 0x00 0xFF 0xFF 0x00 0x00 0xFF 0xFF 0x00 0x00">1/8 Duty Square Wave</option>
-					<option value="0xFF 0x00 0xFF 0x00 0xFF 0x00 0xFF 0x00 0xFF 0x00 0xFF 0x00 0xFF 0x00 0xFF 0x00">1/16 Duty Square Wave</option>
-					<option value="0xF0 0xF0 0xF0 0xF0 0xF0 0xF0 0xF0 0xF0 0xF0 0xF0 0xF0 0xF0 0xF0 0xF0 0xF0 0xF0">1/32 Duty Square Wave</option>
-					<option value="0xCC 0xCC 0xCC 0xCC 0xCC 0xCC 0xCC 0xCC 0xCC 0xCC 0xCC 0xCC 0xCC 0xCC 0xCC 0xCC">1/64 Duty Square Wave</option>
-					<option value="0xAA 0xAA 0xAA 0xAA 0xAA 0xAA 0xAA 0xAA 0xAA 0xAA 0xAA 0xAA 0xAA 0xAA 0xAA 0xAA">1/128 Duty Square Wave</option>
-					<option value="0x10 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x10 0x00 0x00 0x00 0x00 0x00 0x00 0x00">High Grind</option>
-					<option value="0xAA 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0xAA 0x00 0x00 0x00 0x00 0x00 0x00 0x00">Medium Grind</option>
-					<option value="0xFF 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0xFF 0x00 0x00 0x00 0x00 0x00 0x00 0x00">Low Grind</option>
-					<option value="0xF0 0xF0 0xF0 0xF0 0xcc 0xcc 0xcc 0xcc 0xF0 0xF0 0xF0 0xF0 0xcc 0xcc 0xcc 0xcc">Doorbell</option>
-					<option value="0x55 0xAA 0x55 0xAA 0x55 0xAA 0x55 0xAA 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00">Gurgle</option>
-					<option value="0x02 0xCD 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00">Click</option>
-					<option value="0xFF 0x80 0x3F 0xE0 0x0F 0xF8 0x03 0xFF 0x00 0x7F 0xC0 0x8E 0x38 0xE3 0x8E 0x38">A5</option>
-				</select>
-				<button onclick="randomAudio();">Random</button>
-				<button onclick="shiftAudio(1);">&lt;</button>
-				<button onclick="shiftAudio(-1);">&gt;</button>
-				<br>
-				Duration (1/60ths of a second): <input id="time" type="text" size="4" value="30">
-				<button onclick="playAudio();">Play</button>
-				<div id="audioerror" style="color: red;"></div>
-				<h3>Waveform Blending</h3>
-				Combine this waveform with the one above.<br>
-				<textarea id="blendPattern" rows="4" cols="40" spellcheck="false" onchange="editAudioHex('blendPattern');" onkeyup="editAudioHex('blendPattern');"></textarea><br>
-				<button type="button" onclick="blendWaveform('xor');">XOR</button>
-				<button type="button" onclick="blendWaveform('and');">AND</button>
-				<button type="button" onclick="blendWaveform('or');">OR</button>
-				<button type="button" onclick="blendWaveform('not');">NOT (this pattern)</button>
-				<button type="button" onclick="swapWaveforms('blendPattern', 'audioPattern');">Swap</button>
-				<h3>Tone Generator</h3>
-				<canvas id="waveform" width="256" height="64"></canvas><br>
-				Freq. (Hz): <input id="frequency" type="text" size="4" value="440" onchange="generateWaveform();" onkeyup="generateWaveform();">
-				Cutoff: <input id="cutoff" type="text" size="4" value="128" onchange="generateWaveform();" onkeyup="generateWaveform();">
-				<button type="button" onclick="swapWaveforms('generatedPattern', 'audioPattern');">Swap</button>
-				<br><textarea id="generatedPattern" rows="4" cols="40" spellcheck="false" onchange="editAudioHex('generatedPattern');" onkeyup="editAudioHex('generatedPattern');"></textarea>
-			</div>
-		</center>
+  <div id='status'>
+    <span id='status-text'></span>
+    <span id='expand-out' title='Show compiler output'>&and;</span>
+  </div>
 
-		<center>
-			<textarea id="output" style="display:none;" rows="6" cols="80"></textarea>
-		</center>
-	</div>
+  <div class='lightbox' id='decompile-cover'>
+    <img src='images/load.gif'/>
+  </div>
 
-	<div id="status" class="statusbar"></div>
-
-	<div class="lightbox" id="emulator" style="display:none">
-		<div class="canv">
-			<canvas id="target" width="640" height="320"></canvas>
-		</div>
-
-		<div style="position: absolute; bottom: 20px; width: 100%;">
-			<table border="0" id="keypad" style="display: none; width: 164px; margin: auto;">
-				<tr>
-					<td class="key" id="0x1">1</td>
-					<td class="key" id="0x2">2</td>
-					<td class="key" id="0x3">3</td>
-					<td class="key" id="0xC">C</td>
-				</tr>
-				<tr>
-					<td class="key" id="0x4">4</td>
-					<td class="key" id="0x5">5</td>
-					<td class="key" id="0x6">6</td>
-					<td class="key" id="0xD">D</td>
-				</tr>
-				<tr>
-					<td class="key" id="0x7">7</td>
-					<td class="key" id="0x8">8</td>
-					<td class="key" id="0x9">9</td>
-					<td class="key" id="0xE">E</td>
-				</tr>
-				<tr>
-					<td class="key" id="0xA">A</td>
-					<td class="key" id="0x0">0</td>
-					<td class="key" id="0xB">B</td>
-					<td class="key" id="0xF">F</td>
-				</tr>
-			</table>
-		</div>
-
-		<div class="buttons">
-			<img
-				title="close"
-				src="images/close.png"
-				onclick="keyUp({keyCode:27})"
-			/>
-			<img
-				title="toggle keypad"
-				src="images/keypad.png"
-				onclick="toggleKeypad()"
-				style="padding-left: 10px;"
-			/>
-			<img
-				title="save a screenshot"
-				src="images/screenshot.png"
-				onclick="saveScreenshot()"
-				style="padding-left: 10px;"
-			/>
-			<img
-				id="continueButton"
-				title="continue"
-				src="images/continue.png"
-				onclick="clearBreakpoint()"
-				style="padding-left: 10px; display:none;"
-			/>
-		</div>
-
-		<div class="debugger" id="registerView" style="display:none">
-			register display.
-		</div>
-	</div>
-
-	<div class="lightbox" style="display:none" id="decompileWork">
-		<img src="images/load.gif" class="centericon"/>
-	</div>
-
-	<script src="js/compiler.js"></script>
-	<script src="js/decompiler.js"></script>
-	<script src="js/emulator.js"></script>
-	<script src="js/shared.js"></script>
-	<script src="js/octo.js"></script>
-	<script src="js/filesaver.js"></script>
-	<script src="js/screenshot.js"></script>
-	<script src="js/fileexports.js"></script>
-	<script>window.onload = runGist;</script>
+  <div class='lightbox' id='run-cover'>
+    <div id='run-overlay'>
+      <div id='run-controls'>
+        <img src='images/close.png'    title='close'         id='run-close'   >
+        <img src='images/keypad.png'   title='toggle keypad' id='run-keypad'  >
+        <img src='images/record.png'   title='record gif'    id='run-record'  >
+        <img src='images/continue.png' title='continue'      id='run-continue'>
+      </div>
+      <div id='debugger'></div>
+    </div>
+    <div class='spacer'></div>
+    <div id='run-container'>
+      <canvas id='target' width='640' height='320'></canvas>
+    </div>
+    <div id='run-key-spacer' class='spacer invisible'></div>
+    <div id='run-keys' class='invisible'>
+      <table>
+        <tr>
+          <td class='key' id='0x1'>1</td>
+          <td class='key' id='0x2'>2</td>
+          <td class='key' id='0x3'>3</td>
+          <td class='key' id='0xC'>C</td>
+        </tr>
+        <tr>
+          <td class='key' id='0x4'>4</td>
+          <td class='key' id='0x5'>5</td>
+          <td class='key' id='0x6'>6</td>
+          <td class='key' id='0xD'>D</td>
+        </tr>
+        <tr>
+          <td class='key' id='0x7'>7</td>
+          <td class='key' id='0x8'>8</td>
+          <td class='key' id='0x9'>9</td>
+          <td class='key' id='0xE'>E</td>
+        </tr>
+        <tr>
+          <td class='key' id='0xA'>A</td>
+          <td class='key' id='0x0'>0</td>
+          <td class='key' id='0xB'>B</td>
+          <td class='key' id='0xF'>F</td>
+        </tr>
+      </table>
+    </div>
+    <div class='spacer'></div>
+  </div>
 </body>
+
+<style>
+/* reusable radio bar widget */
+.radiobar {
+  display: flex;
+  flex-direction: row;
+  border: 1px solid black;
+  border-radius: 5px;
+  background: #AAA;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.radiobar>span { flex-grow: 1; text-align: center; padding: 5px; cursor: pointer; }
+.radiobar>span:not(:last-child) { border-right: 1px solid black; }
+.radiobar>span:hover { background: #888; }
+.radiobar>span:active, .radiobar .selected { background: #444; color: white; }
+
+/* reusable horizontal bar of buttons */
+.buttonbar { display: flex; flex-direction: row; margin-top: 10px; }
+.buttonbar>div, .button {
+  flex-grow: 1;
+  text-align: center;
+  padding: 5px;
+  cursor: pointer;
+  border: 1px solid black;
+  border-radius: 5px;
+  background: #AAA;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.buttonbar>div:not(:last-child) { margin-right: 10px; }
+.buttonbar>div:hover, .button:hover { background: #888; }
+.buttonbar>div:active, .button:active, .buttonbar .selected, .button.selected { background: #444; color: white; }
+
+/* reusable checkbox widget */
+.checkbox {
+  margin-bottom: 5px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+.checkbox .check {
+  min-height: 25px;
+  min-width: 25px;
+  display: inline-block;
+  border: 1px solid black;
+  border-radius: 5px;
+  margin-right: 10px;
+  background: #AAA;
+}
+.checkbox .check:hover { background: #888; }
+.checkbox .check.selected { background: #444; color: white; }
+
+/* main styles */
+body {
+  background: black;
+  margin: 0px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: white;
+  font-size: 13px;
+  font-family: futura;
+}
+input { font-size: 13px; font-family: monospace; background:#272822; color:#f8f8f2; padding:5px; }
+input::selection { background: rgba(73, 72, 62, .99); }
+input:focus { outline: none; }
+.invisible { display: none!important; }
+
+#header, #status, #output-header, #toolbox .tool-header {
+  height:       30px;
+  line-height:  30px;
+  padding-left: 20px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+#header { display:flex; flex-direction:row; }
+#header .spacer { flex-grow:1; background:black!important; cursor:default; }
+#header img { padding-top: 5px; cursor: pointer; width:54px; height:18px; margin-right: 20px;}
+#header>div { border-left: 1px solid #222; cursor:pointer; padding: 0px 30px 0px 30px; }
+#header>div:hover { background: #888; }
+#header>div:active, #header>.selected { background:#444; }
+#header .menu { padding: 0; }
+#header .menu .head { padding: 0px 30px 0px 30px; }
+
+.menu ul {
+  visibility: hidden;
+  position: relative;
+  left: 0;
+  top: 0;
+  z-index: 1000;
+  background: black;
+  list-style-type: none;
+  margin: 0px;
+  padding: 0px;
+  border-radius: 0px 0px 5px 5px;
+  overflow: hidden;
+}
+.menu:hover { background: #222!important; }
+.menu:hover > ul,
+.menu ul:hover { visibility: visible; }
+.menu li { padding: 0px 30px 0px 30px; }
+.menu li:hover { background: #888; }
+.menu li:active, .menu li.selected { background: #444; }
+#main-examples ul { font-family: monospace; font-size: 10px; line-height: 18px; }
+
+#main { flex-grow: 1; display: flex; flex-direction: row; }
+#main #editor .CodeMirror { flex-grow: 1; }
+#main #editor .CodeMirror-gutters { padding-right: 10px; }
+#editor { flex-grow: 1; display: flex; flex-direction: column; }
+
+#manual { width:450px; display:flex; flex-direction:column; display:none; }
+#manual iframe { flex-grow: 1; border: none; }
+
+#toolbox { width:450px; display:flex; flex-direction:column; display:none; }
+#toolbox .tool-header { flex-grow: 0; border-top: 1px solid #222; cursor: pointer; }
+#toolbox .tool-header:hover { background:#202020; }
+#toolbox .tool-body { background:gray; color:black; padding:0 10px 0 10px; flex-grow:1; display:none; }
+#toolbox .tool-body.selected { display:block; }
+#toolbox h1 { font-size: 13px; padding-top:10px; padding-bottom:5px; margin:0; }
+#toolbox canvas { border:1px solid black; }
+#toolbox .CodeMirror { margin-top: 10px; border: 1px solid black; }
+.preview-container { display:flex; flex-direction:row; justify-content:center; margin-top:10px; }
+
+#sprite-palette { margin-top: 10px; display: none; }
+#sprite-editor .CodeMirror { height: 115px; }
+#audio-pattern-editor .CodeMirror,
+#audio-blend-editor   .CodeMirror,
+#audio-tone-editor    .CodeMirror { height: 40px; }
+#audio-tone-group { display: flex; flex-direction: row; margin-top: 10px; align-items: center; }
+#audio-tone-group .pair { margin-right: 15px; }
+#audio-tone-group .button { margin-left: 10px; }
+#audio-tone-group input { width:40px; height:30px; margin-left:5px; border:1px solid black; }
+#binary-editor        .CodeMirror { height: 100px; }
+
+#color-table {
+  background: #AAA;
+  border: 1px solid black;
+  width: 100%;
+  border-collapse: collapse;
+}
+#color-table input { border: none; width:100px; margin:0px; }
+#color-table tr { border-bottom: 1px solid black; height: 20px; }
+#color-table td { color: black; font-size: 13px; padding:0px; }
+#color-table td:first-child { padding: 0px 5px 0px 10px; }
+#color-table td:not(:first-child) { width: 100px; }
+#color-table td:not(:last-child) { border-right: 1px solid black; }
+
+#output { display: none; }
+#collapse-out, #expand-out { float: right; padding: 0px 20px 0px 20px; cursor: pointer; border-left: 1px solid #222; }
+#collapse-out:hover, #expand-out:hover { background:#222; }
+#output-header, #status { cursor: pointer; border-top: 1px solid #222; }
+#output .CodeMirror { height: 100px; }
+
+.lightbox {
+  display: none;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+  height: 100%;
+  background: black;
+  z-index: 100;
+  justify-content: center;
+}
+#decompile-cover img { width: 64px; height: 64px; align-self: center; }
+
+#run-cover { flex-direction: column; }
+#run-overlay { position: absolute; top: 0px; left: 0px; width: 100%; height: 100%; }
+#run-controls { margin: 20px; }
+#run-controls img { margin-right: 10px; cursor: pointer; }
+#run-controls img:active { opacity: 0.5; }
+#debugger { font-family: monospace; margin-left: 20px; text-shadow: black 0 0 5px; }
+#debugger .debug-context, #debugger .debug-profile { font-family: monospace; color: white; }
+#debugger .debug-context tr.current { text-decoration: underline; font-weight: bold; }
+#debugger .debug-context td:first-child { width: 50px; }
+#debugger .debug-context td:last-child { width: 60%; }
+#debugger .debug-profile-results { position: fixed; bottom: 20px; }
+#debugger .debug-profile-full {
+  font-size:10px;
+  font-family:monospace;
+  background:#272822;
+  color:#f8f8f2;
+  padding:5px;
+  border:1px solid white;
+  width: 80%;
+  height: 100px;
+  overflow-y: scroll;
+  margin-top: 10px;
+}
+
+#run-container, #run-keys { display: flex; flex-direction: row; justify-content: center; }
+#run-container canvas { border: 1px solid black; }
+#run-cover .spacer { flex-grow: 1; }
+td.key {
+  height: 40px;
+  width:  40px;
+  vertical-align: center;
+  text-align: center;
+  color: black;
+  background-color: white;
+  border: 1px solid black;
+  -webkit-user-select: none;
+  user-select: none;
+}
+td.key:active,
+td.key.active { color: white; background-color: black; border: 1px solid white; }
+
+</style>
+
+<script src='js/debugger.js'></script>
+<script src='js/recording.js'></script>
+<script src='js/tool-sprite.js'></script>
+<script src='js/tool-audio.js'></script>
+<script src='js/tool-binary.js'></script>
+<script src='js/tool-color.js'></script>
+<script src='js/tool-options.js'></script>
+<script>
+
+/**
+* Main UI:
+**/
+
+const editor = CodeMirror(document.getElementById('editor'), {
+  mode:           'octo',
+  theme:          'monokai',
+  lineNumbers:    true,
+  smartIndent:    false,
+  tabSize:        2,
+  indentWithTabs: false,
+  value:          'loading...',
+  extraKeys: {
+    'Shift-Enter': _ => document.getElementById('main-run').click(),
+  },
+})
+editor.on('change', _ => saveLocalProgram())
+
+const expandOut   = document.getElementById('expand-out')
+const outputPanel = document.getElementById('output')
+const output      = textBox(document.getElementById('output'), true, 'no output')
+const statusBar   = document.getElementById('status')
+const statusText  = document.getElementById('status-text')
+
+function toggleOutput() {
+  const v = outputPanel.style.display == 'block'
+  setVisible(outputPanel, !v)
+  setVisible(expandOut, v)
+  output.refresh()
+}
+document.getElementById('output-header').onclick = toggleOutput
+document.getElementById('status'       ).onclick = toggleOutput
+
+function setStatusMessage(message, ok) {
+  statusBar.style.backgroundColor = ok ? 'black' : 'darkred'
+  statusText.innerHTML = message
+}
+
+function accordion(initial) {
+  var current = null
+  function open(panel) {
+    current = panel
+    document.querySelectorAll('.tool-body').forEach(x => {
+      x.classList.toggle('selected', x.dataset.panel == panel)
+    })
+    const tools = {
+      sprite:  updateSpriteEditor,
+      audio:   updateAudio,
+      binary:  updateBinary,
+      color:   updateColor,
+      options: updateOptions,
+    }
+    tools[panel]()
+  }
+  document.querySelectorAll('.tool-header').forEach(x => x.onclick = _ => open(x.dataset.panel))
+  open(initial)
+  return { setValue: open, update: _ => open(current) }
+}
+const toolboxAccordion = accordion('sprite')
+
+const mainInput   = document.getElementById('maininput')
+const manual      = document.getElementById('manual')
+const toolbox     = document.getElementById('toolbox')
+const showToolbox = document.getElementById('show-toolbox')
+const showManual  = document.getElementById('show-manual')
+const speedMenu   = menuChooser(document.getElementById('main-speed'), emulator.tickrate, x => {
+  emulator.tickrate = +x
+  saveLocalOptions()
+})
+
+document.getElementById('main-run').onclick = _ => runRom(compile())
+document.getElementById('main-open').onclick = _ => mainInput.click()
+document.getElementById('main-save').onclick = _ => share()
+
+mainInput.onchange = _ => {
+  var reader = new FileReader()
+  reader.onload = _ => editor.setValue(reader.result)
+  reader.readAsText(mainInput.files[0])
+}
+showToolbox.onclick = _ => {
+  showToolbox.classList.toggle('selected')
+  setVisible(toolbox, showToolbox.classList.contains('selected'), 'flex')
+  toolboxAccordion.update()
+}
+showManual.onclick = _ => {
+  showManual.classList.toggle('selected')
+  setVisible(manual, showManual.classList.contains('selected'), 'flex')
+}
+
+/**
+* Run mode:
+**/
+
+document.getElementById('run-close'   ).onclick = _ => stopRom()
+document.getElementById('run-continue').onclick = _ => clearBreakpoint()
+document.getElementById('run-keypad'  ).onclick = _ => {
+  document.getElementById('run-keys'      ).classList.toggle('invisible')
+  document.getElementById('run-key-spacer').classList.toggle('invisible')
+}
+
+function getVirtualKey(k) { return document.getElementById('0x' + k.toString(16).toUpperCase()) }
+function setVirtualKey(k, v) { if (k) getVirtualKey(k).classList.toggle('active', v) }
+
+window.onkeydown = event => {
+  if (emulator.halted) return
+  if (!(event.keyCode in emulator.keys)) {
+    emulator.keys[event.keyCode] = true
+    setVirtualKey(keymapInverse[event.keyCode], true)
+  }
+  event.preventDefault()
+}
+
+window.onkeyup = event => {
+  if (emulator.halted) return
+  if (event.keyCode in emulator.keys) {
+    delete emulator.keys[event.keyCode]
+    setVirtualKey(keymapInverse[event.keyCode], false)
+  }
+  const kindex = keymap.indexOf(event.keyCode)
+  if (emulator.waiting && kindex >= 0) {
+    emulator.waiting = false
+    emulator.v[emulator.waitReg] = kindex
+  }
+  if (event.key == '`') { stopRom() }
+  if (event.key == 'i') { emulator.breakpoint ? clearBreakpoint() : haltBreakpoint('user interrupt') }
+  if (event.key == 'p') { haltProfiler('profiler') }
+  if (emulator.breakpoint) {
+    if (event.key == 'o') { emulator.tick(); renderDisplay(emulator); haltBreakpoint('single step') }
+    if (event.key == 'u') { const l = emulator.r.length; if (l>0) { emulator.stack_breakpoint = l-1; clearBreakpoint() } } // step out
+    if (event.key == 'l') {
+      if ((emulator.m[emulator.pc] & 0xF0) == 0x20) { const l = emulator.r.length; if (l >= 0) { emulator.stack_breakpoint = l; clearBreakpoint(); } }
+      else { emulator.tick(); renderDisplay(emulator); haltBreakpoint('stepping over') }
+    }
+  }
+  event.preventDefault()
+}
+
+range(16).forEach(k => {
+  const m    = keymap[k]
+  const fake = { keyCode: m, preventDefault:_=>{} }
+  const dn   = _ => window.onkeydown(fake)
+  const up   = _ => { if (m in emulator.keys) window.onkeyup(fake) }
+  const b    = getVirtualKey(k)
+  b.onmousedown  = dn
+  b.onmouseup    = up
+  b.onmouseout   = up
+})
+
+/**
+* Central Dogma:
+**/
+
+function compile() {
+  const c = new Compiler(editor.getValue())
+  try {
+    output.setValue('no output')
+    c.go()
+    writeBytes(output, null, c.rom)
+    const maxRom = compatSize.getValue()
+    if (c.rom.length > maxRom) {
+      throw 'Rom is too large- ' + (c.rom.length-maxRom) + ' bytes over!'
+    }
+    setStatusMessage(
+      (c.rom.length + ' bytes, ' + (maxRom-c.rom.length) + ' free.') +
+      (c.schip ? ' (SuperChip instructions used)' : '') +
+      (c.xo    ? ' (XO-Chip instructions used)'   : ''),
+      true
+    )
+  }
+  catch (error) {
+    if (c.pos != null) {
+      var line = 1, ch = 0, text = editor.getValue()
+      for(var x = 0; x < c.pos[1]-1; x++) {
+        if (text[x] == '\n') { line++; ch = 0 }
+        else { ch++ }
+      }
+      error = 'line '+line+': '+error
+      editor.setSelection(
+        {line:line-1, ch:ch},
+        {line:line-1, ch:ch + (c.pos[2]-1-x)},
+      )
+    }
+    setStatusMessage(error, false)
+    return null
+  }
+  return {
+    rom:         c.rom,
+    breakpoints: c.breakpoints,
+    dbginfo:     c.dbginfo,
+    aliases:     c.aliases,
+    labels:      c.dict,
+  }
+}
+
+const runCover = document.getElementById('run-cover')
+var intervalHandle = null
+
+function runRom(rom) {
+  if (rom === null) return
+  if (intervalHandle != null) stopRom()
+  emulator.exitVector = stopRom
+  emulator.importFlags = _ => JSON.parse(localStorage.getItem('octoFlagRegisters'))
+  emulator.exportFlags = f => localStorage.setItem('octoFlagRegisters', JSON.stringify(f))
+  emulator.buzzTrigger = (ticks, remainingTicks) => playPattern(ticks, emulator.pattern, remainingTicks)
+  emulator.init(rom)
+  clearBreakpoint()
+  audioSetup()
+  setVisible(runCover, true, 'flex')
+  runCover.style.backgroundColor = emulator.quietColor
+  setRenderTarget(5, 'target')
+  intervalHandle = setInterval(_ => {
+    for(var z = 0; (z < emulator.tickrate) && (!emulator.waiting); z++) {
+      if (!emulator.breakpoint) {
+        if (emulator.vBlankQuirks && ((emulator.m[emulator.pc] & 0xF0) == 0xD0)) { z = emulator.tickrate }
+        emulator.tick()
+        if (emulator.pc in emulator.metadata.breakpoints) { haltBreakpoint(emulator.metadata.breakpoints[emulator.pc]) }
+        if (emulator.r.length == emulator.stack_breakpoint) { emulator.stack_breakpoint = -1; haltBreakpoint('step out') }
+      }
+    }
+    if (!emulator.breakpoint) {
+      emulator.dt -= emulator.dt > 0
+      emulator.st -= emulator.st > 0
+    }
+    recordFrame()
+    renderDisplay(emulator)
+    if (emulator.halted) return
+    runCover.style.backgroundColor = (emulator.st > 0) ? emulator.buzzColor : emulator.quietColor
+  }, 1000/60)
+}
+
+function stopRom() {
+  emulator.halted = true
+  setVisible(runCover, false)
+  window.clearInterval(intervalHandle)
+  intervalHandle = null
+  clearBreakpoint()
+  stopAudio()
+}
+
+</script>
 </html>
