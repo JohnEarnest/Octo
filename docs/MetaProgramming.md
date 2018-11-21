@@ -430,3 +430,70 @@ temp-end
 ```
 
 The technique of using low memory as temporary storage for "compile time data structures" is quite powerful. I'm sure that you can imagine writing even more elaborate macros to help prepare data for your own applications.
+
+Sprite Width
+------------
+Let's look at another place compile-time manipulation of sprites can be handy: variable-width text. We've drawn a series of 4-pixel tall characters, and we want to draw a series of these characters to spell out a word:
+
+```
+: let-I   0xC0 0x00 0xC0 0xC0
+: let-L   0xC0 0xC0 0xC0 0xE0
+: let-M   0xD8 0xE8 0xC8 0xC8
+```
+
+While they are are the same height, each of the above sprites vary in width- `I`, `L`, and `M` are 2, 3, and 5 pixels wide, respectively. Consider this approach:
+
+```
+:macro print S WIDTH {
+	i := S
+	sprite v0 v1 4
+	:calc advance { 1 + WIDTH } # 1 pixel between letters
+	v0 += advance
+}
+: macro print-I { print let-I 2 }
+: macro print-L { print let-L 3 }
+: macro print-M { print let-M 5 }
+
+...
+
+print let-M
+print let-I
+print let-L
+print let-L
+```
+
+Usable, but a bit of a pain to maintain. We have to define a helper macro for every letter, and then manually update those macros if we ever alter the characters. Instead, let's calculate those character sizes in the `print` macro itself. If we use `@` we can take a bitwise OR of all the bytes which make up the rows of the character, stacking them together:
+
+```
+:calc pixels { ( @ S ) | ( @ 1 + S ) | ( @ 2 + S ) | ( @ 3 + S ) }
+```
+
+What we need now is the index of the least-significant set bit in `pixels`. The expression `x & - x` clears all but the least-significant bit in `x`. Taking the log base 2 of this number tells us what place (right-to-left) that bit is in, and then we simply need to offset it appropriately to incorporate one extra pixel between each character as it is drawn, to keep the text legible. All together:
+
+```
+:macro print S {
+	:calc pixels  { ( @ S ) | ( @ 1 + S ) | ( @ 2 + S ) | ( @ 3 + S ) }
+	:calc lsb     { pixels & - pixels }
+	:calc index   { ( log lsb ) / log 2 }
+	:calc advance { 9 - index }
+
+	i := S
+	sprite v0 v1 4
+	v0 += advance
+}
+```
+
+Or, more compactly,
+
+```
+:macro print S {
+	:calc pixels  { ( @ S ) | ( @ 1 + S ) | ( @ 2 + S ) | ( @ 3 + S ) }
+	:calc advance { 9 - ( log pixels & - pixels ) / log 2 }
+
+	i := S
+	sprite v0 v1 4
+	v0 += advance
+}
+```
+
+You can see a very similar routine in the example game "Slippery Slope".
