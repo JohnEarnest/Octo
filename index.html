@@ -243,34 +243,33 @@
     <div id='run-container'>
       <canvas id='target' width='640' height='320'></canvas>
     </div>
-    <div id='run-key-spacer' class='spacer invisible'></div>
     <div id='run-keys' class='invisible'>
-      <table>
-        <tr>
-          <td class='key' id='0x1'>1</td>
-          <td class='key' id='0x2'>2</td>
-          <td class='key' id='0x3'>3</td>
-          <td class='key' id='0xC'>C</td>
-        </tr>
-        <tr>
-          <td class='key' id='0x4'>4</td>
-          <td class='key' id='0x5'>5</td>
-          <td class='key' id='0x6'>6</td>
-          <td class='key' id='0xD'>D</td>
-        </tr>
-        <tr>
-          <td class='key' id='0x7'>7</td>
-          <td class='key' id='0x8'>8</td>
-          <td class='key' id='0x9'>9</td>
-          <td class='key' id='0xE'>E</td>
-        </tr>
-        <tr>
-          <td class='key' id='0xA'>A</td>
-          <td class='key' id='0x0'>0</td>
-          <td class='key' id='0xB'>B</td>
-          <td class='key' id='0xF'>F</td>
-        </tr>
-      </table>
+      <div class='keypad'>
+        <div class='key-row'>
+          <div class='key' id='0x1'>1</div>
+          <div class='key' id='0x2'>2</div>
+          <div class='key' id='0x3'>3</div>
+          <div class='key' id='0xC'>C</div>
+        </div>
+        <div class='key-row'>
+          <div class='key' id='0x4'>4</div>
+          <div class='key' id='0x5'>5</div>
+          <div class='key' id='0x6'>6</div>
+          <div class='key' id='0xD'>D</div>
+        </div>
+        <div class='key-row'>
+          <div class='key' id='0x7'>7</div>
+          <div class='key' id='0x8'>8</div>
+          <div class='key' id='0x9'>9</div>
+          <div class='key' id='0xE'>E</div>
+        </div>
+        <div class='key-row'>
+          <div class='key' id='0xA'>A</div>
+          <div class='key' id='0x0'>0</div>
+          <div class='key' id='0xB'>B</div>
+          <div class='key' id='0xF'>F</div>
+        </div>
+      </div>
     </div>
     <div class='spacer'></div>
   </div>
@@ -471,21 +470,24 @@ input:focus { outline: none; }
 }
 
 #run-container, #run-keys { display: flex; flex-direction: row; justify-content: center; }
+#run-keys { z-index: 2000; }
 #run-container canvas { border: 1px solid black; }
 #run-cover .spacer { flex-grow: 1; }
-td.key {
-  height: 40px;
-  width:  40px;
-  vertical-align: center;
+#run-keys .keypad { display: flex; flex-direction: column; margin-top: 20px; }
+#run-keys .key-row { display: flex; flex-direction: row; }
+#run-keys .key {
   text-align: center;
   color: black;
   background-color: white;
   border: 1px solid black;
   -webkit-user-select: none;
   user-select: none;
+  font-size: 7vw;
+  width: 10vw;
+  height: 10vw;
 }
-td.key:active,
-td.key.active { color: white; background-color: black; border: 1px solid white; }
+#run-keys .key:active,
+#run-keys .key.active { color: white; background-color: black; border: 1px solid white; }
 
 </style>
 
@@ -594,8 +596,13 @@ showManual.onclick = _ => {
 document.getElementById('run-close'   ).onclick = _ => stopRom()
 document.getElementById('run-continue').onclick = _ => clearBreakpoint()
 document.getElementById('run-keypad'  ).onclick = _ => {
-  document.getElementById('run-keys'      ).classList.toggle('invisible')
-  document.getElementById('run-key-spacer').classList.toggle('invisible')
+  document.getElementById('run-keys').classList.toggle('invisible')
+}
+
+if (window.innerWidth < window.innerHeight) {
+  // make a guess that portrait-mode windows are mobile devices.
+  // in this situation, the virtual keypad should be visible by default:
+  document.getElementById('run-keys').classList.remove('invisible')
 }
 
 function getVirtualKey(k) { return document.getElementById('0x' + k.toString(16).toUpperCase()) }
@@ -644,6 +651,9 @@ range(16).forEach(k => {
   b.onmousedown  = dn
   b.onmouseup    = up
   b.onmouseout   = up
+  b.ontouchstart = dn
+  b.ontouchenter = up
+  b.ontouchleave = up
 })
 
 /**
