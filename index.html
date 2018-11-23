@@ -388,6 +388,8 @@ input:focus { outline: none; }
 #main #editor .CodeMirror { flex-grow: 1; }
 #main #editor .CodeMirror-gutters { padding-right: 10px; }
 #editor { flex-grow: 1; display: flex; flex-direction: column; }
+#editor .breakpoints { width: 10px; }
+#editor .breakpoint  { color: #f92672; margin-left: 5px; }
 
 #manual { width:450px; display:flex; flex-direction:column; display:none; }
 #manual iframe { flex-grow: 1; border: none; }
@@ -512,11 +514,33 @@ const editor = CodeMirror(document.getElementById('editor'), {
   tabSize:        2,
   indentWithTabs: false,
   value:          'loading...',
+  gutters:        ['breakpoints', 'CodeMirror-linenumbers'],
   extraKeys: {
     'Shift-Enter': _ => document.getElementById('main-run').click(),
   },
 })
 editor.on('change', _ => saveLocalProgram())
+editor.on('gutterClick', function(cm, n) {
+  function makeMarker() {
+    const marker = document.createElement('div')
+    marker.classList.add('breakpoint')
+    marker.dataset.line = n
+    marker.innerHTML = '●'
+    return marker
+  }
+  const info = cm.lineInfo(n)
+  cm.setGutterMarker(n, 'breakpoints', info.gutterMarkers ? null : makeMarker())
+})
+
+function getVisualBreakpoints(debuginfo) {
+  const r = {}
+  document.querySelectorAll('#editor .breakpoint').forEach(x => {
+    const line = +(x.dataset.line)
+    const addr = debuginfo.getAddr(line)
+    if (addr) { r[addr] = 'source line ' + (line+1) }
+  })
+  return r
+}
 
 const expandOut   = document.getElementById('expand-out')
 const outputPanel = document.getElementById('output')
@@ -693,6 +717,8 @@ function compile() {
     setStatusMessage(error, false)
     return null
   }
+  const visualBreakpoints = getVisualBreakpoints(c.dbginfo)
+  for (var k in visualBreakpoints) { c.breakpoints[k] = visualBreakpoints[k] }
   return {
     rom:         c.rom,
     breakpoints: c.breakpoints,

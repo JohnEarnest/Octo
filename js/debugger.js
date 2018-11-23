@@ -22,7 +22,7 @@ function getLabel(addr,reg,raw) {
 	return '('+n+(x == addr ? '' : ' + '+(addr-x))+')'
 }
 
-function dumpRegisters(showV) {
+function dumpRegisters(showV, name) {
 	const line = (text, click) => '<span' + (click ? ' onClick="'+click+'"' : '')+'>' + text + '</span><br>'
 	const register = (n, v, f) => line(n + ' := ' + numericFormat(v, regNumFormat[n || 'hex']) + ' ' + f(v,n), 'cycleNumFormat(\''+n+'\')')
 	const aliases = (addr,reg) => {
@@ -113,12 +113,12 @@ function haltBreakpoint(name) {
 	setVisible(runContinue, true, 'inline')
 	setVisible(debugPanel,  true)
 	emulator.breakpoint = true
-	debugPanel.innerHTML = dumpRegisters(true) + dumpStack() + dumpContext()
+	debugPanel.innerHTML = dumpRegisters(true, name) + dumpStack() + dumpContext()
 }
 
-function haltProfiler(breakName) {
+function haltProfiler(name) {
 	setVisible(runContinue, true, 'inline')
 	setVisible(debugPanel,  true)
 	emulator.breakpoint = true
-	debugPanel.innerHTML = dumpRegisters(false) + dumpProfile()
+	debugPanel.innerHTML = dumpRegisters(false, name) + dumpProfile()
 }

@@ -101,6 +101,13 @@ DebugInfo.prototype.getLine = function(addr) {
 	return i != undefined? this.posToLine(i): undefined
 }
 
+DebugInfo.prototype.getAddr = function(line) {
+	for (var addr in this._locs) {
+		if (this.posToLine(this._locs[addr]) == line) return addr
+	}
+	return undefined
+}
+
 DebugInfo.prototype.posToLine = function(pos) {
 	var i;
 	for (i = 0; i < this.lines.length; i++) {
