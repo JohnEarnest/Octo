@@ -61,11 +61,13 @@ document.getElementById('binary-open').onclick = _ => {
 }
 document.getElementById('binary-save-ch8').onclick = _ => {
 	var prog = compile()
-	if (prog != null) { return }
-	saveAs(new Blob([new Uint8Array(prog.rom)], {type: 'application/octet-stream'}), 'output.ch8')
+	if (prog == null) { return }
+	const name = document.getElementById('binary-filename').value
+	saveAs(new Blob([new Uint8Array(prog.rom)], {type: 'application/octet-stream'}), name+'.ch8')
 }
 document.getElementById('binary-save-8o').onclick = _ => {
-	saveAs(new Blob([editor.getValue()], {type: 'text/plain;charset=utf-8'}), 'source.8o')
+	const name = document.getElementById('binary-filename').value
+	saveAs(new Blob([editor.getValue()], {type: 'text/plain;charset=utf-8'}), name+'.8o')
 }
 
 writeBytes(binaryEditor, null, [0xD0, 0x15, 0x70, 0x04, 0x40, 0x40, 0x71, 0x05, 0x40, 0x40, 0x60, 0x00, 0x12, 0x00])

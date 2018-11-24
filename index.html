@@ -138,6 +138,9 @@
           <span data-value='hex'>Hexadecimal</span>
         </div>
         <h1>File Output</h1>
+        <div>
+          <input id='binary-filename' value='output'>
+        </div>
         <div class='buttonbar'>
           <div id='binary-save-8o'>Save <tt>.8o</tt></div>
           <div id='binary-save-ch8'>Save <tt>.ch8</tt></div>
@@ -341,7 +344,14 @@ body {
   font-family: futura;
   height: 100%;
 }
-input { font-size: 13px; font-family: monospace; background:#272822; color:#f8f8f2; padding:5px; }
+input {
+  font-size: 13px;
+  font-family: monospace;
+  background:#272822;
+  color:#f8f8f2;
+  padding:5px;
+  border: 1px solid black;
+}
 input::selection { background: rgba(73, 72, 62, .99); }
 input:focus { outline: none; }
 .invisible { display: none!important; }
@@ -412,8 +422,9 @@ input:focus { outline: none; }
 #audio-tone-group { display: flex; flex-direction: row; margin-top: 10px; align-items: center; }
 #audio-tone-group .pair { margin-right: 15px; }
 #audio-tone-group .button { margin-left: 10px; }
-#audio-tone-group input { width:40px; height:30px; margin-left:5px; border:1px solid black; }
+#audio-tone-group input { width:40px; height:30px; margin-left:5px; }
 #binary-editor        .CodeMirror { height: 100px; }
+#binary-filename { width: 100%; }
 
 #color-table {
   background: #AAA;
