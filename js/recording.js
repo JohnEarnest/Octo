@@ -10,14 +10,15 @@ function gifBuilder(width, height, colors) {
 	const b = x => buffer.push(x & 0xFF)
 	const s = x => { b(x); b(x >> 8) }
 	const t = x => x.split('').forEach(x => b(x.charCodeAt(0)))
+	const z = Math.ceil(Math.log(colors.length)/Math.log(2))
 
 	t('GIF89a') // header
 	s(width)
 	s(height)
-	b(241)      // global colortable, 8-bits per channel, 4 colors
-	b(0)        // background color index
-	b(0)        // 1:1 pixel aspect ratio
-	colors.forEach(x => { b(x>>16); b(x>>8); b(x) })
+	b(0xF0 | (z-1)) // global colortable, 8-bits per channel, 2^z colors
+	b(0)            // background color index
+	b(0)            // 1:1 pixel aspect ratio
+	for (let x=0; x<1<<z; x++) { const c=colors[x]|0; b(c>>16); b(c>>8); b(c) }
 
 	return {
 		comment: text => {
@@ -50,9 +51,9 @@ function gifBuilder(width, height, colors) {
 			s(height)
 			b(0)           // no local colortable
 			b(7)           // minimum LZW code size
-			for (var off = 0; off < pixels.length; off += 64) {
-				b(1 + 64) // block size
-				b(0x80)   // CLEAR
+			for (let off = 0; off < pixels.length; off += 64) {
+				b(1 + Math.min(64,pixels.length)) // block size
+				b(0x80)                           // CLEAR
 				pixels.slice(off, off+64).forEach(b)
 			}
 			b(0) // end of frame

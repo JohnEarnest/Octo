@@ -69,6 +69,12 @@ document.getElementById('binary-save-8o').onclick = _ => {
 	const name = document.getElementById('binary-filename').value
 	saveAs(new Blob([editor.getValue()], {type: 'text/plain;charset=utf-8'}), name+'.8o')
 }
+document.getElementById('binary-save-cart').onclick = _ => {
+	const name  = document.getElementById('binary-filename').value
+	const label = name + '\n' + (new Date().toISOString().replace('T','\n'))
+	const cart  = buildCartridge(label, preparePayload())
+	saveAs(new Blob([new Uint8Array(cart)], {type: 'image/gif'}), name+'.gif')
+}
 
 writeBytes(binaryEditor, null, [0xD0, 0x15, 0x70, 0x04, 0x40, 0x40, 0x71, 0x05, 0x40, 0x40, 0x60, 0x00, 0x12, 0x00])
 

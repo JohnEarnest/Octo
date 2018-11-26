@@ -144,6 +144,7 @@
         <div class='buttonbar'>
           <div id='binary-save-8o'>Save <tt>.8o</tt></div>
           <div id='binary-save-ch8'>Save <tt>.ch8</tt></div>
+          <div id='binary-save-cart'>Save Cartridge</div>
         </div>
       </div>
 
@@ -275,6 +276,10 @@
       </div>
     </div>
     <div class='spacer'></div>
+  </div>
+
+  <div class='lightbox' id='dragon'>
+    <div>Drop cartridges on the window to load and run them.</div>
   </div>
 </body>
 
@@ -502,6 +507,8 @@ input:focus { outline: none; }
 #run-keys .key:active,
 #run-keys .key.active { color: white; background-color: black; border: 1px solid white; }
 
+#dragon { flex-direction: column; opacity:0.5; }
+#dragon>div { text-align:center; font-size: 30px; }
 </style>
 
 <script src='js/debugger.js'></script>
@@ -524,6 +531,7 @@ const editor = CodeMirror(document.getElementById('editor'), {
   smartIndent:    false,
   tabSize:        2,
   indentWithTabs: false,
+  dragDrop:       false,
   value:          'loading...',
   gutters:        ['breakpoints', 'CodeMirror-linenumbers'],
   extraKeys: {
@@ -609,11 +617,35 @@ document.getElementById('main-run').onclick = _ => runRom(compile())
 document.getElementById('main-open').onclick = _ => mainInput.click()
 document.getElementById('main-save').onclick = _ => share()
 
-mainInput.onchange = _ => {
-  var reader = new FileReader()
-  reader.onload = _ => editor.setValue(reader.result)
-  reader.readAsText(mainInput.files[0])
+const dragon = document.getElementById('dragon')
+document.body.ondragover = _ => setVisible(dragon, true, 'flex')
+dragon.ondragleave       = _ => setVisible(dragon, false)
+dragon.ondragover        = _ => event.preventDefault()
+dragon.ondrop = event => {
+  setVisible(dragon, false)
+  event.preventDefault()
+  if (event.dataTransfer.items && event.dataTransfer.items[0].kind === 'file') {
+    openFile(event.dataTransfer.items[0].getAsFile(), true)
+  }
 }
+
+function openFile(file, runCart) {
+  const reader = new FileReader()
+  if (file.type == 'image/gif') {
+    reader.onload = _ => {
+      const payload = parseCartridge(new Uint8Array(reader.result))
+      if (runCart) runPayload(payload.options, payload.program)
+      else         runCart   (payload.options, payload.program)
+    }
+    reader.readAsArrayBuffer(file)
+  }
+  else {
+    reader.onload = _ => editor.setValue(reader.result)
+    reader.readAsText(file)
+  }
+}
+
+mainInput.onchange = _ => openFile(mainInput.files[0], false)
 showToolbox.onclick = _ => {
   showToolbox.classList.toggle('selected')
   setVisible(toolbox, showToolbox.classList.contains('selected'), 'flex')
