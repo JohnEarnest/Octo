@@ -40,7 +40,7 @@ function updateOptions() {
   compatProfile.setValue('none')
   for (key in compatibilityProfiles) {
     const p = compatibilityProfiles[key]
-    const same = Object.keys(p).every(x => emulator[x] == !!p[x])
+    const same = Object.keys(p).every(x => emulator[x] == p[x])
     if (same) compatProfile.setValue(key)
   }
 
