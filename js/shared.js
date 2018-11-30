@@ -23,12 +23,12 @@ const optionFlags = [
 	"clipQuirks",
 	"vBlankQuirks",
 	"jumpQuirks",
-	"enableXO",
 	"screenRotation",
+	"maxSize",
 ]
 function unpackOptions(emulator, options) {
 	optionFlags.forEach(x => { if (x in options) emulator[x] = options[x] })
-	emulator.enableXO = 1 // legacy option, force on
+	if (options["enableXO"]) emulator.maxSize = 65024 // legacy option
 }
 function packOptions(emulator) {
 	const r = {}

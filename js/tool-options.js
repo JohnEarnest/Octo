@@ -2,7 +2,7 @@
 * Options
 **/
 
-const compatSize     = radioBar(document.getElementById('max-size'), 3584, updateOptions)
+const compatSize     = radioBar(document.getElementById('max-size'), 3584, setOptions)
 const compatProfile  = radioBar(document.getElementById('compatibility-profile'), 'octo', setCompatibilityProfile)
 const screenRotation = radioBar(document.getElementById('screen-rotation'), 0, x => emulator.screenRotation = +x)
 
@@ -24,23 +24,24 @@ const compatibilityFlags = {
 function setCompatibilityProfile(x) {
   const p = compatibilityProfiles[x]
   for (key in compatibilityFlags) emulator[key] = p[key]
-  compatSize.setValue(p.maxSize)
   saveLocalOptions()
   updateOptions()
 }
 function setOptions() {
   for (key in compatibilityFlags) emulator[key] = compatibilityFlags[key].getValue()
+  emulator.maxSize = compatSize.getValue()
   saveLocalOptions()
   updateOptions()
 }
 function updateOptions() {
   for (key in compatibilityFlags) compatibilityFlags[key].setValue(emulator[key])
   screenRotation.setValue(emulator.screenRotation)
+  compatSize.setValue(emulator.maxSize)
   compatProfile.setValue('none')
   for (key in compatibilityProfiles) {
     const p = compatibilityProfiles[key]
-    const same = Object.keys(p).every(x => x == 'maxSize' || emulator[x] == !!p[x])
-    if (p.maxSize == compatSize.getValue() && same) compatProfile.setValue(key)
+    const same = Object.keys(p).every(x => emulator[x] == !!p[x])
+    if (same) compatProfile.setValue(key)
   }
 
 }
