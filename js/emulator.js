@@ -87,6 +87,7 @@ function Emulator() {
 	this.vBlankQuirks       = false;
 	this.enableXO           = true;
 	this.screenRotation     = 0;
+	this.maxSize            = 3584;
 	this.maskFormatOverride = true;
 	this.numericFormatStr   = "default";
 

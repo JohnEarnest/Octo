@@ -733,7 +733,7 @@ function compile() {
     output.setValue('no output')
     c.go()
     writeBytes(output, null, c.rom)
-    const maxRom = compatSize.getValue()
+    const maxRom = emulator.maxSize
     if (c.rom.length > maxRom) {
       throw 'Rom is too large- ' + (c.rom.length-maxRom) + ' bytes over!'
     }
