@@ -633,9 +633,15 @@ function openFile(file, runCart) {
   const reader = new FileReader()
   if (file.type == 'image/gif') {
     reader.onload = _ => {
-      const payload = parseCartridge(new Uint8Array(reader.result))
-      if (runCart) runPayload(payload.options, payload.program)
-      else         runCart   (payload.options, payload.program)
+      try {
+        const payload = parseCartridge(new Uint8Array(reader.result))
+        if (runCart) runPayload(payload.options, payload.program)
+        else         runCart   (payload.options, payload.program)
+      }
+      catch(error) {
+        setStatusMessage('Unable to read cartridge.')
+        console.log(error)
+      }
     }
     reader.readAsArrayBuffer(file)
   }

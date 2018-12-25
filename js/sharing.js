@@ -219,35 +219,35 @@ const BASE_IMAGE = [
 ]
 
 function unLZW(minCodeSize, bytes) {
-	let i = 0, b = 0, size, nextsym, symbols
+	const prefix=[], suffix=[], clear=1<<minCodeSize
+	let   size, mask, next, old, first, i=0, b=0, d=0
+	for (var x=0; x<clear; x++) suffix[x]=x
+
 	const symbol = _ => {
-		const r = ((bytes[i]>>b) | (bytes[i+1]<<(8-b))) & ((1<<(size+1))-1)
-		i += Math.floor((size+1+b)/8)
-		b = (size+1+b)%8
-		return r
+		while (b<size) d+=bytes[i++]<<b, b+=8
+		const r=d&mask; return d>>=size, b-=size, r
 	}
 	const cleartable = _ => {
-		size = minCodeSize
-		symbols = {}
-		for (let x = 0; x < 1<<size; x++) symbols[x] = [x]
-		nextsym = (1<<size)+2
+		size=minCodeSize+1, mask=(1<<size)-1, next=clear+2, old=null
 	}
-	const append = x => {
-		if (nextsym != 4096) symbols[nextsym++] = x
-		if (nextsym == 1<<size+1 && nextsym < 4096) size++
+	const unpack = (c,r) => {
+		const t=[]
+		if    (c==next) t.push(first),     c=old
+		while (c>clear) t.push(suffix[c]), c=prefix[c]
+		r.push(first=suffix[c])
+		Array.prototype.push.apply(r, t.reverse())
+		if (next>=4096) return
+		prefix[next]=old, suffix[next++]=first
+		if ((next&mask)==0 && next<4096) size++, mask+=next
 	}
 	cleartable()
-	const r = []
-	let w = null
-	while(i < bytes.length) {
-		const t = symbol()
-		if (t == (1<<minCodeSize)) { cleartable(); w=null; continue }
-		if (t == (1<<minCodeSize)+1) { break }
-		if (w == null)  { w = [t]; r.push(t); continue }
-		const e = symbols[t] || w.concat(w[0])
-		e.forEach(x => r.push(x))
-		append(w.concat(e[0]))
-		w = e
+	const r=[]
+	while (i<bytes.length) {
+		const t=symbol()
+		if (t>next || t==clear+1) break
+		else if (t==clear)  cleartable()
+		else if (old==null) r.push(suffix[old=first=t])
+		else                unpack(t, r), old=t
 	}
 	return r
 }
