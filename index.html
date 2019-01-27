@@ -635,8 +635,8 @@ function openFile(file, runCart) {
     reader.onload = _ => {
       try {
         const payload = parseCartridge(new Uint8Array(reader.result))
-        if (runCart) runPayload(payload.options, payload.program)
-        else         runCart   (payload.options, payload.program)
+        if (runCart) runPayload (payload.options, payload.program)
+        else         openPayload(payload.options, payload.program)
       }
       catch(error) {
         setStatusMessage('Unable to read cartridge.')
