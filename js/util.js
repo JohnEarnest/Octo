@@ -21,7 +21,10 @@ function ajax(method, url, payload, then) {
   x.open(method, url)
   x.onreadystatechange = _ => {
     if (x.readyState != 4) return
-    if (method == 'GET' && x.status == 404) { setStatusMessage('Unable to retrieve <tt>' + url +'</tt>', false); return }
+    if (method == 'GET' && x.status != 200) {
+      setStatusMessage('Unable to retrieve <tt>' + url +'</tt>', false)
+      return
+    }
     then(JSON.parse(x.responseText), x.status)
   }
   x.send(payload ? JSON.stringify(payload) : null)
