@@ -105,15 +105,14 @@ function renderDisplay(emulator) {
 	var c = document.getElementById(renderTarget);
 
 	// Canvas rendering can be expensive. Exit out early if nothing has changed.
-	// NOTE: toggling emulator.hires changes emulator.p dimensions.
-	var colors = [emulator.backColor, emulator.fillColor, emulator.fillColor2, emulator.blendColor];
+	var colors = [emulator.backgroundColor, emulator.fillColor, emulator.fillColor2, emulator.blendColor];
 	if (c.last !== undefined) {
 		if (arrayEqual(c.last.p[0], emulator.p[0]) && arrayEqual(c.last.p[1], emulator.p[1])
 				&& arrayEqual(c.last.colors, colors)) {
 			return;
 		}
-		if (c.last.p[0].length != emulator.p[0].length)
-			c.last = undefined
+		if (c.last.hires !== emulator.hires)
+			c.last = undefined;  // full redraw when switching resolution
 	}
 	var g = c.getContext("2d");
 	getTransform(emulator, g);
@@ -138,7 +137,8 @@ function renderDisplay(emulator) {
 
 	c.last = {
 		colors: colors,
-		p: [emulator.p[0].slice(), emulator.p[1].slice()]
+		p: [emulator.p[0].slice(), emulator.p[1].slice()],
+		hires: emulator.hires,
 	};
 }
 
