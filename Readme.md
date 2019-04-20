@@ -24,7 +24,8 @@ General information:
 - [SuperChip Extensions](https://github.com/JohnEarnest/Octo/blob/gh-pages/docs/SuperChip.md)
 - [XO-Chip Extensions](https://github.com/JohnEarnest/Octo/tree/gh-pages/docs/XO-ChipSpecification.md)
 - [Octo Programming Google Group](https://groups.google.com/forum/#!forum/octo-programming)
-- [OctoJam](http://www.awfuljams.com) an Octo-centric game jam held every October.
+- [OctoJam](http://octojam.com) an Octo-centric game jam held every October.
+- [Chip-8 Archive](https://github.com/JohnEarnest/chip8Archive) A curated gallery of Chip-8 Programs.
 
 Third-party tools and references:
 
