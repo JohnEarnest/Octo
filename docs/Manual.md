@@ -194,7 +194,7 @@ When using `:calc` and `:macro` together, it is often useful to write the conten
 		:byte Y
 	}
 
-For convenience and brevity, if `:byte` is immediately followed by `{` the expression is computed as with `:calc` and compiled as a byte, without defining an intermediate constant.
+For convenience and brevity, if `:byte` is immediately followed by `{` the expression is computed as with `:calc` and compiled as a byte, without defining an intermediate constant. The `:org` and `:call` operatives can also accept a constant expression, truncated to a 16-bit or 12-bit address, respectively.
 
 SuperChip
 ---------

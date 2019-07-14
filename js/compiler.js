@@ -197,7 +197,7 @@ function Compiler(source) {
 }
 
 Compiler.prototype.data = function(a) {
-	if (typeof this.rom[this.hereaddr-0x200] != "undefined") {
+	if (typeof this.rom[this.hereaddr-0x200] != "undefined" && this.hereaddr-0x200 >= 0) {
 		throw "Data overlap. Address "+hexFormat(this.hereaddr)+" has already been defined.";
 	}
 	this.rom[this.hereaddr-0x200] = (a & 0xFF);
@@ -619,10 +619,13 @@ Compiler.prototype.instruction = function(token) {
 		var name = this.checkName(this.next(), "calculated constant");
 		this.constants[name] = this.parseCalculated(name);
 	}
-	else if (token == ":byte")   {
+	else if (token == ":byte") {
 		this.data(this.peek() == '{' ? this.parseCalculated('ANONYMOUS') : this.shortValue());
 	}
-	else if (token == ":org")    { this.hereaddr = this.constantValue(); }
+	else if (token == ":org") {
+		var addr = this.peek() == '{' ? this.parseCalculated('ANONYMOUS') : this.constantValue();
+		this.hereaddr = 0xFFFF & addr;
+	}
 	else if (token == ";")       { this.inst(0x00, 0xEE); }
 	else if (token == "return")  { this.inst(0x00, 0xEE); }
 	else if (token == "clear")   { this.inst(0x00, 0xE0); }
@@ -750,7 +753,8 @@ Compiler.prototype.instruction = function(token) {
 		this.vassign(this.register(token), this.next());
 	}
 	else if (token == ":call") {
-		this.immediate(0x20, this.wideValue(this.next()));
+		var addr = this.peek() == '{' ? this.parseCalculated('ANONYMOUS') : this.wideValue(this.next());
+		this.immediate(0x20, 0xFFF & addr);
 	}
 	else {
 		this.immediate(0x20, this.wideValue(token));

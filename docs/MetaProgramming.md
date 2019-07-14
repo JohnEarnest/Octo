@@ -431,6 +431,93 @@ temp-end
 
 The technique of using low memory as temporary storage for "compile time data structures" is quite powerful. I'm sure that you can imagine writing even more elaborate macros to help prepare data for your own applications.
 
+Custom Control Structures
+-------------------------
+In the previous example, we saw the use of low memory as a scratchpad for intermediate bytes. Octo will produce a compiler error if a program attempts to re-define the same portion of a ROM, but 0x000-0x200 are free game- these addresses will never be included in the final output of the compiler.
+
+The following macro is one way we could formulate a rewritable variable in this storage area. Given an address `A` and a number `X`, we increment the value at `A` by `X` and, as a side-effect, leave the previous value of that address in a calculated constant named `prev`:
+
+```
+:macro inc A X {
+	:calc there { HERE }
+	:org  A
+	:calc prev { @ HERE }
+	:byte { X + prev }
+	:org  there
+}
+```
+
+Read over the following fragment and consider how reads, writes, and re-definitions produce the sequence of compiled bytes indicated in the comments:
+
+```
+: main
+	exit            # 0x00FD
+	:const pos 32
+	inc pos 5
+	:byte { prev }  # 0
+	:byte { @ pos } # 5
+	inc pos 4
+	:byte { @ pos } # 9
+	inc pos -2
+	:byte { @ pos } # 7
+	:byte { prev }  # 9
+```
+
+We can use this as a building block for making a compile-time stack, which in turn allows us to synthesize our own specialized control structures:
+
+```
+:const for-stack-pointer 0
+inc for-stack-pointer 1
+
+:macro for REG FROM COUNT STEP {
+	REG := FROM loop
+	:calc for-prog { HERE }
+		inc for-stack-pointer 4
+		:org { -3 + @ for-stack-pointer }
+		REG += STEP
+		:calc to { FROM + COUNT * STEP }
+		if REG != to then
+	:org for-prog
+}
+:macro next {
+	inc for-stack-pointer -4
+	:byte { @ prev - 3 }
+	:byte { @ prev - 2 }
+	:byte { @ prev - 1 }
+	:byte { @ prev - 0 }
+	again
+}
+
+# usage example
+: main
+	for v0 16 6 5
+		for v1 3 4 6
+			sprite v0 v1 5
+		next
+	next
+```
+
+Decompiling the output of the nested `for...next` constructs above helps show the behavior of the macros:
+
+```
+: main
+	v0 := 16
+	loop
+		v1 := 3
+		loop
+			sprite v0 v1 5
+			v1 += 6
+			if v1 != 27 then
+		again
+		v0 += 5
+		if v0 != 46 then
+	again
+```
+
+The `for` macro builds the head of the loop in the program ROM, and then stages the two input-dependent instructions on a stack in scratchpad memory. The `next` macro pops the bytes of these instructions from this stack and closes the loop.
+
+In general, be aware that macros of this nature tend to be _very_ difficult to design and debug, and prevent the compiler from producing useful error messages when things go off the rails- use them sparingly if at all.
+
 Sprite Width
 ------------
 Let's look at another place compile-time manipulation of sprites can be handy: variable-width text. We've drawn a series of 4-pixel tall characters, and we want to draw a series of these characters to spell out a word:
