@@ -144,7 +144,7 @@
         <div class='buttonbar'>
           <div id='binary-save-8o'>Save <tt>.8o</tt></div>
           <div id='binary-save-ch8'>Save <tt>.ch8</tt></div>
-          <div id='binary-save-cart'>Save Cartridge</div>
+          <div id='binary-save-cart'>Save Cartridge...</div>
         </div>
       </div>
 
@@ -280,6 +280,27 @@
 
   <div class='lightbox' id='dragon'>
     <div>Drop cartridges on the window to load and run them.</div>
+  </div>
+
+  <div id='cartridge-modal'>
+    <div class='lightbox background'></div>
+    <div class='lightbox foreground'>
+      <div class='modal'>
+        <h1>Build a Cartridge: &nbsp;&nbsp;<tt id='cartridge-filename'></tt></h1>
+        <p>
+          Click on the preview to choose a label image,
+          or enter text that should appear on the label.
+        </p>
+        <p id='cartridge-err'></p>
+        <canvas width='320' height='256' id='cartridge-preview'></canvas>
+        <input type='file' id='cartridge-image' style='display:none'>
+        <div id='cartridge-desc'></div>
+        <div class='buttonbar'>
+          <div id='cartridge-cancel'>Cancel</div>
+          <div id='cartridge-save'>Save</div>
+        </div>
+      </div>
+    </div>
   </div>
 </body>
 
@@ -509,6 +530,18 @@ input:focus { outline: none; }
 
 #dragon { flex-direction: column; opacity:0.5; }
 #dragon>div { text-align:center; font-size: 30px; }
+
+#cartridge-modal { color:black; display:none; }
+#cartridge-modal h1 { font-size: 13px; margin:0; }
+#cartridge-modal #cartridge-desc { margin-top: 10px; }
+#cartridge-modal #cartridge-desc .CodeMirror { height: 100px; }
+#cartridge-modal p { width: 320px; }
+#cartridge-modal #cartridge-err { color:darkred; }
+#cartridge-modal>.lightbox { display:flex; }
+#cartridge-modal>.lightbox.background { opacity:0.5; }
+#cartridge-modal>.lightbox.foreground { background:rgba(0,0,0,0); align-items:center; }
+#cartridge-modal .modal { background:gray; border-radius:5px; padding:15px; image-rendering: pixelated; }
+#cartridge-modal #cartridge-preview { border:8px solid black; cursor:pointer; }
 </style>
 
 <script src='js/debugger.js'></script>

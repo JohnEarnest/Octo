@@ -253,6 +253,7 @@ function unLZW(minCodeSize, bytes) {
 }
 
 function gifDecode(bytes) {
+	if (bytes[0]!=71||bytes[1]!=73||bytes[2]!=70) throw 'bad magic number.'
 	let   i  = 6 // skip GIF89a
 	const b  = _ => bytes[i++] || 0
 	const s  = _ => b() | (b()<<8)
@@ -273,9 +274,13 @@ function gifDecode(bytes) {
 		else if (here == 0x2C) {
 			const left = s(), top = s(), iw = s(), ih = s(), ip = b()
 			const lct = (ip & 0x80) ? cl(1 << ((ip & 0x70)+1)) : null
-			if (ip & 0x40) throw 'interlaced GIFs are not supported'
-			if (iw != width || ih != height) throw 'windowing is nyi!'
-			frames.push({ palette: lct||gct, pixels: unLZW(b(), dl()) })
+			if (ip & 0x40) throw 'interlaced GIFs are not supported.'
+			let pix = unLZW(b(), dl())
+			if (iw != width || ih != height || left!=0 || top!= 0) {
+				const lf = frames[frames.length-1].pixels.slice(0)
+				pix = copyImage(lf,width,height,pix,iw,ih,left,top)
+			}
+			frames.push({ palette: lct||gct, pixels:pix })
 		}
 		else if (here == 0x21) {
 			const xt = b()
@@ -285,6 +290,28 @@ function gifDecode(bytes) {
 		else { throw 'unrecognized block type '+here+'!' }
 	}
 	return { width, height, frames }
+}
+
+function adaptPalette(pixels, srcpal, dstpal) {
+	const m = srcpal.map(x => {
+		const xr = (x>>16)&0xFF, xg = (x>>8)&0xFF, xb = (x>>8)&0xFF
+		return dstpal.map(c => {
+			const cr = (c>>16)&0xFF, cg = (c>>8)&0xFF, cb = (c>>8)&0xFF
+			return (xr-cr)**2 + (xg-cg)**2 + (xb-cb)**2
+		}).reduce((b,v,i,a) => v>a[b]?b:i, 0)
+	})
+	return pixels.map(x => m[x])
+}
+
+function copyImage(dest, dw, dh, src, sw, sh, x, y) {
+	for (var a = 0; a < sh; a++) {
+		for (var b = 0; b < sw; b++) {
+			if (a+y >= 0 && a+y < dh && b+x >= 0 && b+x < dw) {
+				dest[(b+x) + (dw*(a+y))] = src[b + sw*a] + 1
+			}
+		}
+	}
+	return dest
 }
 
 function printLabel(dest, pen, text) {
@@ -317,8 +344,26 @@ function printLabel(dest, pen, text) {
 	})
 }
 
-function buildCartridge(label, data) {
+function decorateCartridge(label, image) {
 	const base = gifDecode(BASE_IMAGE)
+	if (image) {
+		const p = base.frames[0].palette;
+		copyImage(
+			base.frames[0].pixels, base.width, base.height,
+			adaptPalette(image.frames[0].pixels, image.frames[0].palette, [NaN,p[1],p[3],p[4]]),
+			image.width, image.height, 16, 21,
+		)
+	}
+	else {
+		const p = { w: base.width, h: base.height, buffer: new Uint8Array(base.frames[0].pixels) }
+		printLabel(p, 1, label)
+		base.frames[0].pixels = p.buffer
+	}
+	return base
+}
+
+function buildCartridge(label, data, image) {
+	const base = decorateCartridge(label, gifDecode(image))
 	const bytes = JSON.stringify(data).split('').map(x => x.charCodeAt(0))
 	const payload = [
 		(bytes.length >> 24) & 0xFF,
@@ -342,9 +387,7 @@ function buildCartridge(label, data) {
 	}
 	const g = gifBuilder(w, h, expand(base.frames[0].palette))
 	for (let x = 0; x < payload.length; x += PER_FRAME) {
-		const p = { w: w, h: h, buffer: new Uint8Array(base.frames[0].pixels) }
-		printLabel(p, 1, label)
-		g.frame(encode(p.buffer, payload.slice(x, x+PER_FRAME)))
+		g.frame(encode(base.frames[0].pixels, payload.slice(x, x+PER_FRAME)))
 	}
 	return g.finish()
 }
