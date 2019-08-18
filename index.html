@@ -305,6 +305,17 @@
 </body>
 
 <style>
+@font-face {
+  font-family: 'Poppins';
+  src: url('css/poppins-regular-webfont.woff') format('woff');
+  font-weight: normal;
+}
+@font-face {
+  font-family: 'Poppins';
+  src: url('css/poppins-bold-webfont.woff') format('woff');
+  font-weight: bold;
+}
+
 /* reusable radio bar widget */
 .radiobar {
   display: flex;
@@ -367,7 +378,7 @@ body {
   overflow: hidden;
   color: white;
   font-size: 13px;
-  font-family: futura;
+  font-family: 'Poppins', futura;
   height: 100%;
 }
 input {
@@ -468,7 +479,7 @@ input:focus { outline: none; }
 #output { display: none; }
 #collapse-out, #expand-out { float: right; padding: 0px 20px 0px 20px; cursor: pointer; border-left: 1px solid #222; }
 #collapse-out:hover, #expand-out:hover { background:#222; }
-#output-header, #status { cursor: pointer; border-top: 1px solid #222; }
+#output-header, #status { cursor: pointer; border-top: 1px solid #222; background:black; }
 #output .CodeMirror { height: 100px; }
 
 .lightbox {
@@ -494,6 +505,11 @@ input:focus { outline: none; }
 #debugger .debug-context tr.current { text-decoration: underline; font-weight: bold; }
 #debugger .debug-context td:first-child { width: 50px; }
 #debugger .debug-context td:last-child { width: 60%; }
+#debugger .debug-profile { border-collapse: collapse; }
+#debugger .debug-profile tr:hover { background: gray; }
+#debugger .debug-profile th { border-bottom: 1px solid white; min-width: 80px; }
+#debugger .debug-profile th:not(:first-child),
+#debugger .debug-profile td:not(:first-child) { border-left: 1px solid white; padding:4px; }
 #debugger .debug-profile-results { position: fixed; bottom: 20px; }
 #debugger .debug-profile-full {
   font-size:10px;
@@ -563,7 +579,7 @@ const editor = CodeMirror(document.getElementById('editor'), {
   lineNumbers:    true,
   smartIndent:    false,
   tabSize:        2,
-  indentWithTabs: false,
+  indentWithTabs: true,
   dragDrop:       false,
   value:          'loading...',
   gutters:        ['breakpoints', 'CodeMirror-linenumbers'],
@@ -738,7 +754,7 @@ window.onkeyup = event => {
   if (event.key == 'i') { emulator.breakpoint ? clearBreakpoint() : haltBreakpoint('user interrupt') }
   if (event.key == 'p') { haltProfiler('profiler') }
   if (emulator.breakpoint) {
-    if (event.key == 'o') { emulator.tick(); renderDisplay(emulator); haltBreakpoint('single step') }
+    if (event.key == 'o') { emulator.dt = emulator.st = 0; emulator.tick(); renderDisplay(emulator); haltBreakpoint('single step') }
     if (event.key == 'u') { const l = emulator.r.length; if (l>0) { emulator.stack_breakpoint = l-1; clearBreakpoint() } } // step out
     if (event.key == 'l') {
       if ((emulator.m[emulator.pc] & 0xF0) == 0x20) { const l = emulator.r.length; if (l >= 0) { emulator.stack_breakpoint = l; clearBreakpoint(); } }
