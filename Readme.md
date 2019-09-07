@@ -38,6 +38,7 @@ Third-party tools and references:
 - [VSCode syntax definitions/integration](https://github.com/hoovercj/vscode-octo)
 - [OctoFont](https://github.com/jdeeny/octofont) .TTF font converter.
 - [wernsey chip8](https://github.com/wernsey/chip8) an alternative assembler/disassembler.
+- [EZ-Bake Animator](http://beyondloom.com/tools/ezbake.html) a graphics preparation tool.
 
 Third-party games, programs and libraries:
 
