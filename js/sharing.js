@@ -144,17 +144,23 @@ function buildStandalone(callback) {
 		options: packOptions(emulator)
 	})}</script>\n`
 	let i = 0
+	const root = 'https://johnearnest.github.io/Octo/'
 	const deps = [
-		{u:'js/compiler.js', f:x=>`<script>${x}</script>\n`},
-		{u:'js/emulator.js', f:x=>`<script>${x}</script>\n`},
-		{u:'js/shared.js',   f:x=>`<script>${x}</script>\n`},
-		{u:'standalone.html',f:x=>x},
+		{u:root+'js/compiler.js', f:x=>`<script>${x}</script>\n`},
+		{u:root+'js/emulator.js', f:x=>`<script>${x}</script>\n`},
+		{u:root+'js/shared.js',   f:x=>`<script>${x}</script>\n`},
+		{u:root+'standalone.html',f:x=>x},
 	]
 	function fetchDeps() {
 		const x = new XMLHttpRequest()
 		x.open('GET', deps[i].u)
 		x.onreadystatechange = _ => {
 			if (x.readyState != 4) return
+			if (x.status != 200) {
+				console.log('Unable to retrieve ' + deps[i].u, x.status)
+				return
+			}
+			console.log('successfully fetched ', deps[i].u, x.responseText.length)
 			page += deps[i++].f(x.responseText)
 			if (i >= deps.length) { callback(page) }
 			else { fetchDeps() }
