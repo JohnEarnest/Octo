@@ -695,6 +695,19 @@ function openFile(file, runCart) {
     }
     reader.readAsArrayBuffer(file)
   }
+  else if (file.type == 'text/html') {
+    reader.onload = _ => {
+      try {
+        const payload = parseStandalone(reader.result)
+        openPayload(payload.options, payload.program)
+      }
+      catch(error) {
+        setStatusMessage('Unable to unpack standalone HTML project.')
+        console.log(error)
+      }
+    }
+    reader.readAsText(file)
+  }
   else {
     reader.onload = _ => editor.setValue(reader.result)
     reader.readAsText(file)
