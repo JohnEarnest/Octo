@@ -130,6 +130,41 @@ window.onload = _ => {
 }
 
 /**
+* Standalone
+*
+* Some services like Itch.io allow hosting a game as a standalone HTML file.
+* This routine glues together the necessary parts of the Octo emulator/compiler,
+* the program data, and a small runtime stub.
+**/
+
+function buildStandalone(callback) {
+	console.log('build standalone...')
+	let page = `<script>data=${JSON.stringify({
+		program: editor.getValue(),
+		options: packOptions(emulator)
+	})}</script>\n`
+	let i = 0
+	const deps = [
+		{u:'js/compiler.js', f:x=>`<script>${x}</script>\n`},
+		{u:'js/emulator.js', f:x=>`<script>${x}</script>\n`},
+		{u:'js/shared.js',   f:x=>`<script>${x}</script>\n`},
+		{u:'standalone.html',f:x=>x},
+	]
+	function fetchDeps() {
+		const x = new XMLHttpRequest()
+		x.open('GET', deps[i].u)
+		x.onreadystatechange = _ => {
+			if (x.readyState != 4) return
+			page += deps[i++].f(x.responseText)
+			if (i >= deps.length) { callback(page) }
+			else { fetchDeps() }
+		}
+		x.send()
+	}
+	fetchDeps()
+}
+
+/**
 * Cartridges
 *
 * Octo cartridge files are GIF89a images with a payload steganographically

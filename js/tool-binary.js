@@ -78,6 +78,12 @@ document.getElementById('binary-save-cart').onclick = _ => {
 	cartImageBytes = null
 	cartDesc.setValue('')
 }
+document.getElementById('binary-save-html').onclick = _ => {
+	const name = binaryFilename.value
+	buildStandalone(x => {
+		saveAs(new Blob([x], {type: 'text/html;charset=utf-8'}, name+'.html'))
+	})
+}
 writeBytes(binaryEditor, null, [0xD0, 0x15, 0x70, 0x04, 0x40, 0x40, 0x71, 0x05, 0x40, 0x40, 0x60, 0x00, 0x12, 0x00])
 
 function updateBinary() {

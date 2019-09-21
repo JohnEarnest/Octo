@@ -1,0 +1,38 @@
+<body><canvas id='target' width=512 height=256></canvas></body>
+<style>body{margin:0px;display:flex;align-items:center;justify-content:center;}</style>
+<script>
+const emulator = new Emulator()
+const compiler = new Compiler(data.program)
+function run(options,rom) {
+	unpackOptions(emulator, options)
+	setRenderTarget(4, 'target')
+	emulator.init(rom)
+	emulator.importFlags = _=> JSON.parse(localStorage.getItem('octoFlagRegisters'))
+	emulator.exportFlags = x=> localStorage.setItem('octoFlagRegisters', JSON.stringify(x))
+	emulator.buzzTrigger = (ticks,rest)=> playPattern(ticks, emulator.pattern, rest)
+	window.addEventListener('keydown',e=>{
+		if (!audio) audioSetup()
+		if (!(e.keyCode in emulator.keys)) emulator.keys[e.keyCode]=true
+	}, false)
+	window.addEventListener('keyup', e=>{
+		if (event.keyCode in emulator.keys) delete emulator.keys[event.keyCode]
+		if (!emulator.waiting) return
+		for(var z=0; z<16; z++) {
+			if (keymap[z] != event.keyCode) continue
+			emulator.waiting=false
+			emulator.v[emulator.waitReg]=z
+			break
+		}
+	}, false)
+	intervalHandle = setInterval(_=>{
+		if (emulator.halted) return
+		for(var z = 0; (z<emulator.tickrate) && (!emulator.waiting); z++) emulator.tick()
+		if (emulator.dt > 0) emulator.dt--
+		if (emulator.st > 0) emulator.st--
+		renderDisplay(emulator)
+		document.body.style.backgroundColor = emulator.st?emulator.buzzColor:emulator.quietColor
+	}, 1000/60)
+}
+compiler.go()
+run(data.options, {rom:compiler.rom})
+</script>

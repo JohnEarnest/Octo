@@ -89,6 +89,8 @@ You can also use the `gist` id or `key` to embed a Chip8 emulator in an `iframe`
 
 The `scale` argument is optional and specifies the number of pixels which should make up a high-resolution mode Chip8 pixel. Low-resolution mode pixels will be twice this size.
 
+Alternatively, using the "Save HTML" button in the "Binary Tools" panel of the toolbox, you can generate a single HTML file containing the Octo emulator and your program, allowing you to easily host a game yourself or on sites like Itch.io.
+
 Licensing
 ---------
 Octo, along with all its associated documentation, examples and tooling, are made available under the MIT license. See LICENSE.txt for additional details. If for any reason this is insufficiently flexible or permissive for some application, please contact John Earnest with your request. Contributions to this repository are welcome, with the understanding that they will fall under the same licensing conditions.
