@@ -7,6 +7,9 @@ const emulator = new Emulator()
 function range(x) { return Array.apply(undefined, Array(x)).map((_, i) => i) }
 function zip(a, b, dyad) { return a.map((x,i) => dyad(x, b[i])) }
 function mod(x, y) { x %= y; if (x < 0) x += y; return x }
+function toset(x) { return x.reduce((a,b) => (a[b]=1,a), {}) }
+function distinct(x) { return Object.keys(toset(x)) }
+function except(x, y) { return Object.keys(x.reduce((a,b) => (b!=y?a[b]=1:0,a), {})) }
 
 const FORMATS = { dec:decimalFormat, hex:hexFormat, bin:binaryFormat, default:hexFormat }
 function zeroPad(str, n) { const d = str.length % n; return (d == 0 ? '' : '00000000'.substr(0, n - d)) + str }

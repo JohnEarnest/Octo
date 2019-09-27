@@ -16,24 +16,17 @@
 			var emulator = new Emulator();
 			var scaleArg = null;
 
-			function keyDown(event) {
-				if (!(event.keyCode in emulator.keys)) {
-					emulator.keys[event.keyCode] = true;
-				}
+			function keyDown(e) {
+				if (!(e.key in emulator.keys)) emulator.keys[e.key]=true
 			}
 
-			function keyUp(event) {
-				if (event.keyCode in emulator.keys) {
-					delete emulator.keys[event.keyCode];
-				}
-				if (emulator.waiting) {
-					for(var z = 0; z < 16; z++) {
-						if (keymap[z] == event.keyCode) {
-							emulator.waiting = false;
-							emulator.v[emulator.waitReg] = z;
-							return;
-						}
-					}
+			function keyUp(e) {
+				if (e.key in emulator.keys) delete emulator.keys[e.key]
+				if (!emulator.waiting) return
+				const kindex = keymapInverse[e.key]
+				if (kindex) {
+					emulator.waiting = false
+					emulator.v[emulator.waitReg] = kindex
 				}
 			}
 

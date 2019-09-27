@@ -145,6 +145,9 @@ function buildStandalone(callback) {
 		program: editor.getValue(),
 		options: packOptions(emulator)
 	})}</script>\n`
+	if (keymap.staticExport) {
+		page += `<script>STATIC_KEYMAP=${JSON.stringify(keymap)}</script>\n`
+	}
 	let i = 0
 	const root = 'https://johnearnest.github.io/Octo/'
 	const deps = [

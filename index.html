@@ -213,6 +213,9 @@
           <span data-value='180'>180&deg;</span>
           <span data-value='270'>270&deg;</span>
         </div>
+        <div class='buttonbar'>
+          <div id='key-config-show'>Keyboard Configuration...</div>
+        </div>
       </div>
 
     </div>
@@ -303,6 +306,52 @@
       </div>
     </div>
   </div>
+
+  <div id='key-config-modal'>
+    <div class='lightbox background'></div>
+    <div class='lightbox foreground'>
+      <div class='modal'>
+        <h1>Keyboard Configuration</h1>
+        <p>
+          Click on a button and then press any keyboard key to create a new mapping.
+          Multiple keyboard keys may be bound to a given hex pad "button".
+        </p>
+        <table>
+          <tr>
+            <td><div class='button' data-key='1'>1</div><input data-key='1'></td>
+            <td><div class='button' data-key='2'>2</div><input data-key='2'></td>
+            <td><div class='button' data-key='3'>3</div><input data-key='3'></td>
+            <td><div class='button' data-key='C'>C</div><input data-key='C'></td>
+          </tr>
+          <tr>
+            <td><div class='button' data-key='4'>4</div><input data-key='4'></td>
+            <td><div class='button' data-key='5'>5</div><input data-key='5'></td>
+            <td><div class='button' data-key='6'>6</div><input data-key='6'></td>
+            <td><div class='button' data-key='D'>D</div><input data-key='D'></td>
+          </tr>
+          <tr>
+            <td><div class='button' data-key='7'>7</div><input data-key='7'></td>
+            <td><div class='button' data-key='8'>8</div><input data-key='8'></td>
+            <td><div class='button' data-key='9'>9</div><input data-key='9'></td>
+            <td><div class='button' data-key='E'>E</div><input data-key='E'></td>
+          </tr>
+          <tr>
+            <td><div class='button' data-key='A'>A</div><input data-key='A'></td>
+            <td><div class='button' data-key='0'>0</div><input data-key='0'></td>
+            <td><div class='button' data-key='B'>B</div><input data-key='B'></td>
+            <td><div class='button' data-key='F'>F</div><input data-key='F'></td>
+          </tr>
+        </table>
+        <div id='key-config-standalone'>
+          <span>When saving standalone HTML programs, embed this mapping.</span>
+        </div>
+        <div class='buttonbar'>
+          <div id='key-config-done'>Done</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </body>
 
 <style>
@@ -559,6 +608,18 @@ input:focus { outline: none; }
 #cartridge-modal>.lightbox.foreground { background:rgba(0,0,0,0); align-items:center; }
 #cartridge-modal .modal { background:gray; border-radius:5px; padding:15px; image-rendering: pixelated; }
 #cartridge-modal #cartridge-preview { border:8px solid black; cursor:pointer; }
+
+#key-config-modal { color:black; display:none; }
+#key-config-modal h1 { font-size: 13px; margin:0; }
+#key-config-modal p { width: 500px; }
+#key-config-modal>.lightbox { display:flex; }
+#key-config-modal>.lightbox.background { opacity:0.5; }
+#key-config-modal>.lightbox.foreground { background:rgba(0,0,0,0); align-items:center; }
+#key-config-modal .modal { background:gray; border-radius:5px; padding:15px; image-rendering: pixelated; }
+#key-config-modal table .button { width:30px; display:inline-block; }
+#key-config-modal table input { width:150px; display:inline-block; margin-left:5px; }
+#key-config-modal #key-config-standalone { margin-top:10px; }
+
 </style>
 
 <script src='js/debugger.js'></script>
@@ -742,25 +803,25 @@ if (window.innerWidth < window.innerHeight) {
 }
 
 function getVirtualKey(k) { return document.getElementById('0x' + k.toString(16).toUpperCase()) }
-function setVirtualKey(k, v) { if (k) getVirtualKey(k).classList.toggle('active', v) }
+function setVirtualKey(k, v) { if (k != undefined) getVirtualKey(k).classList.toggle('active', v) }
 
 window.onkeydown = event => {
   if (emulator.halted) return
-  if (!(event.keyCode in emulator.keys)) {
-    emulator.keys[event.keyCode] = true
-    setVirtualKey(keymapInverse[event.keyCode], true)
+  if (!(event.key in emulator.keys)) {
+    emulator.keys[event.key] = true
+    setVirtualKey(keymapInverse[event.key], true)
   }
   event.preventDefault()
 }
 
 window.onkeyup = event => {
   if (emulator.halted) return
-  if (event.keyCode in emulator.keys) {
-    delete emulator.keys[event.keyCode]
-    setVirtualKey(keymapInverse[event.keyCode], false)
+  if (event.key in emulator.keys) {
+    delete emulator.keys[event.key]
+    setVirtualKey(keymapInverse[event.key], false)
   }
-  const kindex = keymap.indexOf(event.keyCode)
-  if (emulator.waiting && kindex >= 0) {
+  const kindex = keymapInverse[event.key]
+  if (emulator.waiting && kindex) {
     emulator.waiting = false
     emulator.v[emulator.waitReg] = kindex
   }
@@ -779,8 +840,8 @@ window.onkeyup = event => {
 }
 
 range(16).forEach(k => {
-  const m    = keymap[k]
-  const fake = { keyCode: m, preventDefault:_=>{} }
+  const m    = Object.keys(keymap[k])[0] || '0'
+  const fake = { key: m, preventDefault:_=>{} }
   const dn   = _ => window.onkeydown(fake)
   const up   = _ => { if (m in emulator.keys) window.onkeyup(fake) }
   const b    = getVirtualKey(k)

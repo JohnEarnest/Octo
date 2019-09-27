@@ -12,16 +12,15 @@ function run(options,rom) {
 	emulator.buzzTrigger = (ticks,rest)=> playPattern(ticks, emulator.pattern, rest)
 	window.addEventListener('keydown',e=>{
 		if (!audio) audioSetup()
-		if (!(e.keyCode in emulator.keys)) emulator.keys[e.keyCode]=true
+		if (!(e.key in emulator.keys)) emulator.keys[e.key]=true
 	}, false)
 	window.addEventListener('keyup', e=>{
-		if (event.keyCode in emulator.keys) delete emulator.keys[event.keyCode]
+		if (e.key in emulator.keys) delete emulator.keys[e.key]
 		if (!emulator.waiting) return
-		for(var z=0; z<16; z++) {
-			if (keymap[z] != event.keyCode) continue
-			emulator.waiting=false
-			emulator.v[emulator.waitReg]=z
-			break
+		const kindex = keymapInverse[e.key]
+		if (kindex) {
+			emulator.waiting = false
+			emulator.v[emulator.waitReg] = kindex
 		}
 	}, false)
 	intervalHandle = setInterval(_=>{

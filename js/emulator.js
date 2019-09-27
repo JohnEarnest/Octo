@@ -1,29 +1,32 @@
 "use strict";
 
-var keymap = [
-	// chip8    // keyboard
-	/* 0 */ 88, // x
-	/* 1 */ 49, // 1
-	/* 2 */ 50, // 2
-	/* 3 */ 51, // 3
-	/* 4 */ 81, // q
-	/* 5 */ 87, // w
-	/* 6 */ 69, // e
-	/* 7 */ 65, // a
-	/* 8 */ 83, // s
-	/* 9 */ 68, // d
-	/* A */ 90, // z
-	/* B */ 67, // c
-	/* C */ 52, // 4
-	/* D */ 82, // r
-	/* E */ 70, // f
-	/* F */ 86  // v
-];
-
-var keymapInverse = [];
-for (var i = 0, len = keymap.length; i < len; i++) {
-	keymapInverse[keymap[i]] = i;
+function invertKeymap(k) {
+	return Object.keys(k).reduce((a,b) => {
+		Object.keys(k[b]).forEach(x => a[x]=+b)
+		return a
+	}, {})
 }
+
+var keymap = (this.STATIC_KEYMAP) || JSON.parse(localStorage.getItem('octoKeymap')) || {
+	0x0: { x:1 },
+	0x1: { 1:1 },
+	0x2: { 2:1 },
+	0x3: { 3:1 },
+	0x4: { q:1 },
+	0x5: { w:1, ArrowUp:1 },
+	0x6: { e:1, ' ':1 },
+	0x7: { a:1, ArrowLeft:1 },
+	0x8: { s:1, ArrowDown:1 },
+	0x9: { d:1, ArrowRight:1 },
+	0xA: { z:1 },
+	0xB: { c:1 },
+	0xC: { 4:1 },
+	0xD: { r:1 },
+	0xE: { f:1 },
+	0xF: { v:1 },
+}
+
+var keymapInverse = invertKeymap(keymap)
 
 var font = [
 	0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
@@ -346,12 +349,12 @@ function Emulator() {
 		}
 		if ((op & 0xF0FF) == 0xE09E) {
 			// if -key
-			if (keymap[this.v[x]] in this.keys) { this.skip(); }
+			if (Object.keys(keymap[this.v[x]]).some(x => x in this.keys)) { this.skip(); }
 			return;
 		}
 		if ((op & 0xF0FF) == 0xE0A1) {
 			// if key
-			if (!(keymap[this.v[x]] in this.keys)) { this.skip(); }
+			if (!Object.keys(keymap[this.v[x]]).some(x => x in this.keys)) { this.skip(); }
 			return;
 		}
 		if ((op & 0xFFF0) == 0x00C0) {

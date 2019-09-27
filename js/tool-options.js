@@ -42,3 +42,44 @@ function updateOptions() {
     if (same) compatProfile.setValue(key)
   }
 }
+
+/**
+* Keyboard Config
+**/
+
+const keyConfigModal = document.getElementById('key-config-modal')
+const keyConfigStandalone = checkBox(document.getElementById('key-config-standalone' ), false, x => x)
+
+document.getElementById('key-config-show').onclick = _ => {
+  keyConfigModal.querySelectorAll('table .button').forEach(x => {
+    const k = x.dataset.key
+    const i = keyConfigModal.querySelector(`table input[data-key="${k}"]`)
+    i.value = Object.keys(keymap[parseInt(k,16)]).join(',')
+    x.onclick = _ => {
+      i.onkeydown = event => {
+        event.stopPropagation()
+        event.preventDefault()
+        i.onkeydown = null
+        keyConfigModal.querySelectorAll('table input').forEach(x => {
+          x.value = except(x.value.split(','), event.key).join(',')
+        })
+        i.value = distinct(i.value.split(',').concat(event.key)).join(',')
+      }
+      i.focus()
+    }
+  })
+  setVisible(keyConfigModal, true)
+  keyConfigStandalone.setValue(keymap.staticExport == true)
+}
+
+document.getElementById('key-config-done').onclick = _ => {
+  keyConfigModal.querySelectorAll('table input').forEach(x => {
+    const k = parseInt(x.dataset.key, 16)
+    keymap[k] = toset(x.value.split(','))
+  })
+  keymap.staticExport = keyConfigStandalone.getValue()
+  keymapInverse = invertKeymap(keymap)
+  localStorage.setItem('octoKeymap', JSON.stringify(keymap))
+  setVisible(keyConfigModal, false)
+}
+
