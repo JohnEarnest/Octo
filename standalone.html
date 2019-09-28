@@ -2,36 +2,31 @@
 <style>body{margin:0px;display:flex;align-items:center;justify-content:center;}</style>
 <script>
 const emulator = new Emulator()
-const compiler = new Compiler(data.program)
-function run(options,rom) {
-	unpackOptions(emulator, options)
-	setRenderTarget(4, 'target')
-	emulator.init(rom)
-	emulator.importFlags = _=> JSON.parse(localStorage.getItem('octoFlagRegisters'))
-	emulator.exportFlags = x=> localStorage.setItem('octoFlagRegisters', JSON.stringify(x))
-	emulator.buzzTrigger = (ticks,rest)=> playPattern(ticks, emulator.pattern, rest)
-	window.addEventListener('keydown',e=>{
-		if (!audio) audioSetup()
-		if (!(e.key in emulator.keys)) emulator.keys[e.key]=true
-	}, false)
-	window.addEventListener('keyup', e=>{
-		if (e.key in emulator.keys) delete emulator.keys[e.key]
-		if (!emulator.waiting) return
-		const kindex = keymapInverse[e.key]
-		if (kindex) {
-			emulator.waiting = false
-			emulator.v[emulator.waitReg] = kindex
-		}
-	}, false)
-	intervalHandle = setInterval(_=>{
-		if (emulator.halted) return
-		for(var z = 0; (z<emulator.tickrate) && (!emulator.waiting); z++) emulator.tick()
-		if (emulator.dt > 0) emulator.dt--
-		if (emulator.st > 0) emulator.st--
-		renderDisplay(emulator)
-		document.body.style.backgroundColor = emulator.st?emulator.buzzColor:emulator.quietColor
-	}, 1000/60)
-}
-compiler.go()
-run(data.options, {rom:compiler.rom})
+unpackOptions(emulator, data.options)
+setRenderTarget(4, 'target')
+emulator.init({rom:data.rom})
+emulator.importFlags = _=> JSON.parse(localStorage.getItem('octoFlagRegisters'))
+emulator.exportFlags = x=> localStorage.setItem('octoFlagRegisters', JSON.stringify(x))
+emulator.buzzTrigger = (ticks,rest)=> playPattern(ticks, emulator.pattern, rest)
+window.addEventListener('keydown',e=>{
+	if (!audio) audioSetup()
+	if (!(e.key in emulator.keys)) emulator.keys[e.key]=true
+}, false)
+window.addEventListener('keyup', e=>{
+	if (e.key in emulator.keys) delete emulator.keys[e.key]
+	if (!emulator.waiting) return
+	const kindex = keymapInverse[e.key]
+	if (kindex) {
+		emulator.waiting = false
+		emulator.v[emulator.waitReg] = kindex
+	}
+}, false)
+intervalHandle = setInterval(_=>{
+	if (emulator.halted) return
+	for(var z = 0; (z<emulator.tickrate) && (!emulator.waiting); z++) emulator.tick()
+	if (emulator.dt > 0) emulator.dt--
+	if (emulator.st > 0) emulator.st--
+	renderDisplay(emulator)
+	document.body.style.backgroundColor = emulator.st?emulator.buzzColor:emulator.quietColor
+}, 1000/60)
 </script>
