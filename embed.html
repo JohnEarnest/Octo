@@ -24,7 +24,7 @@
 				if (e.key in emulator.keys) delete emulator.keys[e.key]
 				if (!emulator.waiting) return
 				const kindex = keymapInverse[e.key]
-				if (kindex) {
+				if (kindex != undefined) {
 					emulator.waiting = false
 					emulator.v[emulator.waitReg] = kindex
 				}

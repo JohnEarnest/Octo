@@ -821,7 +821,7 @@ window.onkeyup = event => {
     setVirtualKey(keymapInverse[event.key], false)
   }
   const kindex = keymapInverse[event.key]
-  if (emulator.waiting && kindex) {
+  if (emulator.waiting && kindex != undefined) {
     emulator.waiting = false
     emulator.v[emulator.waitReg] = kindex
   }
