@@ -416,7 +416,7 @@ function decorateCartridge(label, image) {
 }
 
 function buildCartridge(label, data, image) {
-	const base = decorateCartridge(label, gifDecode(image))
+	const base = decorateCartridge(label, image && gifDecode(image))
 	const bytes = JSON.stringify(data).split('').map(x => x.charCodeAt(0))
 	const payload = [
 		(bytes.length >> 24) & 0xFF,
