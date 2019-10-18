@@ -3,8 +3,9 @@
 **/
 
 function injectGestureControls(screen, keyup, keydown) {
-  const ael = (event, listener) => screen.addEventListener(event, listener, false)
-  const rel = (event, listener) => screen.removeEventListener(event, listener, false)
+  const ael = (event, listener) => screen.addEventListener(event, listener, { passive: false })
+  const rel = (event, listener) => screen.removeEventListener(event, listener, { passive: false })
+  const pd  = event => event.preventDefault()
 
   ael('touchstart', start => {
     start.stopPropagation()
@@ -14,7 +15,7 @@ function injectGestureControls(screen, keyup, keydown) {
     if (start.touches.length == 1) {
       // directional or action
       let vdirs = []
-      const tt = end => (up('e'),rel('touchend',tt)) // release action
+      const tt = end => (up('e'),rel('touchend',tt),pd(end)) // release action
       const tm = move => {
         // this has definitely become a directional input...
         if (cancel) cancel = clearTimeout(cancel)
@@ -26,6 +27,7 @@ function injectGestureControls(screen, keyup, keydown) {
         vdirs.forEach(x => (t    .indexOf(x)<0) && up  (x)) // clear keys no longer held
         t    .forEach(x => (vdirs.indexOf(x)<0) && down(x)) // push keys that were not held before
         vdirs = t
+        pd(move)
       }
       const te = end => {
         // within cookoff period, translate into key-down-up:
@@ -35,14 +37,14 @@ function injectGestureControls(screen, keyup, keydown) {
         }
         // otherwise, clear our virtual directions:
         vdirs.map(up)
-        rel('touchmove',tm),rel('touchend',te)
+        rel('touchmove',tm),rel('touchend',te),pd(end)
       }
       let cancel = setTimeout(_ => (rel('touchmove',tm),rel('touchend',te),ael('touchend',tt),down('e')), 200)
       ael('touchmove',tm),ael('touchend',te)
     }
     else if (start.touches.length == 2) {
       // alt action
-      const te = end => (up('q'),rel('touchend',te))
+      const te = end => (up('q'),rel('touchend',te),pd(end))
       down('q'),ael('touchend',te)
     }
   })

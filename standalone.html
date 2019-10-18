@@ -11,6 +11,7 @@ emulator.buzzTrigger = (ticks,rest)=> playPattern(ticks, emulator.pattern, rest)
 const kd = e=>{
 	if (!audio) audioSetup()
 	if (!(e.key in emulator.keys)) emulator.keys[e.key]=true
+	e.preventDefault()
 }
 const ku = e=>{
 	if (e.key in emulator.keys) delete emulator.keys[e.key]
@@ -20,6 +21,7 @@ const ku = e=>{
 		emulator.waiting = false
 		emulator.v[emulator.waitReg] = kindex
 	}
+	e.preventDefault()
 }
 window.addEventListener('keydown',kd,false)
 window.addEventListener('keyup',ku,false)
