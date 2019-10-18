@@ -8,11 +8,11 @@ emulator.init({rom:data.rom})
 emulator.importFlags = _=> JSON.parse(localStorage.getItem('octoFlagRegisters'))
 emulator.exportFlags = x=> localStorage.setItem('octoFlagRegisters', JSON.stringify(x))
 emulator.buzzTrigger = (ticks,rest)=> playPattern(ticks, emulator.pattern, rest)
-window.addEventListener('keydown',e=>{
+const kd = e=>{
 	if (!audio) audioSetup()
 	if (!(e.key in emulator.keys)) emulator.keys[e.key]=true
-}, false)
-window.addEventListener('keyup', e=>{
+}
+const ku = e=>{
 	if (e.key in emulator.keys) delete emulator.keys[e.key]
 	if (!emulator.waiting) return
 	const kindex = keymapInverse[e.key]
@@ -20,7 +20,9 @@ window.addEventListener('keyup', e=>{
 		emulator.waiting = false
 		emulator.v[emulator.waitReg] = kindex
 	}
-}, false)
+}
+window.addEventListener('keydown',kd,false)
+window.addEventListener('keyup',ku,false)
 intervalHandle = setInterval(_=>{
 	if (emulator.halted) return
 	for(var z = 0; (z<emulator.tickrate) && (!emulator.waiting); z++) emulator.tick()
@@ -29,4 +31,54 @@ intervalHandle = setInterval(_=>{
 	renderDisplay(emulator)
 	document.body.style.backgroundColor = emulator.st?emulator.buzzColor:emulator.quietColor
 }, 1000/60)
+
+// experimental multitouch gesture input:
+const screenElement = document.getElementById('target')
+screenElement.addEventListener('touchstart', start => {
+  start.stopPropagation()
+  const sp   = event => { event.preventDefault(); event.stopPropagation(); }
+  const ael  = (event, listener) => screenElement.addEventListener(event, listener, false)
+  const rel  = (event, listener) => screenElement.removeEventListener(event, listener, false)
+  const down = key => kd({key, preventDefault:_=>_})
+  const up   = key => key in emulator.keys && ku({key, preventDefault:_=>_})
+
+  if (start.touches.length == 1) {
+    // directional or action
+    let vdir = null
+    const tt = end => (up('e'),rel('touchend',tt)) // release action
+    const tm = move => {
+      // this has definitely become a directional input...
+      if (cancel) cancel = clearTimeout(cancel)
+      const xd = move.touches[0].clientX - start.touches[0].clientX
+      const yd = move.touches[0].clientY - start.touches[0].clientY
+      const di = Math.sqrt(xd*xd + yd*yd)
+      const vk = di<20 ? null : // include a dead zone near the start position
+                 Math.abs(xd) > Math.abs(yd) ? (xd < 0 ? 'a' : 'd') : // horizontal
+                                               (yd < 0 ? 'w' : 's')   // vertical
+
+      // change or release direction as needed
+      if (vk != vdir && vdir) up(vdir)
+      vdir = vk
+      if (vdir) down(vdir)
+    }
+    const te = end => {
+      // within cookoff period, translate into key-down-up:
+      if (cancel) {
+        cancel = clearTimeout(cancel)
+        down('e'),setTimeout(_=>up('e'),100)
+      }
+      // otherwise, clear our virtual direction:
+      if (vdir) up(vdir)
+      rel('touchmove',tm),rel('touchend',te)
+    }
+    const movedebounce = _ => (rel('touchmove',tm),rel('touchend',te),ael('touchend',tt),down('e'))
+    let cancel = setTimeout(movedebounce, 200)
+    ael('touchmove',tm),ael('touchend',te)
+  }
+  else if (start.touches.length == 2) {
+    // alt action
+    const te = end => (up('q'),rel('touchend',te),sp(end))
+    down('q'),ael('touchend',te)
+  }
+}, false)
 </script>
