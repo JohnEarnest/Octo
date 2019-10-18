@@ -9,6 +9,7 @@
   <script src='js/shared.js'></script>
   <script src='js/util.js'></script>
   <script src='js/sharing.js'></script>
+  <script src='js/input.js'></script>
 
 	<link rel='stylesheet' href='lib/codemirror/codemirror.min.css'>
 	<link rel='stylesheet' href='lib/codemirror/monokai.css'>
@@ -853,58 +854,7 @@ range(16).forEach(k => {
   b.ontouchleave = up
 })
 
-/**
-* Experimental Gesture Input:
-**/
-
-const screenElement = document.getElementById('target')
-screenElement.addEventListener('touchstart', start => {
-  start.stopPropagation()
-  const sp   = event => { event.preventDefault(); event.stopPropagation(); }
-  const ael  = (event, listener) => screenElement.addEventListener(event, listener, false)
-  const rel  = (event, listener) => screenElement.removeEventListener(event, listener, false)
-  const down = key => window.onkeydown({key, preventDefault:_=>_})
-  const up   = key => key in emulator.keys && window.onkeyup({key, preventDefault:_=>_})
-
-  if (start.touches.length == 1) {
-    // directional or action
-    let vdir = null
-    const tt = end => (up('e'),rel('touchend',tt)) // release action
-    const tm = move => {
-      // this has definitely become a directional input...
-      if (cancel) cancel = clearTimeout(cancel)
-      const xd = move.touches[0].clientX - start.touches[0].clientX
-      const yd = move.touches[0].clientY - start.touches[0].clientY
-      const di = Math.sqrt(xd*xd + yd*yd)
-      const vk = di<20 ? null : // include a dead zone near the start position
-                 Math.abs(xd) > Math.abs(yd) ? (xd < 0 ? 'a' : 'd') : // horizontal
-                                               (yd < 0 ? 'w' : 's')   // vertical
-
-      // change or release direction as needed
-      if (vk != vdir && vdir) up(vdir)
-      vdir = vk
-      if (vdir) down(vdir)
-    }
-    const te = end => {
-      // within cookoff period, translate into key-down-up:
-      if (cancel) {
-        cancel = clearTimeout(cancel)
-        down('e'),setTimeout(_=>up('e'),100)
-      }
-      // otherwise, clear our virtual direction:
-      if (vdir) up(vdir)
-      rel('touchmove',tm),rel('touchend',te)
-    }
-    const movedebounce = _ => (rel('touchmove',tm),rel('touchend',te),ael('touchend',tt),down('e'))
-    let cancel = setTimeout(movedebounce, 200)
-    ael('touchmove',tm),ael('touchend',te)
-  }
-  else if (start.touches.length == 2) {
-    // alt action
-    const te = end => (up('q'),rel('touchend',te),sp(end))
-    down('q'),ael('touchend',te)
-  }
-}, false)
+injectGestureControls(document.getElementById('target'), window.onkeyup, window.onkeydown)
 
 /**
 * Central Dogma:

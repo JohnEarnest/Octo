@@ -155,6 +155,7 @@ function buildStandalone(callback) {
 	const deps = [
 		{u:root+'js/emulator.js', f:x=>`<script>${x}</script>\n`},
 		{u:root+'js/shared.js',   f:x=>`<script>${x}</script>\n`},
+		{u:root+'js/input.js',    f:x=>`<script>${x}</script>\n`},
 		{u:root+'standalone.html',f:x=>x},
 	]
 	function fetchDeps() {
