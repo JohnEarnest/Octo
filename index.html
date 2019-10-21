@@ -911,8 +911,8 @@ function runRom(rom) {
   if (rom === null) return
   if (intervalHandle != null) stopRom()
   emulator.exitVector = stopRom
-  emulator.importFlags = _ => JSON.parse(localStorage.getItem('octoFlagRegisters'))
-  emulator.exportFlags = f => localStorage.setItem('octoFlagRegisters', JSON.stringify(f))
+  emulator.importFlags = _ => getPref('octoFlagRegisters')
+  emulator.exportFlags = f => setPref('octoFlagRegisters',f)
   emulator.buzzTrigger = (ticks, remainingTicks) => playPattern(ticks, emulator.pattern, remainingTicks)
   emulator.init(rom)
   clearBreakpoint()
