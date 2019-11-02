@@ -527,11 +527,12 @@ Compiler.prototype.resolveLabel = function(offset) {
 }
 
 Compiler.prototype.parseTerminal = function(name) {
-	// NUMBER | CONSTANT | LABEL | '(' expression ')'
+	// NUMBER | CONSTANT | LABEL | VREGISTER | '(' expression ')'
 	var x = this.peek();
 	if (x == 'PI'  ) { this.next(); return Math.PI; }
 	if (x == 'E'   ) { this.next(); return Math.E; }
 	if (x == 'HERE') { this.next(); return this.hereaddr; }
+	if (this.isRegister(x)) { this.next(); return this.register(x); }
 	if (+x == +x) { return +this.next(); }
 	if (x in this.constants)  { return this.constants[this.next()]; }
 	if (x in this.dict)       { return this.dict[this.next()]; }
