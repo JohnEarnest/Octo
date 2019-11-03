@@ -189,6 +189,7 @@ function Compiler(source) {
 	this.schip = false;
 	this.xo = false;
 	this.breakpoints = {}; // map<address, name>
+	this.monitors = {}; // map<name, {base, length}>
 	this.hereaddr = 0x200;
 
 	this.pos = null;
@@ -576,6 +577,7 @@ Compiler.prototype.instruction = function(token) {
 		this.inst(0x60 | this.aliases["unpack-lo"], a);
 	}
 	else if (token == ":breakpoint") { this.breakpoints[this.here()] = this.next(); }
+	else if (token == ":monitor") { this.monitors[this.peek()] = { base:this.veryWideValue(), length:this.veryWideValue() }; }
 	else if (token == ":proto")  { this.next(); } // deprecated.
 	else if (token == ":alias")  { this.aliases[this.checkName(this.next(), "alias")] = this.register(); }
 	else if (token == ":const")  {

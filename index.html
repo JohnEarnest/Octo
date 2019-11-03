@@ -247,6 +247,7 @@
         <img src='images/continue.png' title='continue'      id='run-continue'>
       </div>
       <div id='debugger'></div>
+      <div id='monitor'>Monitor goes here.</div>
     </div>
     <div class='spacer'></div>
     <div id='run-container'>
@@ -575,6 +576,13 @@ input:focus { outline: none; }
   margin-top: 10px;
 }
 
+#monitor { font-family: monospace; text-shadow: black 0 0 5px; display:none; position:fixed; right:10px;top:10px; max-width:420px; }
+#monitor>table { border-collapse: collapse; }
+#monitor tr:hover { background: gray; }
+#monitor th { border-bottom: 1px solid white; min-width: 80px; }
+#monitor th:not(:first-child),
+#monitor td:not(:first-child) { border-left: 1px solid white; padding:4px; }
+
 #run-container, #run-keys { display: flex; flex-direction: row; justify-content: center; z-index: 1000;}
 #run-keys { z-index: 2000; }
 #run-container canvas { border: 1px solid black; }
@@ -830,6 +838,7 @@ window.onkeyup = event => {
   if (event.key == '`') { stopRom() }
   if (event.key == 'i') { emulator.breakpoint ? clearBreakpoint() : haltBreakpoint('user interrupt') }
   if (event.key == 'p') { haltProfiler('profiler') }
+  if (event.key == 'm') { monitoring = !monitoring; setVisible(document.getElementById('monitor'),monitoring) }
   if (emulator.breakpoint) {
     if (event.key == 'o') { emulator.dt = emulator.st = 0; emulator.tick(); renderDisplay(emulator); haltBreakpoint('single step') }
     if (event.key == 'u') { const l = emulator.r.length; if (l>0) { emulator.stack_breakpoint = l-1; clearBreakpoint() } } // step out
@@ -899,6 +908,7 @@ function compile() {
   return {
     rom:         c.rom,
     breakpoints: c.breakpoints,
+    monitors:    c.monitors,
     dbginfo:     c.dbginfo,
     aliases:     c.aliases,
     labels:      c.dict,
@@ -919,6 +929,7 @@ function runRom(rom) {
   clearBreakpoint()
   audioSetup()
   setVisible(runCover, true, 'flex')
+  updateMonitor()
   runCover.style.backgroundColor = emulator.quietColor
   setRenderTarget(5, 'target')
   intervalHandle = setInterval(_ => {
@@ -936,6 +947,7 @@ function runRom(rom) {
     }
     recordFrame()
     renderDisplay(emulator)
+    if (monitoring && !emulator.halted && !emulator.breakpoint) updateMonitor()
     if (emulator.halted) return
     runCover.style.backgroundColor = (emulator.st > 0) ? emulator.buzzColor : emulator.quietColor
   }, 1000/60)
