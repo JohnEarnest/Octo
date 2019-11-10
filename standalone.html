@@ -1,5 +1,5 @@
 <body><canvas id='target' width=512 height=256></canvas></body>
-<style>body{margin:0px;display:flex;align-items:center;justify-content:center;}</style>
+<style>body{margin:0px;display:flex;flex-direction:column;align-items:center;justify-content:center;}</style>
 <script>
 const emulator = new Emulator()
 unpackOptions(emulator, data.options)
@@ -34,5 +34,5 @@ intervalHandle = setInterval(_=>{
 	document.body.style.backgroundColor = emulator.st?emulator.buzzColor:emulator.quietColor
 }, 1000/60)
 
-injectAdaptiveControls('swipe',document.getElementById('target'),ku,kd)
+injectAdaptiveControls(emulator.touchInputMode,document.getElementById('target'),ku,kd)
 </script>

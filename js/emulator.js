@@ -100,6 +100,7 @@ function Emulator() {
 	this.enableXO           = true;
 	this.screenRotation     = 0;
 	this.maxSize            = 3584;
+	this.touchInputMode     = 'none';
 	this.maskFormatOverride = true;
 	this.numericFormatStr   = "default";
 

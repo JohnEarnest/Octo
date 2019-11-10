@@ -216,6 +216,7 @@
         </div>
         <div class='buttonbar'>
           <div id='key-config-show'>Keyboard Configuration...</div>
+          <div id='touch-config-show'>Touch Controls...</div>
         </div>
       </div>
 
@@ -320,6 +321,33 @@
         </div>
         <div class='buttonbar'>
           <div id='key-config-done'>Done</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id='touch-config-modal'>
+    <div class='lightbox background'></div>
+    <div class='lightbox foreground'>
+      <div class='modal'>
+        <h1>Touch Input Configuration</h1>
+        <p>
+          Octo offers several strategies for converting touch input into VIP keypad input,
+          allowing existing programs to be used on mobile devices and tablets.
+          These input methods will only become active if a user touches the Octo screen.
+          Choose a mode for details on how each one works.
+        </p>
+        <div id='touch-input-mode'>
+          <span data-value='none'     >None      </span>
+          <span data-value='swipe'    >Swipe     </span>
+          <span data-value='seg16'    >Seg16     </span>
+          <span data-value='seg16fill'>Seg16 Fill</span>
+          <span data-value='gamepad'  >Gamepad   </span>
+          <span data-value='vip'      >VIP Keypad</span>
+        </div>
+        <p id='touch-input-desc'></p>
+        <div class='buttonbar'>
+          <div id='touch-config-done'>Done</div>
         </div>
       </div>
     </div>
@@ -582,6 +610,15 @@ input:focus { outline: none; }
 #key-config-modal table input { width:150px; display:inline-block; margin-left:5px; }
 #key-config-modal #key-config-standalone { margin-top:10px; }
 
+#touch-config-modal { color:black; display:none; }
+#touch-config-modal h1 { font-size: 13px; margin:0; }
+#touch-config-modal p { width: 500px; }
+#touch-config-modal>.lightbox { display:flex; }
+#touch-config-modal>.lightbox.background { opacity:0.5; }
+#touch-config-modal>.lightbox.foreground { background:rgba(0,0,0,0); align-items:center; }
+#touch-config-modal .modal { background:gray; border-radius:5px; padding:15px; image-rendering: pixelated; }
+#touch-config-modal #touch-input-desc { min-height:100px; }
+
 </style>
 
 <script src='js/debugger.js'></script>
@@ -790,7 +827,7 @@ window.onkeyup = event => {
 }
 
 injectAdaptiveControls(
-  'swipe', // { swipe, gamepad, seg16, vip }
+  emulator.touchInputMode,
   document.getElementById('target'),
   window.onkeyup,
   window.onkeydown

@@ -83,3 +83,38 @@ document.getElementById('key-config-done').onclick = _ => {
   setVisible(keyConfigModal, false)
 }
 
+/**
+* Touch Config
+**/
+
+const touchDescs = {
+  none:      'Do not attempt to handle touch input.',
+  swipe:     'Taps on the screen are treated like pressing key 6. Swipes or dragging and holding on the screen are treated like a virtual directional pad based on keys 5,8,7 and 9.',
+  seg16:     'Treat taps and holds on the center of the screen like an invisible 4x4 hex keypad.',
+  seg16fill: 'The same as <b>Seg16</b>, but the virtual keys take up the entire display, rather than a square region.',
+  gamepad:   'Draw a translucent virtual gamepad around the screen. The directional pad is mapped to keys 5,8,7 and 9, and buttons A and B are mapped to keyboard keys 6 and 4, respectively.',
+  vip:       'Display a 4x4 hex keypad under the screen.',
+}
+function setTouchInputMode(mode) {
+  emulator.touchInputMode = mode
+  document.getElementById('touch-input-desc').innerHTML = touchDescs[mode]
+}
+
+const touchConfigModal = document.getElementById('touch-config-modal')
+const touchInputMode = radioBar(document.getElementById('touch-input-mode'), 'none', setTouchInputMode)
+
+document.getElementById('touch-config-show').onclick = _ => {
+  touchInputMode.setValue(emulator.touchInputMode)
+  setTouchInputMode('none')
+  setVisible(touchConfigModal, true)
+}
+document.getElementById('touch-config-done').onclick = _ => {
+  injectAdaptiveControls(
+    emulator.touchInputMode,
+    document.getElementById('target'),
+    window.onkeyup,
+    window.onkeydown
+  )
+  saveLocalOptions()
+  setVisible(touchConfigModal, false)
+}

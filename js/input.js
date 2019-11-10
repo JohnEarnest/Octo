@@ -6,15 +6,16 @@ const ael = (element, event, listener) => element.addEventListener   (event, lis
 const rel = (element, event, listener) => element.removeEventListener(event, listener, { passive:false })
 const pd  = event => (event.preventDefault(),event.stopPropagation())
 
-const VIP_KEYS = '1234qwerasdfzxcv'.split('')
 const VIP_HEX  = '123c456d789ea0bf'.split('')
+const VIP_KEYS = VIP_HEX.map(x => parseInt(x,16))
+
 const GAMEPAD_STYLES = `
 .gamepad{
   position:absolute;
-  top:0px;
+  top:10%;
   left:0px;
   width:100%;
-  height:100%;
+  height:90%;
   opacity:0.3;
   user-select: none;
   -webkit-user-select: none;
@@ -365,7 +366,8 @@ const INPUT_MODULES = {
         ${[0,1,2,3].map(r=>`<div>${[0,1,2,3].map(c=>`<div>${VIP_HEX[c+(r*4)].toUpperCase()}</div>`).join('')}</div>`).join('')}
       </div>
       <style>${VIP_STYLES}</style>`
-      screen.parentElement.parentElement.append(root)
+      if (screen.parentElement == document.body) { screen.parentElement.append(root) }
+      else { screen.parentElement.parentElement.append(root) }
       const buttons = []
       document.querySelectorAll('.vip-pad .keypad>div>div').forEach(x=>buttons.push(x)) // make an actual Array
       const held = {}
@@ -400,26 +402,36 @@ const INPUT_MODULES = {
   },
 }
 
+let adaptiveControlsInstalled = null
+
 function injectAdaptiveControls(type, screen, keyup, keydown) {
   let options = {
-    up:     'w',
-    down:   's',
-    left:   'a',
-    right:  'd',
-    action1:'e',
-    action2:'q',
-    mode:   'center', // or 'fill', used by seg16
+    up:      5,
+    down:    8,
+    left:    7,
+    right:   9,
+    action1: 6,
+    action2: 4,
+    mode:    'center', // or 'fill', used by seg16
   }
-  // defer installing adaptive input until we actually see
-  // an input event from the user:
+  const lookup = vk => Object.keys(keymap[vk])[0]
   const install = _ => {
     rel(screen, 'touchstart', install)
+    adaptiveControlsInstalled = type
     INPUT_MODULES[type].install(
       screen,
-      key => keyup  ({ key, preventDefault:_=>_ }),
-      key => keydown({ key, preventDefault:_=>_ }),
+      key => keyup  ({ key:lookup(key), preventDefault:_=>_ }),
+      key => keydown({ key:lookup(key), preventDefault:_=>_ }),
       options
     )
   }
+  // uninstall anything that's already there:
+  rel(screen, 'touchstart', install)
+  if (adaptiveControlsInstalled) INPUT_MODULES[adaptiveControlsInstalled].remove(screen)
+
+  if (type == 'none') return
+  if (type == 'seg16fill') { type='seg16'; options.mode='fill' }
+  // defer installing adaptive input until we actually see
+  // an input event from the user:
   ael(screen, 'touchstart', install)
 }
