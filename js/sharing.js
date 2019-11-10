@@ -92,7 +92,7 @@ window.onload = _ => {
 	ajax('GET', 'https://api.github.com/repos/JohnEarnest/Octo/contents/examples', null, result => {
 		const target = document.querySelector('#main-examples ul')
 		target.innerHTML = ''
-		result.forEach(x => {
+		result.filter(x => x.type == 'file').forEach(x => {
 			var r = document.createElement('li')
 			r.innerHTML = x.name
 			r.onclick = _ => ajax('GET', x.url, null, result => {
