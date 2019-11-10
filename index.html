@@ -242,7 +242,6 @@
     <div id='run-overlay'>
       <div id='run-controls'>
         <img src='images/close.png'    title='close'         id='run-close'   >
-        <img src='images/keypad.png'   title='toggle keypad' id='run-keypad'  >
         <img src='images/record.png'   title='record gif'    id='run-record'  >
         <img src='images/continue.png' title='continue'      id='run-continue'>
       </div>
@@ -251,34 +250,6 @@
     <div class='spacer'></div>
     <div id='run-container'>
       <canvas id='target' width='640' height='320'></canvas>
-    </div>
-    <div id='run-keys' class='invisible'>
-      <div class='keypad'>
-        <div class='key-row'>
-          <div class='key' id='0x1'>1</div>
-          <div class='key' id='0x2'>2</div>
-          <div class='key' id='0x3'>3</div>
-          <div class='key' id='0xC'>C</div>
-        </div>
-        <div class='key-row'>
-          <div class='key' id='0x4'>4</div>
-          <div class='key' id='0x5'>5</div>
-          <div class='key' id='0x6'>6</div>
-          <div class='key' id='0xD'>D</div>
-        </div>
-        <div class='key-row'>
-          <div class='key' id='0x7'>7</div>
-          <div class='key' id='0x8'>8</div>
-          <div class='key' id='0x9'>9</div>
-          <div class='key' id='0xE'>E</div>
-        </div>
-        <div class='key-row'>
-          <div class='key' id='0xA'>A</div>
-          <div class='key' id='0x0'>0</div>
-          <div class='key' id='0xB'>B</div>
-          <div class='key' id='0xF'>F</div>
-        </div>
-      </div>
     </div>
     <div class='spacer'></div>
   </div>
@@ -575,25 +546,7 @@ input:focus { outline: none; }
   margin-top: 10px;
 }
 
-#run-container, #run-keys { display: flex; flex-direction: row; justify-content: center; z-index: 1000;}
-#run-keys { z-index: 2000; }
-#run-container canvas { border: 1px solid black; }
-#run-cover .spacer { flex-grow: 1; }
-#run-keys .keypad { display: flex; flex-direction: column; margin-top: 20px; }
-#run-keys .key-row { display: flex; flex-direction: row; }
-#run-keys .key {
-  text-align: center;
-  color: black;
-  background-color: white;
-  border: 1px solid black;
-  -webkit-user-select: none;
-  user-select: none;
-  font-size: 7vh;
-  width: 11vw;
-  height: 10vh;
-}
-#run-keys .key:active,
-#run-keys .key.active { color: white; background-color: black; border: 1px solid white; }
+#run-container { display: flex; flex-direction: row; justify-content: center; z-index: 1000;}
 
 #dragon { flex-direction: column; opacity:0.5; }
 #dragon>div { text-align:center; font-size: 30px; }
@@ -793,24 +746,11 @@ showManual.onclick = _ => {
 
 document.getElementById('run-close'   ).onclick = _ => stopRom()
 document.getElementById('run-continue').onclick = _ => clearBreakpoint()
-document.getElementById('run-keypad'  ).onclick = _ => {
-  document.getElementById('run-keys').classList.toggle('invisible')
-}
-
-if (window.innerWidth < window.innerHeight) {
-  // make a guess that portrait-mode windows are mobile devices.
-  // in this situation, the virtual keypad should be visible by default:
-  document.getElementById('run-keys').classList.remove('invisible')
-}
-
-function getVirtualKey(k) { return document.getElementById('0x' + k.toString(16).toUpperCase()) }
-function setVirtualKey(k, v) { if (k != undefined) getVirtualKey(k).classList.toggle('active', v) }
 
 window.onkeydown = event => {
   if (emulator.halted) return
   if (!(event.key in emulator.keys)) {
     emulator.keys[event.key] = true
-    setVirtualKey(keymapInverse[event.key], true)
   }
   event.preventDefault()
 }
@@ -819,7 +759,6 @@ window.onkeyup = event => {
   if (emulator.halted) return
   if (event.key in emulator.keys) {
     delete emulator.keys[event.key]
-    setVirtualKey(keymapInverse[event.key], false)
   }
   const kindex = keymapInverse[event.key]
   if (emulator.waiting && kindex != undefined) {
@@ -840,21 +779,12 @@ window.onkeyup = event => {
   event.preventDefault()
 }
 
-range(16).forEach(k => {
-  const m    = Object.keys(keymap[k])[0] || '0'
-  const fake = { key: m, preventDefault:_=>{} }
-  const dn   = _ => window.onkeydown(fake)
-  const up   = _ => { if (m in emulator.keys) window.onkeyup(fake) }
-  const b    = getVirtualKey(k)
-  b.onmousedown  = dn
-  b.onmouseup    = up
-  b.onmouseout   = up
-  b.ontouchstart = dn
-  b.ontouchenter = up
-  b.ontouchleave = up
-})
-
-injectGestureControls(document.getElementById('target'), window.onkeyup, window.onkeydown)
+injectAdaptiveControls(
+  'swipe', // { swipe, gamepad, seg16, vip }
+  document.getElementById('target'),
+  window.onkeyup,
+  window.onkeydown
+)
 
 /**
 * Central Dogma:
