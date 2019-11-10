@@ -43,8 +43,8 @@
 
 			function run(rom) {
 				emulator.init(rom);
-				emulator.importFlags = function() { return JSON.parse(localStorage.getItem("octoFlagRegisters")); }
-				emulator.exportFlags = function(flags) { localStorage.setItem("octoFlagRegisters", JSON.stringify(flags)); }
+				emulator.importFlags = function() { return getPref('octoFlagRegisters'); }
+				emulator.exportFlags = function(flags) { setPref('octoFlagRegisters',flags); }
 				window.addEventListener("keydown", keyDown, false);
 				window.addEventListener("keyup"  , keyUp  , false);
 				intervalHandle = setInterval(render, 1000/60);

@@ -122,3 +122,23 @@ function haltProfiler(name) {
 	emulator.breakpoint = true
 	debugPanel.innerHTML = dumpRegisters(false, name) + dumpProfile()
 }
+
+/**
+* Memory Monitor
+**/
+
+let monitoring = false
+
+function updateMonitor() {
+	const d = Object.keys(emulator.metadata.monitors).map(name => {
+		const m = emulator.metadata.monitors[name]
+		const d = emulator.m.slice(m.base, m.base+m.length)
+		let s = ''
+		for (var x = 0; x < d.length; x++) s+= hexFormat(d[x]) + ' '
+		return `<tr><td>${name}</td><td>${s}</td></tr>`
+	}).join('')
+	document.getElementById('monitor').innerHTML = `
+		<table><th>Monitor</th><th>Data</th>${d.length?d:'<tr><td>No monitors registered.</td></tr>'}</table>
+	`
+}
+

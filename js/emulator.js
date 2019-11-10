@@ -7,7 +7,16 @@ function invertKeymap(k) {
 	}, {})
 }
 
-var keymap = (this.STATIC_KEYMAP) || JSON.parse(localStorage.getItem('octoKeymap')) || {
+function getPref(key) {
+	try { return JSON.parse(localStorage.getItem(key)) }
+	catch(e) { console.log(e); return null }
+}
+function setPref(key, value) {
+	try { localStorage.setItem(key, JSON.stringify(value)) }
+	catch(e) { console.log(e); }
+}
+
+var keymap = (this.STATIC_KEYMAP) || getPref('octoKeymap') || {
 	0x0: { x:1 },
 	0x1: { 1:1 },
 	0x2: { 2:1 },

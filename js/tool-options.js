@@ -79,7 +79,7 @@ document.getElementById('key-config-done').onclick = _ => {
   })
   keymap.staticExport = keyConfigStandalone.getValue()
   keymapInverse = invertKeymap(keymap)
-  localStorage.setItem('octoKeymap', JSON.stringify(keymap))
+  setPref('octoKeymap', keymap)
   setVisible(keyConfigModal, false)
 }
 

@@ -84,8 +84,8 @@ function runGist(id) {
 	})
 }
 
-function saveLocalOptions() { localStorage.setItem('octoOptions', JSON.stringify(packOptions(emulator))) }
-function saveLocalProgram() { localStorage.setItem('octoProgram', JSON.stringify(editor.getValue())) }
+function saveLocalOptions() { setPref('octoOptions',packOptions(emulator)) }
+function saveLocalProgram() { setPref('octoProgram',editor.getValue()) }
 
 window.onload = _ => {
 	// load examples
@@ -111,8 +111,8 @@ window.onload = _ => {
 
 	// restore the local data, if available
 	try {
-		const options = JSON.parse(localStorage.getItem('octoOptions'))
-		const program = JSON.parse(localStorage.getItem('octoProgram'))
+		const options = getPref('octoOptions')
+		const program = getPref('octoProgram')
 		if (options) unpackOptions(emulator, options)
 		if (program && program.trim().length) {
 			editor.setValue(program)

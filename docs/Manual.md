@@ -216,7 +216,7 @@ Finally, drawing a sprite with height 0 (which would otherwise do nothing) is us
 
 XO-Chip
 -------
-Beyond SuperChip, Octo provides a set of unique extended instructions called XO-Chip. These instructions provide a 4-color display, improved scrolling functionality, a flexible audio generator, expanded ram and instructions which make memory manipulation more convenient. Since XO-Chip introduces a few minor changes to the behavior of Octo, these features must be explicitly enabled in the Options panel.
+Beyond SuperChip, Octo provides a set of unique extended instructions called XO-Chip. These instructions provide a 4-color display, improved scrolling functionality, a flexible audio generator, expanded ram and instructions which make memory manipulation more convenient.
 
 - `save vx - vy` save an inclusive range of registers to memory starting at `i`.
 - `load vx - vy` load an inclusive range of registers from memory starting at `i`.
@@ -236,3 +236,5 @@ When interrupted, pressing "i" again or clicking the "continue" icon will resume
 Pressing the "p" key will interrupt execution and display a profiler, indicating a best guess at the time spent in subroutines within your program so far. The profiler shows the top 20 results in a table, and you can also copy and paste a more detailed dump of profiling information for further analysis offline.
 
 Breakpoints can also be placed in source code by using the command `:breakpoint` followed by a name- the name will be shown when the breakpoint is encountered so that multiple breakpoints can be readily distinguished. `:breakpoint` is an out-of-band debugging facility and inserting a breakpoint into your program will not add any code or modify any Chip8 registers.
+
+The command `:monitor`, followed by a base address and length, will register a memory monitor. While your program runs, monitors will be updated continuously to reflect the contents of memory. Pressing "m" will toggle the memory monitor on and off. Like `:breakpoint`, `:monitor` is out-of-band and generates no instructions.
