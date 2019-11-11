@@ -29,8 +29,8 @@
 : table
 	:macro S2 {
 		:calc rads { ( HERE - table ) * ( 2 * PI ) / 256 }
-		:calc val1 { 56 + 38 * sin rads } :byte val1
-		:calc val2 { 56 + 16 * cos rads } :byte val2
+		:byte { 56 + 38 * sin rads }
+		:byte { 56 + 16 * cos rads }
 	}
 
 	# expand S2 2*8*8 times for a 256-byte table:
