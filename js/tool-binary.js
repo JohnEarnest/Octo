@@ -25,7 +25,6 @@ function decompileStatic(rom) {
 	analyzeInit(rom, {
 		shiftQuirks:     emulator.shiftQuirks,
 		loadStoreQuirks: emulator.loadStoreQuirks,
-		vfOrderQuirks:   emulator.vfOrderQuirks,
 		jumpQuirks:      emulator.jumpQuirks,
 	})
 	const process = _ => {

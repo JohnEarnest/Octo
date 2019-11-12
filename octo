@@ -98,7 +98,6 @@ function printUsage() {
 var options = {};
 options['shiftQuirks'    ] = extractFlag("--qshift");
 options['loadStoreQuirks'] = extractFlag("--qloadstore");
-options['vfOrderQuirks'  ] = extractFlag("--qvforder");
 options['numericMask'    ] = extractFlag("--numMask") 
 var decompileFlag = extractFlag("--decompile");
 var roundTripFlag = extractFlag("--roundtrip");

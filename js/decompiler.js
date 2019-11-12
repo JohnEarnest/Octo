@@ -11,7 +11,6 @@
 
 var LOAD_STORE_QUIRKS = false; // ignore i increment with loads
 var SHIFT_QUIRKS      = false; // shift vx in place, ignore vy
-var VF_ORDER_QUIRKS   = false; // arithmetic results write to vf after status flag
 
 var regNames = [
 	0x0,0x1,0x2,0x3,0x4,0x5,0x6,0x7,0x8,0x9,0xA,0xB,0xC,0xD,0xE,0xF,
@@ -389,14 +388,8 @@ function apply(address) {
 				}
 			}
 		}
-		if (VF_ORDER_QUIRKS) {
-			ret[0xF] = c;
-			ret[x]   = r;
-		}
-		else {
-			ret[x]   = r;
-			ret[0xF] = c;
-		}
+		ret[x]   = r;
+		ret[0xF] = c;
 	}
 	function chaseReturns() {
 		var destinations = {};
@@ -583,7 +576,6 @@ function analyzeInit(rom, quirks) {
 
 	SHIFT_QUIRKS      = quirks['shiftQuirks']     | false;
 	LOAD_STORE_QUIRKS = quirks['loadStoreQuirks'] | false;
-	VF_ORDER_QUIRKS   = quirks['vfOrderQuirks']   | false;
 	
 	reaching[0x200] = {};
 	for(var z = 0; z < regNames.length; z++) {
@@ -683,9 +675,6 @@ function formatProgram(programSize) {
 	}
 	if (LOAD_STORE_QUIRKS) {
 		ret += "# analyzed with load and store operations that don't modify i.\n";
-	}
-	if (VF_ORDER_QUIRKS) {
-		ret += "# analyzed with arithmetic results written to vf after the status flag.\n";
 	}
 	ret += "\n";
 
