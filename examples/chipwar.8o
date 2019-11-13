@@ -116,7 +116,6 @@
 :alias cursorx      vd
 :alias cursory      vc
 :alias dir          vb
-:alias compare-temp va
 :alias wdice        v9
 :alias bdice        v8
 :alias wtotal       v7

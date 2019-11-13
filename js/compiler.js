@@ -377,7 +377,7 @@ Compiler.prototype.tinyValue = function() {
 Compiler.prototype.conditional = function(negated) {
 	var reg   = this.register();
 	var token = this.next();
-	var compTemp = this.aliases["compare-temp"];
+	var compTemp = 0xF;
 	if (negated) {
 		if      (token == "=="  ) { token = "!="; }
 		else if (token == "!="  ) { token = "=="; }
@@ -405,26 +405,26 @@ Compiler.prototype.conditional = function(negated) {
 	else if (token == ">") {
 		if (this.isRegister()) { this.fourop(0x8, compTemp, this.register(), 0x0); }
 		else                   { this.inst  (0x60 | compTemp, this.shortValue()); }
-		this.fourop(0x8, compTemp, reg, 0x5); // ve -= v1
-		this.inst(0x3F, 1);                   // if vf == 1 then ...
+		this.fourop(0x8, compTemp, reg, 0x5); // vf -= v1
+		this.inst(0x4F, 0);                   // if vf != 0 then ...
 	}
 	else if (token == "<") {
 		if (this.isRegister()) { this.fourop(0x8, compTemp, this.register(), 0x0); }
 		else                   { this.inst  (0x60 | compTemp, this.shortValue()); }
-		this.fourop(0x8, compTemp, reg, 0x7); // ve =- v1
-		this.inst(0x3F, 1);                   // if vf == 1 then ...
+		this.fourop(0x8, compTemp, reg, 0x7); // vf =- v1
+		this.inst(0x4F, 0);                   // if vf != 0 then ...
 	}
 	else if (token == ">=") {
 		if (this.isRegister()) { this.fourop(0x8, compTemp, this.register(), 0x0); }
 		else                   { this.inst  (0x60 | compTemp, this.shortValue()); }
-		this.fourop(0x8, compTemp, reg, 0x7); // ve =- v1
-		this.inst(0x4F, 1);                   // if vf != 1 then ...
+		this.fourop(0x8, compTemp, reg, 0x7); // vf =- v1
+		this.inst(0x3F, 0);                   // if vf == 0 then ...
 	}
 	else if (token == "<=") {
 		if (this.isRegister()) { this.fourop(0x8, compTemp, this.register(), 0x0); }
 		else                   { this.inst  (0x60 | compTemp, this.shortValue()); }
-		this.fourop(0x8, compTemp, reg, 0x5); // ve -= v1
-		this.inst(0x4F, 1);                   // if vf != 1 then ...
+		this.fourop(0x8, compTemp, reg, 0x5); // vf -= v1
+		this.inst(0x3F, 0);                   // if vf == 0 then ...
 	}
 	else {
 		throw "Conditional flag expected, got '" + token + "!";
@@ -765,9 +765,8 @@ Compiler.prototype.instruction = function(token) {
 }
 
 Compiler.prototype.go = function() {
-	this.aliases["compare-temp"] = 0xE;
-	this.aliases["unpack-hi"]    = 0x0;
-	this.aliases["unpack-lo"]    = 0x1;
+	this.aliases["unpack-hi"] = 0x0;
+	this.aliases["unpack-lo"] = 0x1;
 
 	this.inst(0, 0); // reserve a jump slot
 	while(!this.end()) {

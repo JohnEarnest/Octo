@@ -240,7 +240,6 @@
 :alias  input        vb
 :alias  direction    va
 :alias  win          v9
-:alias  compare-temp v8
 
 # v0-v8 reserved for temporary use.
 # v0-v7 are used together for fast buffer copies.

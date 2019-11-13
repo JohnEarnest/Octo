@@ -88,7 +88,7 @@ Octo also provides pseudo-ops for using `<`, `>`, `<=` and `>=` to compare two r
 	if v1 >  v2  then v3 := 5
 	if v1 <= 0xA then v3 := 7
 
-These are implemented by using the subtraction instructions `-=` and `=-` and querying `vf`, and will destroy the contents of a temporary register as well as `vf`. By default this temporary register will be `ve`, but defining an `:alias` named `compare-temp` can reassign it to any register but `vf`. Note that these pseudo-ops produce 3 chip8 instructions each and should be avoided when the simpler direct comparisons are suitable.
+These are implemented by using the subtraction instructions `-=` and `=-` and querying `vf`. Note that these pseudo-ops produce 3 chip8 instructions each and should be avoided when the simpler direct comparisons are suitable.
 
 If you wish to conditionally execute a group of statements, you can use `if...begin...end` instead of `if...then`. Optionally you may include an `else` clause.
 
