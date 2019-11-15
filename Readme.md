@@ -3,14 +3,9 @@ Octo
 
 ![Title Image](https://raw.githubusercontent.com/JohnEarnest/Octo/gh-pages/images/f8z.gif)
 
-[Octo](http://johnearnest.github.io/Octo/) is a high-level assembler for the [Chip8](http://mattmik.com/chip8.html) virtual machine, complete with an environment for testing programs. The Chip8 keypad is represented on your keyboard as follows:
+[Octo](http://johnearnest.github.io/Octo/) is a high-level assembler for the [Chip8](http://mattmik.com/chip8.html) virtual machine, complete with an environment for testing programs, and tools for sharing your creations. Read about the project on [Itch.io](https://internet-janitor.itch.io/octo)!
 
-	Chip8 Key   Keyboard
-	---------   ---------
-	 1 2 3 C     1 2 3 4
-	 4 5 6 D     q w e r
-	 7 8 9 E     a s d f
-	 A 0 B F     z x c v
+![IDE Screenshot](https://raw.githubusercontent.com/JohnEarnest/Octo/gh-pages/images/octo-screenshot.png)
 
 Links
 -----
@@ -38,6 +33,8 @@ Third-party tools and references:
 - [OctoFont](https://github.com/jdeeny/octofont) .TTF font converter.
 - [wernsey chip8](https://github.com/wernsey/chip8) an alternative assembler/disassembler.
 - [EZ-Bake Animator](http://beyondloom.com/tools/ezbake.html) a graphics preparation tool.
+- [EZ-Writer](http://beyondloom.com/tools/ezwriter.html) a text preparation tool.
+- [EZ-Pack](http://beyondloom.com/tools/ezpack.html) an image slicing/repaletting tool.
 
 Third-party games, programs and libraries:
 
@@ -55,7 +52,6 @@ If you've built a project on, with, or for Octo and you'd like to have a link ad
 
 Command Line Mode
 -----------------
-
 The Octo assembler can also be used as a command-line tool via a [Node.js](http://nodejs.org) frontend:
 
 	$ ./octo
@@ -74,21 +70,15 @@ The `--decompile` option can be used to send an existing Chip8 binary through Oc
 
 Sharing Your Programs
 ---------------------
-Octo has a `share` feature which stores source code and configuration metadata and produces a URL you can share with others. By default, Octo stores programs in its own backend, indexed based on a `key`. Alternatively, you can store your program in a GitHub gist and specify a `gist` argument in the Octo URL. The example below demonstrates the structure Octo expects in a Gist.
+Octo has a `share` feature which stores source code and configuration metadata and produces a URL you can share with others. By default, Octo stores programs in its own backend, indexed based on a `key`.
 
-You can also use the `gist` id or `key` to embed a Chip8 emulator in an `iframe` on your websites:
+Using the "Save HTML" button in the "Binary Tools" panel of the toolbox, you can generate a single HTML file containing the Octo emulator and your program, allowing you to easily host a game yourself or on sites like [Itch.io](https://internet-janitor.itch.io/an-evening-to-die-for). Octo can be configured to offer adaptive multitouch controls, making your games playable on mobile devices and tablets!
 
-	<iframe
-		src="http://johnearnest.github.io/Octo/embed.html?scale=2&gist=f3685a75817cde6d5c0d"
-		width="256"
-		height="128"
-	></iframe>
+Octo can also save "Cartridges" which embed programs and their metadata in an animated GIF. Cartridges are easy to share via email or image hosting sites, and include the source code of your programs, so others can riff on your creations:
 
-(Special thanks to rmmh.)
+![Cartridge Example](https://raw.githubusercontent.com/JohnEarnest/Octo/gh-pages/images/murdercart.gif)
 
-The `scale` argument is optional and specifies the number of pixels which should make up a high-resolution mode Chip8 pixel. Low-resolution mode pixels will be twice this size.
-
-Alternatively, using the "Save HTML" button in the "Binary Tools" panel of the toolbox, you can generate a single HTML file containing the Octo emulator and your program, allowing you to easily host a game yourself or on sites like Itch.io.
+Finally, [Doct](https://github.com/JohnEarnest/Octo/tree/gh-pages/tools/Doct) is an experimental tool for building standalone binaries which run Octo programs. Give it a whirl!
 
 Licensing
 ---------
