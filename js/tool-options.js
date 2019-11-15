@@ -47,7 +47,6 @@ function updateOptions() {
 **/
 
 const keyConfigModal = document.getElementById('key-config-modal')
-const keyConfigStandalone = checkBox(document.getElementById('key-config-standalone' ), false, x => x)
 
 document.getElementById('key-config-show').onclick = _ => {
   keyConfigModal.querySelectorAll('table .button').forEach(x => {
@@ -68,7 +67,6 @@ document.getElementById('key-config-show').onclick = _ => {
     }
   })
   setVisible(keyConfigModal, true)
-  keyConfigStandalone.setValue(keymap.staticExport == true)
 }
 
 document.getElementById('key-config-done').onclick = _ => {
@@ -76,7 +74,6 @@ document.getElementById('key-config-done').onclick = _ => {
     const k = parseInt(x.dataset.key, 16)
     keymap[k] = toset(x.value.split(','))
   })
-  keymap.staticExport = keyConfigStandalone.getValue()
   keymapInverse = invertKeymap(keymap)
   setPref('octoKeymap', keymap)
   setVisible(keyConfigModal, false)

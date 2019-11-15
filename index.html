@@ -146,7 +146,7 @@
           <div id='binary-save-8o'>Save <tt>.8o</tt></div>
           <div id='binary-save-ch8'>Save <tt>.ch8</tt></div>
           <div id='binary-save-cart'>Save Cartridge...</div>
-          <div id='binary-save-html'>Save HTML</div>
+          <div id='binary-save-html'>Save HTML...</div>
         </div>
       </div>
 
@@ -278,6 +278,42 @@
     </div>
   </div>
 
+  <div id='html-modal'>
+    <div class='lightbox background'></div>
+    <div class='lightbox foreground'>
+      <div class='modal'>
+        <h1>Save Standalone HTML</h1>
+        <p>
+          Export your program and the Octo runtime as a single
+          standalone HTML file suitable for hosting on your own website.
+        </p>
+        <h2>Display Scaling</h2>
+        <div id='html-scale'>
+          <span data-value='1'>1x</span>
+          <span data-value='2'>2x</span>
+          <span data-value='4'>4x</span>
+          <span data-value='6'>6x</span>
+        </div>
+        <h2>Touch Input Mode</h2>
+        <div id='html-input-mode'>
+          <span data-value='none'     >None      </span>
+          <span data-value='swipe'    >Swipe     </span>
+          <span data-value='seg16'    >Seg16     </span>
+          <span data-value='seg16fill'>Seg16 Fill</span>
+          <span data-value='gamepad'  >Gamepad   </span>
+          <span data-value='vip'      >VIP Keypad</span>
+        </div>
+        <div id='key-config-standalone'>
+          <span>Embed local keyboard mapping.</span>
+        </div>
+        <div class='buttonbar'>
+          <div id='html-cancel'>Cancel</div>
+          <div id='html-save'>Save</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id='key-config-modal'>
     <div class='lightbox background'></div>
     <div class='lightbox foreground'>
@@ -313,9 +349,6 @@
             <td><div class='button' data-key='F'>F</div><input data-key='F'></td>
           </tr>
         </table>
-        <div id='key-config-standalone'>
-          <span>When saving standalone HTML programs, embed this mapping.</span>
-        </div>
         <div class='buttonbar'>
           <div id='key-config-done'>Done</div>
         </div>
@@ -596,6 +629,17 @@ input:focus { outline: none; }
 #cartridge-modal .modal { background:gray; border-radius:5px; padding:15px; image-rendering: pixelated; }
 #cartridge-modal #cartridge-preview { border:8px solid black; cursor:pointer; }
 
+#html-modal { color:black; display:none; }
+#html-modal h1 { font-size: 13px; margin:0; }
+#html-modal h2 { font-size: 13px; margin:0; margin-top:10px; }
+#html-modal p { width: 500px; }
+#html-modal>.lightbox { display:flex; }
+#html-modal>.lightbox.background { opacity:0.5; }
+#html-modal>.lightbox.foreground { background:rgba(0,0,0,0); align-items:center; }
+#html-modal .modal { background:gray; border-radius:5px; padding:15px; image-rendering: pixelated; }
+#html-modal #key-config-standalone { margin-top: 20px; }
+#html-modal .buttonbar { margin-top:20px; }
+
 #key-config-modal { color:black; display:none; }
 #key-config-modal h1 { font-size: 13px; margin:0; }
 #key-config-modal p { width: 500px; }
@@ -605,7 +649,6 @@ input:focus { outline: none; }
 #key-config-modal .modal { background:gray; border-radius:5px; padding:15px; image-rendering: pixelated; }
 #key-config-modal table .button { width:30px; display:inline-block; }
 #key-config-modal table input { width:150px; display:inline-block; margin-left:5px; }
-#key-config-modal #key-config-standalone { margin-top:10px; }
 
 #touch-config-modal { color:black; display:none; }
 #touch-config-modal h1 { font-size: 13px; margin:0; }

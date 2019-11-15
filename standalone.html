@@ -3,7 +3,7 @@
 <script>
 const emulator = new Emulator()
 unpackOptions(emulator, data.options)
-setRenderTarget(4, 'target')
+setRenderTarget(data.options.displayScale || 4, 'target')
 emulator.init({rom:data.rom})
 emulator.importFlags = _ => getPref('octoFlagRegisters')
 emulator.exportFlags = f => setPref('octoFlagRegisters',f)
