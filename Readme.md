@@ -74,6 +74,8 @@ Octo has a `share` feature which stores source code and configuration metadata a
 
 Using the "Save HTML" button in the "Binary Tools" panel of the toolbox, you can generate a single HTML file containing the Octo emulator and your program, allowing you to easily host a game yourself or on sites like [Itch.io](https://internet-janitor.itch.io/an-evening-to-die-for). Octo can be configured to offer adaptive multitouch controls, making your games playable on mobile devices and tablets!
 
+![Screenshot of HTML export dialog](https://raw.githubusercontent.com/JohnEarnest/Octo/gh-pages/images/html-export-screenshot.png)
+
 Octo can also save "Cartridges" which embed programs and their metadata in an animated GIF. Cartridges are easy to share via email or image hosting sites, and include the source code of your programs, so others can riff on your creations:
 
 ![Cartridge Example](https://raw.githubusercontent.com/JohnEarnest/Octo/gh-pages/images/murdercart.gif)
