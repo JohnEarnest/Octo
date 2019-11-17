@@ -96,6 +96,7 @@ function Emulator() {
 	this.vfOrderQuirks      = false;
 	this.clipQuirks         = false;
 	this.jumpQuirks         = false;
+	this.logicQuirks        = false;
 	this.vBlankQuirks       = false;
 	this.enableXO           = true;
 	this.screenRotation     = 0;
@@ -185,9 +186,9 @@ function Emulator() {
 		// basic arithmetic opcodes
 		switch(op) {
 			case 0x0: this.v[x]  = this.v[y]; break;
-			case 0x1: this.v[x] |= this.v[y]; break;
-			case 0x2: this.v[x] &= this.v[y]; break;
-			case 0x3: this.v[x] ^= this.v[y]; break;
+			case 0x1: this.v[x] |= this.v[y]; if (this.logicQuirks) this.v[0xF]=0; break;
+			case 0x2: this.v[x] &= this.v[y]; if (this.logicQuirks) this.v[0xF]=0; break;
+			case 0x3: this.v[x] ^= this.v[y]; if (this.logicQuirks) this.v[0xF]=0; break;
 			case 0x4:
 				var t = this.v[x]+this.v[y];
 				this.writeCarry(x, t, (t > 0xFF));

@@ -184,6 +184,9 @@
         <div id='compat-jump0'>
           <span>4 high bits of target address determines the offset register of <tt>jump0</tt> instead of <tt>v0</tt>.</span>
         </div>
+        <div id='compat-logic'>
+          <span>clear <tt>vF</tt> after <tt>vx |= vy</tt>, <tt>vx &amp;= vy</tt>, and <tt>vx ^= vy</tt>.</span>
+        </div>
         <div id='compat-clip'>
           <span>clip sprites at screen edges instead of wrapping.</span>
         </div>
@@ -526,6 +529,7 @@ input:focus { outline: none; }
 #toolbox .tool-header { flex-grow: 0; border-top: 1px solid #222; cursor: pointer; }
 #toolbox .tool-header:hover { background:#202020; }
 #toolbox .tool-body { background:gray; color:black; padding:0 10px 0 10px; flex-grow:1; display:none; }
+#toolbox .tool-body tt { color:#202020; }
 #toolbox .tool-body.selected { display:block; }
 #toolbox h1 { font-size: 13px; padding-top:10px; padding-bottom:5px; margin:0; }
 #toolbox canvas { border:1px solid black; }

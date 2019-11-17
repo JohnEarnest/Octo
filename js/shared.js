@@ -26,6 +26,7 @@ const optionFlags = [
 	"screenRotation",
 	"maxSize",
 	"touchInputMode",
+	"logicQuirks",
 ]
 function unpackOptions(emulator, options) {
 	optionFlags.forEach(x => { if (x in options) emulator[x] = options[x] })
