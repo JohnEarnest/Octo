@@ -138,6 +138,11 @@
           <span data-value='dec'>Decimal</span>
           <span data-value='hex'>Hexadecimal</span>
         </div>
+        <h1>Linter Mode</h1>
+        <div id='linter-mode'>
+          <span data-value='none'>No Linting</span>
+          <span data-value='pedantic'>Pedantic Linting</span>
+        </div>
         <h1>File Output</h1>
         <div>
           <input id='binary-filename' value='output'>
@@ -608,6 +613,8 @@ input:focus { outline: none; }
   overflow-y: scroll;
   margin-top: 10px;
 }
+.debug-lint-message { font-family:'Poppins'; }
+.debug-lint-message tt { color:orange; }
 
 #run-container { display: flex; flex-direction: row; justify-content: center; z-index: 1000;}
 
@@ -941,12 +948,14 @@ function runRom(rom) {
   audioSetup()
   setVisible(runCover, true, 'flex')
   updateMonitor()
+  resetLinter()
   runCover.style.backgroundColor = emulator.quietColor
   setRenderTarget(5, 'target')
   intervalHandle = setInterval(_ => {
     for(var z = 0; (z < emulator.tickrate) && (!emulator.waiting); z++) {
       if (!emulator.breakpoint) {
         if (emulator.vBlankQuirks && ((emulator.m[emulator.pc] & 0xF0) == 0xD0)) { z = emulator.tickrate }
+        if (emulator.linted) lint()
         emulator.tick()
         if (emulator.pc in emulator.metadata.breakpoints) { haltBreakpoint(emulator.metadata.breakpoints[emulator.pc]) }
         if (emulator.r.length == emulator.stack_breakpoint) { emulator.stack_breakpoint = -1; haltBreakpoint('step out') }

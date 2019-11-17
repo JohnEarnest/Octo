@@ -128,6 +128,7 @@ function Emulator() {
 	this.breakpoint = false;
 	this.metadata = {};
 	this.tickCounter = 0;
+	this.linted = false;
 
 	// external interface stubs
 	this.exitVector  = function() {}                                   // fired by 'exit'

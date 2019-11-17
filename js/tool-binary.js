@@ -6,6 +6,7 @@ const binaryInput    = document.getElementById('fileinput')
 const binaryFilename = document.getElementById('binary-filename')
 const binaryEditor   = textBox(document.getElementById('binary-editor'), false, '')
 const decompilerMode = radioBar(document.getElementById('decompiler-mode'), 'static', x => {})
+const lintMode       = radioBar(document.getElementById('linter-mode'), 'none', x => emulator.linted = x == 'pedantic')
 radioBar(document.getElementById('decompiler-numbers'), 'hex', x => emulator.numericFormatStr = x)
 
 function decompileRaw(rom) {

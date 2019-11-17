@@ -123,6 +123,13 @@ function haltProfiler(name) {
 	debugPanel.innerHTML = dumpRegisters(false, name) + dumpProfile()
 }
 
+function haltLinter(desc) {
+	setVisible(runContinue, true, 'inline')
+	setVisible(debugPanel,  true)
+	emulator.breakpoint = true
+	debugPanel.innerHTML = dumpRegisters(false, 'linter') + '<div class="debug-lint-message">'+desc+'</div>'
+}
+
 /**
 * Memory Monitor
 **/
@@ -142,3 +149,88 @@ function updateMonitor() {
 	`
 }
 
+/**
+* Linter
+**/
+
+let lintIUndefined
+let lintScreenUndefined
+let lintScreenClear
+
+function resetLinter() {
+	lintIUndefined = true
+	lintScreenUndefined = false
+	lintScreenClear = true
+}
+
+function lint() {
+	// decode the next instruction
+	const op = (emulator.m[emulator.pc] << 8) | emulator.m[emulator.pc+1]
+	const x  = (op & 0x0F00) >> 8
+	const y  = (op & 0x00F0) >> 4
+
+	// general bad arguments
+	if ((op & 0xF00F) == 0x8006 && x != y) {
+		haltLinter(`Attempted <tt>vx &gt;&gt;= vy</tt> where <tt>vx</tt> != <tt>vy</tt>.<br>This behaves differently in SCHIP and CHIP-8.`)
+	}
+	if ((op & 0xF00F) == 0x800E && x != y) {
+		haltLinter(`Attempted <tt>vx &lt;&lt;= vy</tt> where <tt>vx</tt> != <tt>vy</tt>.<br>This behaves differently in SCHIP and CHIP-8.`)
+	}
+	if ((op & 0xF000) == 0xB000) {
+		haltLinter(`Attempted <tt>jump0</tt>.<br>This instruction does not work properly in SCHIP.`)
+	}
+	if ((op & 0xF0FF) == 0xF030 && emulator.v[x] > 9) {
+		haltLinter(`Attempted <tt>bighex</tt> for the digit ${emulator.v[x]}.<br>SCHIP only provides digits 0-9.`)
+	}
+
+	// memory safety
+	if (((op & 0xF000) == 0xA000) || // i := NNN
+	    ((op & 0xF0FF) == 0xF029) || // i := hex vx
+	    ((op & 0xF0FF) == 0xF030))   // i := bighex vx
+	{
+		lintIUndefined = false
+	}
+	if ((op & 0xF0FF) == 0xF033 && lintIUndefined) {
+		haltLinter(`Attempted <tt>bcd vx</tt> while i is undefined.<br><tt>load vx</tt> and <tt>save vx</tt> leave i in a non-portable state.`)
+	}
+	if ((op & 0xF0FF) == 0xF055) {
+		if (lintIUndefined) {
+			haltLinter(`Attempted <tt>save vx</tt> while i is undefined.<br><tt>load vx</tt> and <tt>save vx</tt> leave i in a non-portable state.`)
+		}
+		lintIUndefined = true
+	}
+	if ((op & 0xF0FF) == 0xF065) {
+		if (lintIUndefined) {
+			haltLinter(`Attempted <tt>load vx</tt> while i is undefined.<br><tt>load vx</tt> and <tt>save vx</tt> leave i in a non-portable state.`)
+		}
+		lintIUndefined = true
+	}
+
+	// drawing
+	if ((op & 0xF00F) == 0xD000 && !emulator.hires) {
+		haltLinter(`Attempted to draw a 16x16 sprite while in low-resolution mode.<br>This does not work properly in SCHIP.`)
+	}
+	if (op == 0x00E0) { // clear
+		lintScreenUndefined = false
+		lintScreenClear     = true
+	}
+	if (op == 0x00FF || op == 0x00FE) { // hires, lores
+		lintScreenUndefined = !lintScreenClear
+	}
+	if ((op & 0xF000) == 0xD000) {
+		lintScreenClear = false // conservatively treat repeated draws as "not clear"
+		if (lintScreenUndefined) {
+			haltLinter(`Attempted <tt>sprite</tt> after changing resolution without clearing the screen.<br>This behaves unpredictably in SCHIP.`)
+		}
+	}
+	if ((op & 0xFFF0) == 0x00C0 && lintScreenUndefined) { // scroll-down
+		haltLinter(`Attempted <tt>scroll-down</tt> after changing resolution without clearing the screen.<br>This behaves unpredictably in SCHIP.`)
+	}
+	if (op == 0x00FB && lintScreenUndefined) {
+		haltLinter(`Attempted <tt>scroll-right</tt> after changing resolution without clearing the screen.<br>This behaves unpredictably in SCHIP.`)
+	}
+	if (op == 0x00FC && lintScreenUndefined) {
+		haltLinter(`Attempted <tt>scroll-left</tt> after changing resolution without clearing the screen.<br>This behaves unpredictably in SCHIP.`)
+	}
+
+}
