@@ -293,20 +293,23 @@ Compiler.prototype.checkName = function(name, kind) {
 	return name;
 }
 
-Compiler.prototype.veryWideValue = function() {
+Compiler.prototype.veryWideValue = function(noForward) {
 	// i := long NNNN
 	var nnnn = this.next();
 	if (typeof nnnn != "number") {
 		if (nnnn in this.constants) {
 			nnnn = this.constants[nnnn];
 		}
+		else if (nnnn in this.dict) {
+			nnnn = this.dict[nnnn];
+		}
+		else if (noForward) {
+			throw "The reference to '"+nnnn+"' may not be forward-declared.";
+		}
 		else if (nnnn in this.protos) {
 			this.protos[nnnn].push(this.here()+2);
 			this.longproto[this.here()+2] = true;
 			nnnn = 0;
-		}
-		else if (nnnn in this.dict) {
-			nnnn = this.dict[nnnn];
 		}
 		else {
 			this.protos[this.checkName(nnnn, "label")] = [this.here()+2];
@@ -577,7 +580,7 @@ Compiler.prototype.instruction = function(token) {
 		this.inst(0x60 | this.aliases["unpack-lo"], a);
 	}
 	else if (token == ":breakpoint") { this.breakpoints[this.here()] = this.next(); }
-	else if (token == ":monitor") { this.monitors[this.peek()] = { base:this.veryWideValue(), length:this.veryWideValue() }; }
+	else if (token == ":monitor") { this.monitors[this.peek()] = { base:this.veryWideValue(true), length:this.veryWideValue(true) }; }
 	else if (token == ":proto")  { this.next(); } // deprecated.
 	else if (token == ":alias")  { this.aliases[this.checkName(this.next(), "alias")] = this.register(); }
 	else if (token == ":const")  {
