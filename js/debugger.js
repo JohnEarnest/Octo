@@ -109,7 +109,9 @@ function clearBreakpoint() {
 	emulator.breakpoint = false
 }
 
+let lastBreakpointName = null
 function haltBreakpoint(name) {
+	lastBreakpointName = name = name || lastBreakpointName
 	setVisible(runContinue, true, 'inline')
 	setVisible(debugPanel,  true)
 	emulator.breakpoint = true
