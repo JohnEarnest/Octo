@@ -111,6 +111,7 @@ function clearBreakpoint() {
 
 let lastBreakpointName = null
 function haltBreakpoint(name) {
+	updateMonitor()
 	lastBreakpointName = name = name || lastBreakpointName
 	setVisible(runContinue, true, 'inline')
 	setVisible(debugPanel,  true)
@@ -119,6 +120,7 @@ function haltBreakpoint(name) {
 }
 
 function haltProfiler(name) {
+	updateMonitor()
 	setVisible(runContinue, true, 'inline')
 	setVisible(debugPanel,  true)
 	emulator.breakpoint = true
@@ -126,6 +128,7 @@ function haltProfiler(name) {
 }
 
 function haltLinter(desc) {
+	updateMonitor()
 	setVisible(runContinue, true, 'inline')
 	setVisible(debugPanel,  true)
 	emulator.breakpoint = true
