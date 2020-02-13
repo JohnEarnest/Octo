@@ -25,6 +25,12 @@ const palettePresets = radioBar(document.getElementById('palette-presets'), 'oct
   updateColor()
 })
 
+const fontChoices = radioBar(document.getElementById('emulator-fonts'), 'octo', x => {
+  emulator.fontStyle = x
+  saveLocalOptions()
+  updateColor()
+})
+
 document.querySelectorAll('#color-table tr input').forEach((input,i) => {
   function update() {
     emulator[paletteKeys[i]] = input.value
@@ -44,5 +50,26 @@ function updateColor() {
   palettePresets.setValue('none')
   for (key in palettes) {
     if (paletteKeys.every((x,i) => emulator[x] == palettes[key][i])) palettePresets.setValue(key)
+  }
+
+  // draw font choice
+  const fg = document.getElementById('font-draw').getContext('2d')
+  const FSCALE = 2
+  fg.fillStyle = emulator.backgroundColor
+  fg.fillRect(0, 0, FSCALE * 145, FSCALE * 23)
+  fg.fillStyle = emulator.fillColor
+
+  const drawChar = (font,xoff,yoff,w,h,c) => {
+    for(var y = 0; y < h; y++) {
+      for(var x = 0; x < w; x++) {
+        if ((font[c * h + y] >> (7-x) & 1) == 0) continue
+        fg.fillRect(FSCALE * (9 * c + x + xoff), FSCALE * (y + yoff), FSCALE, FSCALE)
+      }
+    }
+  }
+  const fonts = fontsets[emulator.fontStyle]
+  for(let z = 0; z < 16; z++) {
+    drawChar(fonts.small, 1, 1,5, 5,z)
+    drawChar(fonts.big,   1,11,8,10,z)
   }
 }

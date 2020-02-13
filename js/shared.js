@@ -27,6 +27,7 @@ const optionFlags = [
 	"maxSize",
 	"touchInputMode",
 	"logicQuirks",
+	"fontStyle",
 ]
 function unpackOptions(emulator, options) {
 	optionFlags.forEach(x => { if (x in options) emulator[x] = options[x] })
