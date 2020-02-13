@@ -48,6 +48,7 @@ function updateColor() {
     row.querySelector('input').value              = v
   })
   palettePresets.setValue('none')
+  fontChoices.setValue(emulator.fontStyle)
   for (key in palettes) {
     if (paletteKeys.every((x,i) => emulator[x] == palettes[key][i])) palettePresets.setValue(key)
   }
