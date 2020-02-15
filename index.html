@@ -628,7 +628,8 @@ input:focus { outline: none; }
 .debug-lint-message { font-family:'Poppins'; }
 .debug-lint-message tt { color:orange; }
 
-#run-container { display: flex; flex-direction: row; justify-content: center; z-index: 1000;}
+#run-container { display: flex; flex-direction: row; justify-content: center;}
+#run-container canvas { z-index: 1000; }
 
 #monitor { font-family: monospace; text-shadow: black 0 0 5px; display:none; position:fixed; right:10px;top:10px; max-width:420px; }
 #monitor>table { border-collapse: collapse; }
