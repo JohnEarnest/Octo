@@ -6,7 +6,9 @@
 //
 ////////////////////////////////////
 
+//must be set > 0
 var scaleFactor = 5;
+//dom id for canvas element
 var renderTarget = "target";
 
 const optionFlags = [
@@ -49,8 +51,6 @@ function setRenderTarget(scale, canvas) {
 
 	var w  = scaleFactor * 128;
 	var h  = scaleFactor *  64;
-	var wm = (scaleFactor * -64) + "px";
-	var hm = (scaleFactor * -32) + "px";
 
 	if (emulator.screenRotation == 90 || emulator.screenRotation == 270) {
 		c.width  = h;
@@ -62,7 +62,7 @@ function setRenderTarget(scale, canvas) {
 	}
 }
 
-function getTransform(emulator, g) {
+function setTransform(emulator, g) {
 	g.setTransform(1, 0, 0, 1, 0, 0);
 	var x = scaleFactor * 128;
 	var y = scaleFactor *  64;
@@ -80,7 +80,7 @@ function getTransform(emulator, g) {
 			g.translate(-x, 0);
 			break;
 		default:
-			/* nothing to do */
+			console.assert(emulator.screenRotation === 0, 'Screen rotation not set to 0, 90, 180, or 270. Treating as 0.')
 	}
 }
 
@@ -118,7 +118,7 @@ function renderDisplay(emulator) {
 			c.last = undefined;  // full redraw when switching resolution
 	}
 	var g = c.getContext("2d");
-	getTransform(emulator, g);
+	setTransform(emulator, g);
 	var w      = emulator.hires ? 128         : 64;
 	var h      = emulator.hires ? 64          : 32;
 	var size   = emulator.hires ? scaleFactor : scaleFactor*2;

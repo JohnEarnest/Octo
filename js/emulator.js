@@ -219,7 +219,7 @@ function Emulator() {
 	this.logicQuirks        = false;
 	this.vBlankQuirks       = false;
 	this.enableXO           = true;
-	this.screenRotation     = 0;
+	this.screenRotation     = 0;//must be 0, 90, 180, or 270
 	this.maxSize            = 3584;
 	this.touchInputMode     = 'none';
 	this.maskFormatOverride = true;
