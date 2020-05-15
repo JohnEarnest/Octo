@@ -11,6 +11,14 @@
   <script src="lib/jasmine-3.5.0/jasmine-html.js"></script>
   <script src="lib/jasmine-3.5.0/boot.js"></script>
 
+  <script>
+    const jasmineOnLoad = window.onload;
+
+    //recording.js refers to runRecord.onclick and sets runRecord by document.getElementById('run-record') 
+    const documentGetElementById = document.getElementById;
+    document.getElementById = () => ({});
+  </script>
+
   <!-- include source files here... -->
   <script src='../lib/codemirror/codemirror.min.js'></script>
 	<script src='../lib/codemirror/octomode.js'></script>
@@ -20,11 +28,27 @@
   <script src='../js/decompiler.js'></script>
   <script src='../js/shared.js'></script>
   <script src='../js/util.js'></script>
+  <script src='../js/sharing.js'></script>
   <script src='../js/input.js'></script>
+
+  <script src='../js/debugger.js'></script>
+  <script src='../js/recording.js'></script>
 
   <!-- include spec files here... -->
   <script src="spec/shared.spec.js"></script>
+  <script src="spec/sharing.spec.js"></script>
 
+  <script>
+      //jasmine spec report will not run if sharing.js changes window.onload
+      //sharing.js window.onload function should not run without various things stubbed for a test anyway
+      //accesses two globals, editor.setValue and setStatusMessage
+      //queries element that will not exist, document.querySelector('#main-examples ul')
+      //makes a network call
+      window.onload = jasmineOnLoad;
+
+      //set back to real method
+      document.getElementById = documentGetElementById;
+  </script>
 </head>
 
 <body>
