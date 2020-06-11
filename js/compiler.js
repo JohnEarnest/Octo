@@ -604,11 +604,11 @@ Compiler.prototype.instruction = function(token) {
 			body.push(this.raw());
 		}
 		if (this.next() != '}') { throw "Expected '}' for definition of macro '"+name+"'."; }
-		this.macros[name] = { args: args, body: body };
+		this.macros[name] = { args: args, body: body, calls:0 };
 	}
 	else if (token in this.macros) {
 		var macro = this.macros[token];
-		var bindings = {};
+		var bindings = { 'CALLS':[macro.calls++,0,0] };
 		for (var x = 0; x < macro.args.length; x++) {
 			if (this.end()) {
 				throw "Not enough arguments for expansion of macro '"+token+"'";

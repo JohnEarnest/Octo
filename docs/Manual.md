@@ -172,7 +172,7 @@ This generates code equivalent to the following:
 	v2 := v1
 	v1 := vf
 
-Macros must be defined before expansion, and macro definitions may not be nested, but macro invocations may appear within macro definitions.
+Macros must be defined before expansion, and nesting macro definitions does not generally make sense, but macro invocations may appear within macro definitions. Unless it has been shadowed by a macro argument, the special name `CALLS` will be substituted within a macro with a number corresponding to how many times this macro has been expanded, counting from 0.
 
 Sometimes there is an arithmetic relationship between constants in your program. Rather than computing them by hand, the `:calc` command allows you to perform calculations at compile time. It takes a name, followed by a `{`, a sequence of numbers, constant references, binary operators, unary operators or parentheses, and finally a terminal `}`. The name is assigned to the result of evaluating the expression within curly braces. The following operators are available:
 

@@ -275,6 +275,18 @@ Alternatively, we could use `:calc` to count up on each invocation:
 	do-256 sin-entry
 ```
 
+Yet another approach would be to use the special name `CALLS`, which indicates the number of times the current macro (here, `sin-entry`) has been invoked:
+
+```
+:macro sin-entry {
+	:byte { 26 + 25 * sin CALLS * ( 2 * PI ) / 256 }
+}
+: table
+	do-256 sin-entry
+```
+
+Using `CALLS` is especially useful when the number of bytes emitted may be subject to change in the future, as in emitting code rather than simple table entries. See the "Keyboard Test" example for one such use-case.
+
 XOR-Encoded Sprites
 -------------------
 Consider the following program, which displays a simple looped animation:

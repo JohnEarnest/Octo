@@ -39,11 +39,11 @@
 	loop
 		# unroll this loop fully to try to
 		# minimize input lag:
-		:macro scan KEY {
-			:calc keycode  { @ keymap + KEY }
-			:calc heldaddr { held + KEY }
-			:calc kx       { -2 + start-x + cell * floor KEY % 4 }
-			:calc ky       { -1 + start-y + cell * floor KEY / 4 }
+		:macro scan {
+			:calc keycode  { @ keymap + CALLS }
+			:calc heldaddr { held + CALLS }
+			:calc kx       { -2 + start-x + cell * floor CALLS % 4 }
+			:calc ky       { -1 + start-y + cell * floor CALLS / 4 }
 			v1 := keycode
 			v2 := kx
 			v3 := ky
@@ -65,9 +65,9 @@
 			i := heldaddr
 			save v0
 		}
-		scan  0 scan  1 scan  2 scan  3
-		scan  4 scan  5 scan  6 scan  7
-		scan  8 scan  9 scan 10 scan 11
-		scan 12 scan 13 scan 14 scan 15
+		scan scan scan scan
+		scan scan scan scan
+		scan scan scan scan
+		scan scan scan scan
 	again
 
