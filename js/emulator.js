@@ -356,7 +356,7 @@ function Emulator() {
 			case 0x18: this.buzzTrigger(this.v[x], this.st); this.st = this.v[x]; break;
 			case 0x1E: this.i = (this.i + this.v[x])&0xFFFF; break;
 			case 0x29: this.i = ((this.v[x] & 0xF) * 5); break;
-			case 0x30: this.i = ((this.v[x] & 0xF) * 10 + font.length); break;
+			case 0x30: this.i = ((this.v[x] & 0xF) * 10 + fontsets[this.fontStyle].small.length); break;
 			case 0x33:
 				this.m[this.i]   = Math.floor(this.v[x]/100)%10;
 				this.m[this.i+1] = Math.floor(this.v[x]/10)%10;
