@@ -191,6 +191,12 @@ var TIMER_FREQ = 60;
 var SAMPLES = 16;
 var BUFFER_SIZE = SAMPLES * 8
 
+
+function audioEnable() {
+	// this will only work if called directly from a user-generated input handler:
+	if (audio && audio.state == 'suspended') audio.resume()
+}
+
 function audioSetup() {
 	if (!audio) {
 		if (typeof AudioContext !== 'undefined') {
@@ -200,6 +206,7 @@ function audioSetup() {
 			audio = new webkitAudioContext();
 		}
 	}
+	audioEnable()
 	if (audio && !audioNode) {
 		audioNode = audio.createScriptProcessor(4096, 1, 1);
 		audioNode.onaudioprocess = function(audioProcessingEvent) {
@@ -251,6 +258,7 @@ var VOLUME = 0.25;
 
 function playPattern(soundLength, buffer, remainingTicks) {
 	if (!audio) { return; }
+	audioEnable()
 
 	var samples = Math.floor(BUFFER_SIZE * audio.sampleRate / FREQ);
 	var audioBuffer = new Array(samples);

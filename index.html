@@ -864,6 +864,7 @@ window.onkeydown = event => {
   if (!(event.key in emulator.keys)) {
     emulator.keys[event.key] = true
   }
+  audioEnable()
   event.preventDefault()
 }
 
