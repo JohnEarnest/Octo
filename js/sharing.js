@@ -59,17 +59,22 @@ function preparePayload() {
 		options: packOptions(emulator),
 	}
 }
-function openPayload(options, program) {
+function applyPayload(options, program) {
 	editor.setValue(program)
 	speedMenu.setValue(options.tickrate)
 	unpackOptions(emulator, options)
+	updateSpriteEditor()
+	updateAudio()
+	updateColor()
+	updateOptions()
+}
+function openPayload(options, program) {
+	applyPayload(options, program)
 	saveLocalOptions()
 	saveLocalProgram()
 }
 function runPayload(options, program) {
-	editor.setValue(program)
-	speedMenu.setValue(options.tickrate)
-	unpackOptions(emulator, options)
+	applyPayload(options, program)
 	document.getElementById('main-run').click()
 }
 function runShared(key) {
