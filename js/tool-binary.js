@@ -55,7 +55,14 @@ document.getElementById('binary-decompile').onclick = _ => {
 	(decompilerMode.getValue() == 'static' ? decompileStatic : decompileRaw)(readBytes(binaryEditor))
 }
 document.getElementById('binary-run').onclick = _ => {
-	runRom({ rom:readBytes(binaryEditor), breakpoints:{}, aliases:{}, labels:{} })
+	runRom({
+		rom:         readBytes(binaryEditor),
+		breakpoints: {},
+		monitors:    {},
+		dbginfo:     new DebugInfo(''),
+		aliases:     {},
+		labels:      {},
+	})
 }
 document.getElementById('binary-open').onclick = _ => {
 	binaryInput.click()
