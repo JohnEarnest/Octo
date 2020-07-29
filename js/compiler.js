@@ -45,6 +45,16 @@ function parseNumber(token) {
 	return NaN;
 }
 
+var escapeChars = {
+	't' : '\t',
+	'n' : '\n',
+	'r' : '\r',
+	'v' : '\v',
+	'0' : '\0',
+	'\\': '\\',
+	'"' : '\"',
+}
+
 function tokenize(text) {
 	var ret   = [];
 	var index = 0;
@@ -62,6 +72,26 @@ function tokenize(text) {
 			while(c != '\n' && index < text.length) {
 				c = text.charAt(index++);
 			}
+		}
+		else if (c == '"') {
+			if (token.length > 0) {
+				ret.push([ parse(token), tokenStart, index ]);
+			}
+			var str = '';
+			tokenStart = index;
+			while (true) {
+				if (index >= text.length) { throw "Missing a closing \" in a string literal."; }
+				c = text.charAt(index++);
+				if (c == '"') { break; }
+				if (c == '\\') {
+					var esc = text.charAt(index++);
+					if (!(esc in escapeChars)) { throw "Unrecognized escape character '"+esc+"' in a string literal."; }
+					c = escapeChars[esc];
+				}
+				str = str + c;
+			}
+			ret.push([ str, tokenStart, index+1 ]);
+			tokenStart = -1;
 		}
 		else if (" \t\n\r\v".indexOf(c) >= 0) {
 			if (token.length > 0) {
@@ -185,6 +215,7 @@ function Compiler(source) {
 		'OCTO_KEY_V': 0xF,
 	};
 	this.macros    = {}; // map<name, {args, body}>
+	this.stringmodes = {}; // map<name, map<chars,{args, body}>}>
 	this.hasmain = true;
 	this.schip = false;
 	this.xo = false;
@@ -194,7 +225,8 @@ function Compiler(source) {
 
 	this.pos = null;
 	this.currentToken = 0
-	this.tokens = tokenize(source);
+	this.source = source;
+	this.tokens = null;
 }
 
 Compiler.prototype.data = function(a) {
@@ -283,7 +315,7 @@ Compiler.prototype.reservedNames = {
 	"scroll-down":true, "scroll-right":true, "scroll-left":true,
 	"lores":true, "hires":true, "loadflags":true, "saveflags":true, "i":true,
 	"audio":true, "plane":true, "scroll-up":true, ":macro":true, ":calc":true, ":byte":true,
-	":call":true,
+	":call":true, ":stringmode":true,
 };
 
 Compiler.prototype.checkName = function(name, kind) {
@@ -551,6 +583,9 @@ Compiler.prototype.parseTerminal = function(name) {
 
 Compiler.prototype.parseCalc = function(name) {
 	// UNARY expression | terminal BINARY expression | terminal
+	if (this.peek() == 'strlen') {
+		return this.next(), (''+this.next()).length;
+	}
 	if (this.peek() in unaryFunc) {
 		return unaryFunc[this.next()](this.parseCalc(name), this.rom);
 	}
@@ -568,6 +603,20 @@ Compiler.prototype.parseCalculated = function(name) {
 	var value = this.parseCalc(name);
 	if (this.next() != '}') { throw "Expected '}' for calculated constant '"+name+"'."; }
 	return value;
+}
+
+Compiler.prototype.macroBody = function(name, desc) {
+	if (this.next() != '{') { throw "Expected '{' for definition of "+desc+" '"+name+"'."; }
+	var body = [];
+	var depth = 1;
+	while(!this.end()) {
+		if (this.peek() == '{') { depth += 1; }
+		if (this.peek() == '}') { depth -= 1; }
+		if (depth == 0) { break; }
+		body.push(this.raw());
+	}
+	if (this.next() != '}') { throw "Expected '}' for definition of "+desc+" '"+name+"'."; }
+	return body;
 }
 
 Compiler.prototype.instruction = function(token) {
@@ -594,17 +643,7 @@ Compiler.prototype.instruction = function(token) {
 		while(this.peek() != '{' && !this.end()) {
 			args.push(this.checkName(this.next(), "macro argument"));
 		}
-		if (this.next() != '{') { throw "Expected '{' for definition of macro '"+name+"'."; }
-		var body = [];
-		var depth = 1;
-		while(!this.end()) {
-			if (this.peek() == '{') { depth += 1; }
-			if (this.peek() == '}') { depth -= 1; }
-			if (depth == 0) { break; }
-			body.push(this.raw());
-		}
-		if (this.next() != '}') { throw "Expected '}' for definition of macro '"+name+"'."; }
-		this.macros[name] = { args: args, body: body, calls:0 };
+		this.macros[name] = { args: args, body:this.macroBody(name, 'macro'), calls:0 };
 	}
 	else if (token in this.macros) {
 		var macro = this.macros[token];
@@ -620,6 +659,44 @@ Compiler.prototype.instruction = function(token) {
 			var value = (chunk[0] in bindings) ? bindings[chunk[0]] : chunk;
 			this.tokens.splice(x + this.currentToken, 0, value);
 		}
+	}
+	else if (token == ':stringmode') {
+		var name = this.checkName(this.next(), "stringmode");
+		if (!(name in this.stringmodes)) {
+			this.stringmodes[name] = {values:{}, bodies:{}};
+		}
+		var mode = this.stringmodes[name];
+		var alphabet = this.next();
+		alphabet.split('').forEach(char => {
+			if (mode.bodies[char]) { throw "String mode '"+name+"' is already defined for the character '"+char+"'."; }
+		})
+		var macro = { args:[], body:this.macroBody(name, 'string mode'), calls:0 };
+		alphabet.split('').forEach((char,index) => {
+			mode.values[char] = index;
+			mode.bodies[char] = macro;
+		})
+	}
+	else if (token in this.stringmodes) {
+		var mode = this.stringmodes[token];
+		var string = this.next();
+		if (typeof string == 'number') { throw "String mode '"+token+"' cannot be applied to a number ("+string+")."; }
+		var insertion = this.currentToken;
+
+		string.split('').forEach((char,index) => {
+			if (!(char in mode.bodies)) { throw "String mode '"+token+"' is not defined for the character '"+char+"'."; }
+			var macro = mode.bodies[char];
+			var bindings = {
+				'CALLS':[macro.calls++,0,0],      // how many times have we expanded this character class?
+				'CHAR' :[char.charCodeAt(0),0,0], // ascii value of the current character
+				'INDEX':[index,0,0],              // index of the current character in the input string
+				'VALUE':[mode.values[char],0,0],  // index of the current character in the character class's alphabet
+			};
+			for (var x = 0; x < macro.body.length; x++) {
+				var chunk = macro.body[x];
+				var value = (chunk[0] in bindings) ? bindings[chunk[0]] : chunk;
+				this.tokens.splice(insertion++, 0, value);
+			}
+		})
 	}
 	else if (token == ':calc') {
 		var name = this.checkName(this.next(), "calculated constant");
@@ -771,6 +848,7 @@ Compiler.prototype.go = function() {
 	this.aliases["unpack-hi"] = 0x0;
 	this.aliases["unpack-lo"] = 0x1;
 
+	this.tokens = tokenize(this.source);
 	this.inst(0, 0); // reserve a jump slot
 	while(!this.end()) {
 		if (typeof this.peek() == "number") {

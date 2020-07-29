@@ -7,7 +7,7 @@ Octo Metaprogramming Cookbook
 
 The Octo language, by virtue of maintaining a simple, straightforward mapping from statements to the underlying Chip8 bytecode, gives fine-grained control to the programmer. Sometimes there's a tradeoff between keeping programs well-structured and easy to modify, and making them efficient. Making a fast program might involve writing repetitive code or doing elaborate pre-processing on data.
 
-To deal with these situations, Octo offers two constructs: `:calc` and `:macro`. Each is useful on its own, and in concert they are surprisingly expressive. This guide will introduce these constructs and then explore some of their applications.
+To deal with these situations, Octo offers three constructs: `:calc`, `:macro`, and `:stringmode`. Each is useful on its own, and in concert they are surprisingly expressive. This guide will introduce these constructs and then explore some of their applications.
 
 Using `:calc`
 -----------
@@ -596,3 +596,76 @@ Or, more compactly,
 ```
 
 You can see a very similar routine in the example game "Slippery Slope".
+
+Using `:stringmode`
+-------------------
+Octo has another facility for dealing with text: the ability to define _stringmodes_. A stringmode is a special type of macro which can be invoked for every character in a string literal in sequence. Defining a string mode uses `:stringmode`, followed by a name, an _alphabet_, and a macro body enclosed in curly braces (`{}`).
+
+Let's start with a straightforward example: a tiny 4x3 pixel font, a corresponding stringmode, and an example of creating data with the stringmode and printing it.
+
+```
+: font-4x3
+	0x40 0xA0 0xE0 0xA0  0xE0 0xC0 0xA0 0xC0  0x60 0x80 0x80 0x60  0xC0 0xA0 0xA0 0xC0 # ABCD
+	0xE0 0xC0 0x80 0xE0  0xE0 0xC0 0x80 0x80  0x60 0x80 0xA0 0x60  0xA0 0xE0 0xA0 0xA0 # EFGH
+	0xE0 0x40 0x40 0xE0  0xE0 0x20 0xA0 0x40  0xA0 0xC0 0xA0 0xA0  0x80 0x80 0x80 0xE0 # IJKL
+	0xE0 0xE0 0xA0 0xA0  0xC0 0xA0 0xA0 0xA0  0x40 0xA0 0xA0 0x40  0xE0 0xA0 0xE0 0x80 # MNOP
+	0x40 0xA0 0xE0 0x60  0xC0 0xA0 0xC0 0xA0  0xE0 0xC0 0x20 0xE0  0xE0 0x40 0x40 0x40 # QRST
+	0xA0 0xA0 0xA0 0x40  0xA0 0xA0 0xC0 0x80  0xA0 0xA0 0xE0 0xE0  0xA0 0x40 0xA0 0xA0 # UVWX
+	0xA0 0x40 0x40 0x40  0xE0 0x40 0x80 0xE0  0x00 0x00 0x00 0x40  0x00 0x00 0x40 0x80 # YZ.,
+	0x40 0x40 0x00 0x40  0xE0 0x20 0x00 0x40  0x40 0x40 0x00 0x00  0x00 0x00 0x00 0x00 # !?'
+
+:stringmode text "ABCDEFGHIJKLMNOPQRSTUVWXYZ.,!?' " { :byte { VALUE * 4 } }
+:stringmode text "\0"                               { :byte -1 }
+
+: message
+	text "HELLO, WORLD.   WELCOME TO OCTO!\0"
+
+: main
+	v1 := 0 # screen x
+	v2 := 0 # screen y
+	v3 := 0 # char index
+	loop
+		i := message
+		i += v3
+		load v0
+		while v0 != -1
+		v3 += 1
+		i := font-4x3
+		i += v0
+		sprite v1 v2 4
+		v1 += 4
+		if v1 == 64 begin
+			v2 += 5
+			v1 := 0
+		end
+	again
+```
+
+With a little tinkering, this routine could easily be refined to handle newline characters or use indirection to fetch the source string.
+
+Alternatively, if your program only has to display a handful of strings- or speed is essential- you could write something like the `print` macro in the previous section as a stringmode which emits directly-executable inlined code:
+
+```
+:stringmode print "ABCDEFGHIJKLMNOPQRSTUVWXYZ.,!?' " {
+	:calc addr { font-4x3 + VALUE * 4 }
+	i := addr
+	sprite v0 v1 4
+	v0 += 4
+}
+
+: main
+	print "EXAMPLE"
+```
+
+If for some reason you want ASCII strings, (perhaps you have a CHIP-8 machine with a serial IO interface?) it's easy enough to furnish an appropriate stringmode. By wrapping it in an ordinary macro, we could even emulate the behavior of C-style null-terminated string literals, or pascal-style counted strings:
+
+```
+:stringmode ascii " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~" { :byte { CHAR } }
+:stringmode ascii "\0" { :byte 0  }
+:stringmode ascii "\n" { :byte 10 }
+
+:macro cstring      STR { ascii STR  :byte 0 }
+:macro pascalstring STR { :byte { strlen STR }  ascii STR }
+```
+
+Note: use caution with the `strlen` function. It will only tell you the size of a literal in bytes. If you intend to use multi-clause stringmodes to drop some characters or encode them in multiple bytes, `strlen` will not reflect this! For a more elaborate pascal string you might need to `:org` forward over the size byte and then use `HERE` to compute the correct length and patch it up after processing the entire string.

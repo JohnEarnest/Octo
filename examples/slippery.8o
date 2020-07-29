@@ -233,7 +233,11 @@
 : let-V   0xB0 0xB0 0xB0 0x60
 : let-Y   0xB0 0xF0 0x30 0xF0
 
-:macro print S {
+:stringmode print " " {
+	v0 += 4
+}
+:stringmode print "ADEGHILMNOPRSTVY" {
+	:calc S { let-A + VALUE * 4 }
 	i := S
 	sprite v0 v1 4
 	# compute the width of each glyph statically:
@@ -245,56 +249,28 @@
 :macro draw-title {
 	v0 := 14
 	v1 := 4
-	print let-S
-	print let-L
-	print let-I
-	print let-P
-	print let-P
-	print let-E
-	print let-R
-	print let-Y
+	print "SLIPPERY"
 	v0 := 20
 	v1 := 24
-	print let-S
-	print let-L
-	print let-O
-	print let-P
-	print let-E
+	print "SLOPE"
 }
 
 :macro draw-gameover {
 	v0 := 15
 	v1 := 12
-	print let-T
-	print let-H
-	print let-E
-	v0 += 4
-	print let-E
-	print let-N
-	print let-D
-
+	print "THE END"
 	v3 := 8
 	v4 := 20
 	steps-show
 	v0 := v3
 	v1 := v4
-	v0 += 4
-	print let-S
-	print let-T
-	print let-E
-	print let-P
-	print let-S
+	print " STEPS"
 }
 
 :macro draw-levelno {
 	v0 := 17
 	v1 := 12
-	print let-L
-	print let-E
-	print let-V
-	print let-E
-	print let-L
-	v0 += 4
+	print "LEVEL "
 	i  := hex level
 	sprite v0 v1 5
 }

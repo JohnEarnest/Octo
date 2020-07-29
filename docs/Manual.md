@@ -146,7 +146,9 @@ Another type of self-modifying code that comes up frequently is overwriting the 
 	save v0
 	init # va will be set to 5 instead of 2.
 
-You can also specify an address at which subsequent instructions should be compiled by using `:org` followed by an address. The use of this operative is very brittle, so it should be avoided unless absolutely necessary.
+The behavior of `:unpack` and `:next` could also be obtained in a more general case using macros- see below.
+
+You can also specify an address at which subsequent instructions should be compiled by using `:org` followed by an address. The use of this directive is very brittle, so it should be avoided unless absolutely necessary.
 
 Metaprogramming
 ---------------
@@ -176,10 +178,10 @@ Macros must be defined before expansion, and nesting macro definitions does not 
 
 Sometimes there is an arithmetic relationship between constants in your program. Rather than computing them by hand, the `:calc` command allows you to perform calculations at compile time. It takes a name, followed by a `{`, a sequence of numbers, constant references, binary operators, unary operators or parentheses, and finally a terminal `}`. The name is assigned to the result of evaluating the expression within curly braces. The following operators are available:
 
-	unary:  - ~ ! sin cos tan exp log abs sqrt sign ceil floor @
+	unary:  - ~ ! sin cos tan exp log abs sqrt sign ceil floor @ strlen
 	binary: - + * / % & | ^ << >> pow min max < <= == != >= >
 
-The unary operator `@` looks up an address in the compiled ROM at the time of evaluation. Logical operators return `0` or `1` to indicate false or true, respectively. Additionally, the mathematical constants `E` and `PI` are usable, and the constant `HERE` indicates the address immediately following the end of the compiled ROM at the time of evaluation.
+The unary operator `@` looks up an address in the compiled ROM at the time of evaluation. Logical operators return `0` or `1` to indicate false or true, respectively. Additionally, the mathematical constants `E` and `PI` are usable, and the constant `HERE` indicates the address immediately following the end of the compiled ROM at the time of evaluation. The `strlen` operator is special; it expects to be immediately followed by a string literal (or a symbol which expands into one) and expands into the length of said literal in characters.
 
 Note that as with all Octo commands, the tokens of a `:calc` expression must be separated by whitespace. Bitwise operations are performed as if arguments were 32-bit signed integers, and otherwise they are treated as floating-point. When referenced, calculated constants are truncated to integegral values as appropriate. Order of evaluation is strictly right-to-left unless overridden by parentheses. The following expressions are equivalent:
 
@@ -194,7 +196,28 @@ When using `:calc` and `:macro` together, it is often useful to write the conten
 		:byte Y
 	}
 
-For convenience and brevity, if `:byte` is immediately followed by `{` the expression is computed as with `:calc` and compiled as a byte, without defining an intermediate constant. The `:org` and `:call` operatives can also accept a constant expression, truncated to a 16-bit or 12-bit address, respectively.
+For convenience and brevity, if `:byte` is immediately followed by `{` the expression is computed as with `:calc` and compiled as a byte, without defining an intermediate constant. The `:org` and `:call` directives can also accept a constant expression, truncated to a 16-bit or 12-bit address, respectively.
+
+Strings
+-------
+Many Chip8 programs do not require strings or text at all. When text is desired, representing it using ASCII is often very inconvenient. For example, fonts may not include all displayable ASCII characters, or a text rendering routine might want to work with glyph offsets. For this reason, Octo has an unusually flexible approach to working with string literals.
+
+A string literal is enclosed in double-quotes (`"`), and may contain C-style backslash (`\`) escape sequences. The escape characters `tnrv0\"` are supported. Apart from their ability to contain whitespace and some special characters, string literals are totally interchangeable with ordinary tokens.
+
+The `:stringmode` directive is used to define an approach for converting a string literal (or any other non-numeric token) into data in your program. The directive takes a _name_ for the mode, followed by an _alphabet_, and then a macro body enclosed in curly braces (`{ ... }`). The name of the mode will then behave like a macro which consumes one token (a data string) and invokes the mode's macro body for each character in the string. The macro body is provided with three bound arguments for each character: `CHAR`, the ASCII value of the character, `INDEX`, the index of the character in the data string, and `VALUE`, the index of the character in the mode's alphabet. Multiple `:stringmode` directives may be issued for a given mode name, to provide a different macro body for different ranges of characters. The alphabets of these definitions should not overlap.
+
+Here is a simple example which generates premultiplied offsets to a font where each character is 8 pixels tall:
+
+	:stringmode text8 "ABCDEFGHIJKLMNOPQRSTUVWXYZ !" {
+		:byte { 8 * VALUE }
+	}
+
+	: message
+		text8 "GAME OVER!"
+
+This assembles as 10 bytes equivalent to:
+
+	0x30 0x00 0x60 0x20 0xD0 0x70 0xA8 0x20 0x88 0xD8
 
 SuperChip
 ---------
