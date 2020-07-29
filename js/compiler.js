@@ -315,7 +315,7 @@ Compiler.prototype.reservedNames = {
 	"scroll-down":true, "scroll-right":true, "scroll-left":true,
 	"lores":true, "hires":true, "loadflags":true, "saveflags":true, "i":true,
 	"audio":true, "plane":true, "scroll-up":true, ":macro":true, ":calc":true, ":byte":true,
-	":call":true, ":stringmode":true,
+	":call":true, ":stringmode":true, ":assert":true,
 };
 
 Compiler.prototype.checkName = function(name, kind) {
@@ -708,6 +708,11 @@ Compiler.prototype.instruction = function(token) {
 	else if (token == ":org") {
 		var addr = this.peek() == '{' ? this.parseCalculated('ANONYMOUS') : this.constantValue();
 		this.hereaddr = 0xFFFF & addr;
+	}
+	else if (token == ":assert") {
+		var message = this.peek() == '{' ? null : this.next();
+		var value = this.parseCalculated(message ? 'assert '+message : 'assert');
+		if (!value) { throw message ? "Assertion failed: "+message : "Assertion failed."; }
 	}
 	else if (token == ";")       { this.inst(0x00, 0xEE); }
 	else if (token == "return")  { this.inst(0x00, 0xEE); }

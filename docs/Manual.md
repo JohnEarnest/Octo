@@ -261,3 +261,21 @@ Pressing the "p" key will interrupt execution and display a profiler, indicating
 Breakpoints can also be placed in source code by using the command `:breakpoint` followed by a name- the name will be shown when the breakpoint is encountered so that multiple breakpoints can be readily distinguished. `:breakpoint` is an out-of-band debugging facility and inserting a breakpoint into your program will not add any code or modify any Chip8 registers.
 
 The command `:monitor`, followed by a base address and length, will register a memory monitor. While your program runs, monitors will be updated continuously to reflect the contents of memory. Pressing "m" will toggle the memory monitor on and off. Like `:breakpoint`, `:monitor` is out-of-band and generates no instructions.
+
+The command `:assert` is followed by an optional name and a mandatory constant expression enclosed in curly braces (as with `:calc`). If the expression evaluates to zero during compilation, compilation will halt and display the message. This can provide useful sanity-checks while modifying your programs, and is especially helpful when writing macros. For example:
+
+```
+:macro rol REG {
+	# note: v-register tokens are equivalent to their positions
+	# 0-15 when evaluating a constant expression:
+	:assert "cannot rotate-left through carry register" { REG != vF }
+	REG <<= REG
+	REG |=  vF
+}
+
+: main
+	va := 0b10110111
+	rol va # modify this to use vF, and the macro will fail.
+```
+
+Assertions are strictly a compile-time facility and have no effect during the execution of a program.
