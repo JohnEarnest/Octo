@@ -55,6 +55,7 @@ function share() {
 function preparePayload() {
 	return {
 		key:     lastLoadedKey,
+		created: new Date().toISOString(),
 		program: editor.getValue(),
 		options: packOptions(emulator),
 	}
@@ -92,8 +93,7 @@ function runGist(id) {
 function saveLocalOptions() { setPref('octoOptions',packOptions(emulator)) }
 function saveLocalProgram() { setPref('octoProgram',editor.getValue()) }
 
-window.onload = _ => {
-	// load examples
+function loadExamples() {
 	ajax('GET', 'https://api.github.com/repos/JohnEarnest/Octo/contents/examples', null, result => {
 		const target = document.querySelector('#main-examples ul')
 		target.innerHTML = ''
@@ -468,3 +468,5 @@ function parseCartridge(image) {
 	}
 	return JSON.parse(json)
 }
+
+this.parseCartridge = parseCartridge;

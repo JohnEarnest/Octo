@@ -3,6 +3,7 @@
 
 var compiler   = require('./js/compiler');
 var decompiler = require('./js/decompiler');
+var sharing    = require('./js/sharing');
 var fs         = require('fs');
 
 
@@ -114,6 +115,26 @@ var decompiledText = "";
 
 if (decompileFlag) {
 	decompiledText = decompileFile(sourceFile, destFile);
+}
+else if (/\.gif$/i.test(sourceFile)) {
+	try {
+		var cartBytes = fs.readFileSync(sourceFile);
+		var cartData  = sharing.parseCartridge(cartBytes);
+		console.log('Successfully decoded Octo Cartridge...');
+		console.log('---------------------------------------------');
+		console.log('payload:        '+cartData.program.length+' characters');
+		console.log('creation date: ', cartData.created || 'UNKNOWN');
+		console.log('sharing key:   ', cartData.key || 'UNKNOWN');
+		console.log('options: ', cartData.options);
+		if (destFile) {
+			fs.writeFileSync(destFile, cartData.program);
+			console.log('\nwrote payload to '+destFile);
+		}
+	}
+	catch(e) {
+		console.log('Unable to decode Octo Cartridge from GIF file!')
+		console.log(e)
+	}
 }
 else if (!roundTripFlag) {
 	compileFile(sourceFile, destFile);

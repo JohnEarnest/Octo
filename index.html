@@ -859,6 +859,8 @@ showManual.onclick = _ => {
 document.getElementById('run-close'   ).onclick = _ => stopRom()
 document.getElementById('run-continue').onclick = _ => clearBreakpoint()
 
+window.onload = loadExamples
+
 window.onkeydown = event => {
   if (emulator.halted) return
   if (!(event.key in emulator.keys)) {

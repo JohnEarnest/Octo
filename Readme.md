@@ -68,6 +68,8 @@ The Octo assembler can also be used as a command-line tool via a [Node.js](http:
 
 The `--decompile` option can be used to send an existing Chip8 binary through Octo's general-purpose decompiler.
 
+If you supply a `.gif` file as the `source`, Octo will attempt to decode it as an "Octo Cartridge" (see below), and display internal metadata. Providing a `destination` as well will save the source code stored in the cartridge to a local text file.
+
 Sharing Your Programs
 ---------------------
 Octo has a `share` feature which stores source code and configuration metadata and produces a URL you can share with others. By default, Octo stores programs in its own backend, indexed based on a `key`.
