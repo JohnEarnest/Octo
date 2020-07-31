@@ -125,7 +125,7 @@ else if (/\.gif$/i.test(sourceFile)) {
 		console.log('payload:        '+cartData.program.length+' characters');
 		console.log('creation date: ', cartData.created || 'UNKNOWN');
 		console.log('sharing key:   ', cartData.key || 'UNKNOWN');
-		console.log('options: ', cartData.options);
+		console.log('options: ', JSON.stringify(cartData.options, null, '\t'));
 		if (destFile) {
 			fs.writeFileSync(destFile, cartData.program);
 			console.log('\nwrote payload to '+destFile);
