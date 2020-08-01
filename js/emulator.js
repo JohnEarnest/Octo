@@ -483,12 +483,12 @@ function Emulator() {
 		}
 		if ((op & 0xF0FF) == 0xE09E) {
 			// if -key
-			if (Object.keys(keymap[this.v[x]]).some(x => x in this.keys)) { this.skip(); }
+			if (Object.keys(keymap[this.v[x]]||{}).some(x => x in this.keys)) { this.skip(); }
 			return;
 		}
 		if ((op & 0xF0FF) == 0xE0A1) {
 			// if key
-			if (!Object.keys(keymap[this.v[x]]).some(x => x in this.keys)) { this.skip(); }
+			if (!Object.keys(keymap[this.v[x]]||{}).some(x => x in this.keys)) { this.skip(); }
 			return;
 		}
 		if ((op & 0xFFF0) == 0x00C0) {
