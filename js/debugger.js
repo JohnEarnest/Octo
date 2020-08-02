@@ -187,6 +187,12 @@ function lint() {
 	if ((op & 0xF0FF) == 0xF030 && emulator.v[x] > 9) {
 		haltLinter(`Attempted <tt>bighex</tt> for the digit ${emulator.v[x]}.<br>SCHIP only provides digits 0-9.`)
 	}
+	if ((op & 0xF0FF) == 0xE09E && emulator.v[x] > 15) {
+		haltLinter(`Attempted <tt>if vx -key</tt> where <tt>vx</tt> == ${emulator.v[x]}.<br>Key codes > 15 are not portable.`)
+	}
+	if ((op & 0xF0FF) == 0xE0A1 && emulator.v[x] > 15) {
+		haltLinter(`Attempted <tt>if vx key</tt> where <tt>vx</tt> == ${emulator.v[x]}.<br>Key codes > 15 are not portable.`)
+	}
 
 	// memory safety
 	if (((op & 0xF000) == 0xA000) || // i := NNN
