@@ -631,7 +631,12 @@ Compiler.prototype.instruction = function(token) {
 	else if (token == ":breakpoint") { this.breakpoints[this.here()] = this.next(); }
 	else if (token == ":monitor") { this.monitors[this.peek()] = { base:this.veryWideValue(true), length:this.veryWideValue(true) }; }
 	else if (token == ":proto")  { this.next(); } // deprecated.
-	else if (token == ":alias")  { this.aliases[this.checkName(this.next(), "alias")] = this.register(); }
+	else if (token == ":alias") {
+		var name = this.checkName(this.next(), "alias");
+		var val = this.peek() == '{' ? this.parseCalculated('ANONYMOUS') : this.register();
+		if (val < 0 || val >= 16) { throw "Register index must be in the range [0,F]."; }
+		this.aliases[name] = val;
+	}
 	else if (token == ":const")  {
 		var name = this.checkName(this.next(), "constant");
 		if (name in this.constants) { throw "The name '"+name+"' has already been defined."; }

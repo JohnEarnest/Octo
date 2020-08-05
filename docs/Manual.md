@@ -9,10 +9,11 @@ Octo programs are a series of _tokens_ separated by whitespace. Some tokens repr
 
 Using a label by itself will perform a subroutine call to the address the label represents. Alternatively, you can be more explicit by using `:call` followed by an address or name. A semicolon (`;`) is another way to write `return`, which returns from a subroutine. The `#` directive is a single-line comment; it ignores the rest of the current line. Numbers can be written using `0x` or `0b` prefixes to indicate hexadecimal or binary encodings, respectively.
 
-Numeric constants can be defined with the `:const` directive followed by a name and then a value, which may be a number, another constant or a (non forward-declared) label. Registers may be given named aliases with `:alias` followed by a name and then a register. The `i` register may not be given an alias, but v registers can be given as many aliases as desired. Here are some examples of constants and aliases:
+Numeric constants can be defined with the `:const` directive followed by a name and then a value, which may be a number, another constant or a (non forward-declared) label. Registers may be given named aliases with `:alias` followed by a name and then a register or a constant expression 0-15 enclosed in curly braces (`{ ... }`). The `i` register may not be given an alias, but v registers can be given as many aliases as desired. Here are some examples of constants and aliases:
 
 	:alias x v0
 	:alias CARRY_FLAG vF
+	:alias NTH { 3 + CALLS }
 	:const iterations 16
 	:const sprite-height 9
 
