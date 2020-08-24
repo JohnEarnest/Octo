@@ -515,7 +515,10 @@ Compiler.prototype.vassign = function(reg, token) {
 	else if ("|="  == token) { this.fourop(0x8, reg, this.register(), 0x1); }
 	else if ("&="  == token) { this.fourop(0x8, reg, this.register(), 0x2); }
 	else if ("^="  == token) { this.fourop(0x8, reg, this.register(), 0x3); }
-	else if ("-="  == token) { this.fourop(0x8, reg, this.register(), 0x5); }
+	else if ("-="  == token) {
+		if (this.isRegister()) { this.fourop(0x8, reg, this.register(), 0x5); }
+		else                   { this.inst(0x70 | reg, 0xFF&(1+~this.shortValue())); }
+	}
 	else if ("=-"  == token) { this.fourop(0x8, reg, this.register(), 0x7); }
 	else if (">>=" == token) { this.fourop(0x8, reg, this.register(), 0x6); }
 	else if ("<<=" == token) { this.fourop(0x8, reg, this.register(), 0xE); }

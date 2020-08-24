@@ -36,13 +36,13 @@ Statements
 - `return`          return from the current subroutine. (alias for ;)
 - `clear`           clear the screen.
 - `bcd vx`          decode vx into BCD at i, i+1, i+2.
-- `save vx`         save registers v0-vx to i.
-- `load vx`         load registers v0-vx from i.
+- `save vx`         save registers v0-vx to i and advance i. (see note below.)
+- `load vx`         load registers v0-vx from i and advance i. (see note below.)
 - `sprite vx vy n`  draw a sprite at x/y position, n rows tall.
 - `jump n`          jump to address.
 - `jump0 n`         jump to address n + v0.
 
-The `load` and `save` instructions postincrement `i` by `x`+1. For example, `load v3` will add 4 to `i` after loading 4 bytes of memory into the first 4 `v` registers.
+note: The `load` and `save` instructions postincrement `i` by `x`+1. For example, `load v3` will add 4 to `i` after loading 4 bytes of memory into the first 4 `v` registers.
 
 Assignments
 -----------
@@ -51,15 +51,16 @@ The various chip8 copy/fetch/arithmetic opcodes have been abstracted to mostly f
 
 - `delay := vx`    set delay timer to register value.
 - `buzzer := vx`   set sound timer to register value.
-- `i  := n`        set I to constant.
-- `i  := hex vx`   set I to hex char corresponding to register value.
-- `i  += vx`       increment I by a register value.
+- `i  := n`        set i to constant.
+- `i  := hex vx`   set i to hex char corresponding to register value.
+- `i  += vx`       increment i by a register value.
 - `vx := vy`       copy register to register.
 - `vx := n`        set register to constant.
 - `vx := random n` set register to random number AND n.
 - `vx := delay`    set register to delay timer.
 - `vx := key`      block for a keypress and then store code in register.
 - `vx += n`        add constant to register.
+- `vx -= n`        subtract constant from register. (see note below.)
 - `vx += vy`       add register to register. (set vF to 1 if result overflows, else 0)
 - `vx -= vy`       subtract y from x, store in x (set vF to 0 if result underflows, else 1)
 - `vx =- vy`       subtract x from y, store in x (set vF to 0 if result underflows, else 1)
@@ -68,6 +69,8 @@ The various chip8 copy/fetch/arithmetic opcodes have been abstracted to mostly f
 - `vx ^= vy`       bitwise XOR register with register.
 - `vx >>= vy`      shift vy right by 1 and store result in vx. (set vF to LSB of vy)
 - `vx <<= vy`      shift vy left by 1 and store result in vx. (set vF to MSB of vy)
+
+note: `vx -= n` is syntactic sugar for `vx += -n`, (or in other words, adding the two's complement of n) and does not represent a distinct instruction.
 
 Control Flow
 ------------
