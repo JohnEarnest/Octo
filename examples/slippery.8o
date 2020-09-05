@@ -440,8 +440,10 @@
 		move-player
 		draw-stand
 	end
-	vf := OCTO_KEY_E
-	if vf key then pmode := MODE-RESET
+	if level != 0 begin
+		vf := OCTO_KEY_E
+		if vf key then pmode := MODE-RESET
+	end
 }
 
 ###########################################
