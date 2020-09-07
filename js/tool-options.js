@@ -48,6 +48,7 @@ function updateOptions() {
 **/
 
 const keyConfigModal = document.getElementById('key-config-modal')
+const vimMode=checkBox(document.getElementById('vim-mode'), getPref('octoVimMode'), x=>setPref('octoVimMode',x))
 
 document.getElementById('key-config-show').onclick = _ => {
   keyConfigModal.querySelectorAll('table .button').forEach(x => {

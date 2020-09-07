@@ -1,8 +1,12 @@
 <html>
 <head>
-	<title>Octo</title>
-	<script src='lib/codemirror/codemirror.min.js'></script>
-	<script src='lib/codemirror/octomode.js'></script>
+  <title>Octo</title>
+  <script src='lib/codemirror/codemirror.min.js'></script>
+  <script src='lib/codemirror/codemirror.dialog.js'></script>
+  <script src='lib/codemirror/codemirror.matchbrackets.js'></script>
+  <script src='lib/codemirror/codemirror.searchcursor.js'></script>
+  <script src='lib/codemirror/vim.min.js'></script>
+  <script src='lib/codemirror/octomode.js'></script>
   <script src='lib/filesaver.js'></script>
   <script src='js/emulator.js'></script>
   <script src='js/compiler.js'></script>
@@ -11,10 +15,10 @@
   <script src='js/util.js'></script>
   <script src='js/sharing.js'></script>
   <script src='js/input.js'></script>
-
-	<link rel='stylesheet' href='lib/codemirror/codemirror.min.css'>
-	<link rel='stylesheet' href='lib/codemirror/monokai.css'>
-	<link rel='shortcut icon' href='images/favicon.ico' type='image/x-icon'>
+  <link rel='stylesheet' href='lib/codemirror/codemirror.min.css'>
+  <link rel='stylesheet' href='lib/codemirror/codemirror.dialog.css'>
+  <link rel='stylesheet' href='lib/codemirror/monokai.css'>
+  <link rel='shortcut icon' href='images/favicon.ico' type='image/x-icon'>
 </head>
 
 <body>
@@ -371,6 +375,9 @@
             <td><div class='button' data-key='F'>F</div><input data-key='F'></td>
           </tr>
         </table>
+        <div id='vim-mode'>
+          <span>Use Vim keybindings for Octo's text editor. (Refresh the page to reflect changes.)</span>
+        </div>
         <div class='buttonbar'>
           <div id='key-config-done'>Done</div>
         </div>
@@ -675,6 +682,7 @@ input:focus { outline: none; }
 #key-config-modal .modal { background:gray; border-radius:5px; padding:15px; image-rendering: pixelated; }
 #key-config-modal table .button { width:30px; display:inline-block; }
 #key-config-modal table input { width:150px; display:inline-block; margin-left:5px; }
+#vim-mode { margin-top:20px; }
 
 #touch-config-modal { color:black; display:none; }
 #touch-config-modal h1 { font-size: 13px; margin:0; }
@@ -700,6 +708,7 @@ input:focus { outline: none; }
 * Main UI:
 **/
 
+const inVimMode = getPref('octoVimMode')
 const editor = CodeMirror(document.getElementById('editor'), {
   mode:           'octo',
   theme:          'monokai',
@@ -708,12 +717,13 @@ const editor = CodeMirror(document.getElementById('editor'), {
   tabSize:        2,
   indentWithTabs: true,
   dragDrop:       false,
-  viewportMargin: Infinity,
   value:          'loading...',
   gutters:        ['breakpoints', 'CodeMirror-linenumbers'],
   extraKeys: {
     'Shift-Enter': _ => document.getElementById('main-run').click(),
   },
+  viewportMargin: inVimMode?10:Infinity,
+  keyMap:         inVimMode?'vim':'default',
 })
 editor.on('change', _ => saveLocalProgram())
 editor.on('gutterClick', function(cm, n) {
