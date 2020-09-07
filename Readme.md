@@ -54,21 +54,27 @@ Command Line Mode
 -----------------
 The Octo assembler can also be used as a command-line tool via a [Node.js](http://nodejs.org) frontend:
 
-	$ ./octo
-		usage: octo [--decompile] [--roundtrip] [--qshift]
-			[--qloadstore] <source> [<destination>]
-	$ cat simple.8o
-		: main
-			va := 1
-			vb := 2
-	$ ./octo simple.8o simple.ch8
-	$ hexdump simple.ch8
-		0000000 6a 01 6b 02                                    
-		0000004
+```
+$ ./octo
+usage: octo [--decompile] [--options <file.json>] <source> [<destination>]
+       if <source> has a .gif extension, unpack an existing octo cartridge.
+       if <destination> has a .gif extension, create an octo cartridge file.
+
+$ cat simple.8o
+	: main
+		va := 1
+		vb := 2
+
+$ ./octo simple.8o simple.ch8
+
+$ hexdump simple.ch8
+	0000000 6a 01 6b 02
+	0000004
+```
 
 The `--decompile` option can be used to send an existing Chip8 binary through Octo's general-purpose decompiler.
 
-If you supply a `.gif` file as the `source`, Octo will attempt to decode it as an "Octo Cartridge" (see below), and display internal metadata. Providing a `destination` as well will save the source code stored in the cartridge to a local text file.
+The `--options` option allows you to specify a JSON file with settings for all of Octo's feature flags and palette configuration, which will be used for exports and as hints during decompilation.
 
 Sharing Your Programs
 ---------------------
