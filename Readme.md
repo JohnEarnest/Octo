@@ -59,6 +59,7 @@ $ ./octo
 usage: octo [--decompile] [--options <file.json>] <source> [<destination>]
        if <source> has a .gif extension, unpack an existing octo cartridge.
        if <destination> has a .gif extension, create an octo cartridge file.
+       if <destination> has an .html extension, create a standalone HTML5 build.
 
 $ cat simple.8o
 	: main
