@@ -6,6 +6,7 @@ const compiler   = require('./js/compiler')
 const decompiler = require('./js/decompiler')
 const sharing    = require('./js/sharing')
 const fs         = require('fs')
+const path       = require('path')
 
 /**
 *
@@ -87,11 +88,11 @@ function compileFile(src, dst, options) {
 			rom:     programRom,
 		})}</script>\n`;
 		([
-			{u:'js/emulator.js', f:x=>`<script>${x}</script>\n`},
-			{u:'js/shared.js',   f:x=>`<script>${x}</script>\n`},
-			{u:'js/input.js',    f:x=>`<script>${x}</script>\n`},
+			{u:'./js/emulator.js', f:x=>`<script>${x}</script>\n`},
+			{u:'./js/shared.js',   f:x=>`<script>${x}</script>\n`},
+			{u:'./js/input.js',    f:x=>`<script>${x}</script>\n`},
 			{u:'standalone.html',f:x=>x},
-		]).forEach(x => page += x.f(fs.readFileSync(x.u, { encoding:'utf8' })))
+		]).forEach(x => page += x.f(fs.readFileSync(path.resolve(__dirname, x.u), { encoding:'utf8' })))
 		fs.writeFileSync(dst, page)
 	}
 	else if (dst) fs.writeFileSync(dst, programBinary, { encoding:'binary' })
