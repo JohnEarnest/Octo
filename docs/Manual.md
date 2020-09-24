@@ -5,7 +5,7 @@ title: Octo Assembly Language
 Octo Assembly Language
 ----------------------
 
-Octo programs are a series of _tokens_ separated by whitespace. Some tokens represent Chip8 instructions and some tokens are _directives_ which instruct Octo to do some special action as the program is compiled. The `:` directive, followed by a name (which cannot contain spaces) defines a _label_. A label represents a memory address- a location in your program. You must define at least one label called `main` which serves as the entrypoint to your program.
+Octo programs are a series of _tokens_ separated by whitespace. Some tokens represent Chip-8 instructions and some tokens are _directives_ which instruct Octo to do some special action as the program is compiled. The `:` directive, followed by a name (which cannot contain spaces) defines a _label_. A label represents a memory address- a location in your program. You must define at least one label called `main` which serves as the entrypoint to your program.
 
 Using a label by itself will perform a subroutine call to the address the label represents. Alternatively, you can be more explicit by using `:call` followed by an address or name. A semicolon (`;`) is another way to write `return`, which returns from a subroutine. The `#` directive is a single-line comment; it ignores the rest of the current line. Numbers can be written using `0x` or `0b` prefixes to indicate hexadecimal or binary encodings, respectively.
 
@@ -17,18 +17,18 @@ Numeric constants can be defined with the `:const` directive followed by a name 
 	:const iterations 16
 	:const sprite-height 9
 
-Chip8 has 16 general-purpose 8-bit registers named `v0` to `vF`. `vF` is the "flag" register", and some operations will modify it as a side effect. `i` is the memory index register and is used when reading and writing memory via `load`, `save` and `bcd`, and also provides the address of the graphics data drawn by `sprite`. Sprites are drawn by XORing their pixels with the contents of the screen. The screen is 64 pixels wide and 32 pixels tall, and sprites drawn off the edge of the display will wrap around. Drawing a sprite sets `vF` to 0, or to 1 if drawing the sprite toggles any pixels which were previously on. For a more detailed description of the behavior of Chip8 instructions consult <a href="http://mattmik.com/chip8.html" target="_blank">Mastering Chip8</a>.
+Chip-8 has 16 general-purpose 8-bit registers named `v0` to `vF`. `vF` is the "flag" register", and some operations will modify it as a side effect. `i` is the memory index register and is used when reading and writing memory via `load`, `save` and `bcd`, and also provides the address of the graphics data drawn by `sprite`. Sprites are drawn by XORing their pixels with the contents of the screen. The screen is 64 pixels wide and 32 pixels tall, and sprites drawn off the edge of the display will wrap around. Drawing a sprite sets `vF` to 0, or to 1 if drawing the sprite toggles any pixels which were previously on. For a more detailed description of the behavior of Chip-8 instructions consult <a href="https://github.com/mattmikolay/chip-8/wiki/CHIP%E2%80%908-Technical-Reference" target="_blank">The Chip-8 Technical Reference</a>.
 
-In the following descriptions, `vx` and `vy` refer to some register name (v0-vF) and `n` refers to some number. The Chip8 keypad is represented on your keyboard as follows:
+In the following descriptions, `vx` and `vy` refer to some register name (v0-vF) and `n` refers to some number. The Chip-8 keypad is represented on your keyboard as follows:
 
-	Chip8 Key   Keyboard
-	---------   ---------
-	 1 2 3 C     1 2 3 4
-	 4 5 6 D     q w e r
-	 7 8 9 E     a s d f
-	 A 0 B F     z x c v
+	Chip-8 Key  Keyboard
+	----------  ---------
+	  1 2 3 C    1 2 3 4
+	  4 5 6 D    q w e r
+	  7 8 9 E    a s d f
+	  A 0 B F    z x c v
 
-For convenience, Octo predefines constants beginning with `OCTO_KEY_` for each keyboard key with the value of the corresponding Chip8 key. For example, `OCTO_KEY_W` has a value of `5`.
+For convenience, Octo predefines constants beginning with `OCTO_KEY_` for each keyboard key with the value of the corresponding Chip-8 key. For example, `OCTO_KEY_W` has a value of `5`.
 
 Statements
 ----------
@@ -47,7 +47,7 @@ note: The `load` and `save` instructions postincrement `i` by `x`+1. For example
 Assignments
 -----------
 
-The various chip8 copy/fetch/arithmetic opcodes have been abstracted to mostly fit into a consistent `<dest-reg> <operator> <source>` format. For some instructions, `<source>` can have several forms.
+The various Chip-8 copy/fetch/arithmetic opcodes have been abstracted to mostly fit into a consistent `<dest-reg> <operator> <source>` format. For some instructions, `<source>` can have several forms.
 
 - `delay := vx`    set delay timer to register value.
 - `buzzer := vx`   set sound timer to register value.
@@ -74,7 +74,7 @@ note: `vx -= n` is syntactic sugar for `vx += -n`, (or in other words, adding th
 
 Control Flow
 ------------
-The Chip8 conditional opcodes are all conditional skips, so Octo control structures have been designed to map cleanly to this approach. The following conditional expressions can be used with `if` or `while`:
+The Chip-8 conditional opcodes are all conditional skips, so Octo control structures have been designed to map cleanly to this approach. The following conditional expressions can be used with `if` or `while`:
 
 - `vx == n`
 - `vx != n`
@@ -92,7 +92,7 @@ Octo also provides pseudo-ops for using `<`, `>`, `<=` and `>=` to compare two r
 	if v1 >  v2  then v3 := 5
 	if v1 <= 0xA then v3 := 7
 
-These are implemented by using the subtraction instructions `-=` and `=-` and querying `vf`. Note that these pseudo-ops produce 3 chip8 instructions each and should be avoided when the simpler direct comparisons are suitable.
+These are implemented by using the subtraction instructions `-=` and `=-` and querying `vf`. Note that these pseudo-ops produce 3 Chip-8 instructions each and should be avoided when the simpler direct comparisons are suitable.
 
 If you wish to conditionally execute a group of statements, you can use `if...begin...end` instead of `if...then`. Optionally you may include an `else` clause.
 
@@ -204,7 +204,7 @@ For convenience and brevity, if `:byte` is immediately followed by `{` the expre
 
 Strings
 -------
-Many Chip8 programs do not require strings or text at all. When text is desired, representing it using ASCII is often very inconvenient. For example, fonts may not include all displayable ASCII characters, or a text rendering routine might want to work with glyph offsets. For this reason, Octo has an unusually flexible approach to working with string literals.
+Many Chip-8 programs do not require strings or text at all. When text is desired, representing it using ASCII is often very inconvenient. For example, fonts may not include all displayable ASCII characters, or a text rendering routine might want to work with glyph offsets. For this reason, Octo has an unusually flexible approach to working with string literals.
 
 A string literal is enclosed in double-quotes (`"`), and may contain C-style backslash (`\`) escape sequences. The escape characters `tnrv0\"` are supported. Apart from their ability to contain whitespace and some special characters, string literals are totally interchangeable with ordinary tokens.
 
@@ -225,7 +225,7 @@ This assembles as 10 bytes equivalent to:
 
 SuperChip
 ---------
-SuperChip or SCHIP is a set of extended Chip8 instructions. Octo can emulate these instructions and will indicate if any such instructions are used in an assembled program. The SuperChip instructions are as follows:
+SuperChip or SCHIP is a set of extended Chip-8 instructions. Octo can emulate these instructions and will indicate if any such instructions are used in an assembled program. The SuperChip instructions are as follows:
 
 - `hires` Switch to a 128x64 pixel high resolution display mode.
 - `lores` Switch to the normal 64x32 pixel low resolution display mode.
@@ -252,17 +252,17 @@ Beyond SuperChip, Octo provides a set of unique extended instructions called XO-
 - `audio` store 16 bytes starting at `i` in the audio pattern buffer.
 - `scroll-up n` scroll the contents of the display up by 0-15 pixels.
 
-For more details, consult the XO-Chip specification in Octo's documentation directory. At time of writing Octo is the only Chip8 interpreter which supports these instructions, but authors are encouraged to provide them in their own interpreters.
+For more details, consult the XO-Chip specification in Octo's documentation directory. At time of writing Octo is the only Chip-8 interpreter which supports these instructions, but authors are encouraged to provide them in their own interpreters.
 
 Debugging
 ---------
-Octo provides basic debugging facilities for Chip8 programs. While a program is running, pressing the "i" key will interrupt execution and display the contents of the `v` registers, `i` and the program counter. Any register aliases and (guessed) labels will be indicated next to the raw register contents. You can click on registers in this view to cycle through displaying their contents in binary, decimal, or hexadecimal.
+Octo provides basic debugging facilities for Chip-8 programs. While a program is running, pressing the "i" key will interrupt execution and display the contents of the `v` registers, `i` and the program counter. Any register aliases and (guessed) labels will be indicated next to the raw register contents. You can click on registers in this view to cycle through displaying their contents in binary, decimal, or hexadecimal.
 
 When interrupted, pressing "i" again or clicking the "continue" icon will resume execution, while pressing "o" will single-step through the program. The "u" key will attempt to step out (execute until the current subroutine returns) and the "l" key will attempt to step over (execute the contents of any subroutines until they return to the current level).
 
 Pressing the "p" key will interrupt execution and display a profiler, indicating a best guess at the time spent in subroutines within your program so far. The profiler shows the top 20 results in a table, and you can also copy and paste a more detailed dump of profiling information for further analysis offline.
 
-Breakpoints can also be placed in source code by using the command `:breakpoint` followed by a name- the name will be shown when the breakpoint is encountered so that multiple breakpoints can be readily distinguished. `:breakpoint` is an out-of-band debugging facility and inserting a breakpoint into your program will not add any code or modify any Chip8 registers.
+Breakpoints can also be placed in source code by using the command `:breakpoint` followed by a name- the name will be shown when the breakpoint is encountered so that multiple breakpoints can be readily distinguished. `:breakpoint` is an out-of-band debugging facility and inserting a breakpoint into your program will not add any code or modify any Chip-8 registers.
 
 The command `:monitor`, followed by a base address and length, will register a memory monitor. While your program runs, monitors will be updated continuously to reflect the contents of memory. Pressing "m" will toggle the memory monitor on and off. Like `:breakpoint`, `:monitor` is out-of-band and generates no instructions.
 
