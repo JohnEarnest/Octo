@@ -201,10 +201,18 @@ function lint() {
 	{
 		lintIUndefined = false
 	}
-	if ((op & 0xF0FF) == 0xF033 && lintIUndefined) {
-		haltLinter(`Attempted <tt>bcd vx</tt> while i is undefined.<br><tt>load vx</tt> and <tt>save vx</tt> leave i in a non-portable state.`)
+	if ((op & 0xF0FF) == 0xF033) {
+		if (emulator.i < 0x200) {
+			haltLinter(`Attempted <tt>bcd vx</tt> while i points to reserved ram below 0x200<br>This will disrupt the CHIP-8 interpreter on a VIP.`)
+		}
+		if (lintIUndefined) {
+			haltLinter(`Attempted <tt>bcd vx</tt> while i is undefined.<br><tt>load vx</tt> and <tt>save vx</tt> leave i in a non-portable state.`)
+		}
 	}
 	if ((op & 0xF0FF) == 0xF055) {
+		if (emulator.i < 0x200) {
+			haltLinter(`Attempted <tt>save vx</tt> while i points to reserved ram below 0x200.<br>This will disrupt the CHIP-8 interpreter on a VIP.`)
+		}
 		if (lintIUndefined) {
 			haltLinter(`Attempted <tt>save vx</tt> while i is undefined.<br><tt>load vx</tt> and <tt>save vx</tt> leave i in a non-portable state.`)
 		}
