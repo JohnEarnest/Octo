@@ -335,7 +335,7 @@ function Emulator() {
 				this.writeCarry(x, t, ((this.v[y] >> 7) & 0x1));
 				break;
 			default:
-				haltBreakpoint("unknown math opcode "+op);
+				haltBreakpoint("unknown math opcode "+op.toString(16).toUppercase());
 		}
 	}
 
@@ -382,7 +382,7 @@ function Emulator() {
 				for(var z = 0; z <= x; z++) { this.v[z] = this.flags[z]; }
 				break;
 			default:
-				haltBreakpoint("unknown misc opcode "+rest);
+				haltBreakpoint("unknown misc opcode "+rest.toString(16).toUppercase());
 		}
 	}
 
@@ -582,11 +582,11 @@ function Emulator() {
 				return;
 			}
 			else {
-				haltBreakpoint("unknown opcode "+op);
+				haltBreakpoint("unknown opcode "+op.toString(16).toUppercase());
 			}
 		}
 		if (o == 0x9 && n != 0) {
-			haltBreakpoint("unknown opcode "+op);
+			haltBreakpoint("unknown opcode "+op.toString(16).toUppercase());
 		}
 
 		// dispatch complex opcodes
@@ -606,7 +606,7 @@ function Emulator() {
 			case 0xC: this.v[x] = (Math.random()*256)&nn;           break;
 			case 0xD: this.sprite(this.v[x], this.v[y], n);         break;
 			case 0xF: this.misc(x, nn);                             break;
-			default: haltBreakpoint("unknown opcode "+o);
+			default: haltBreakpoint("unknown opcode "+o.toString(16).toUppercase());
 		}
 	}
 
