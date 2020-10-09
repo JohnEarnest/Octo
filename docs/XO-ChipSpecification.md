@@ -28,7 +28,7 @@ Chip8 memory operations can prove clumsy. `load` and `save` place low registers 
 	i := buffer2
 	load v3
 
-Chip8E proposes a pair of instructions which load and save register ranges, specifying both a minimum and maximum (inclusive) register. XO-Chip adopts this idea from Chip-8E and adds a dash between the two registers to denote a range. Using these instructions, the above code could instead be written as:
+Chip8E proposes a pair of instructions which load and save register ranges, specifying both a minimum and maximum (inclusive) register. XO-Chip adopts these as described by the Chip-8E instruction encoding ([VIPER Vol 2, Issue 8 & 9, Page 16](http://www.mattmik.com/files/viper/Volume2Issue08_09.pdf)) . Their Octo forms are written with a dash between the two registers to denote a range. Using these instructions, the above code could instead be written as:
 
 	i := buffer1
 	load v4 - v7
