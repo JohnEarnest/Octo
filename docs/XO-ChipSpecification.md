@@ -28,18 +28,18 @@ Chip8 memory operations can prove clumsy. `load` and `save` place low registers 
 	i := buffer2
 	load v3
 
-Chip8E proposes a pair of instructions which load and save register ranges, specifying both a minimum and maximum (inclusive) register. XO-Chip adopts these as described using the CHIP-8E instruction encoding. Using these instructions, the above code could instead be written as:
+Chip8E proposes a pair of instructions which load and save register ranges, specifying both a minimum and maximum (inclusive) register. XO-Chip adopts this idea from Chip-8E and adds a dash between the two registers to denote a range. Using these instructions, the above code could instead be written as:
 
 	i := buffer1
-	load v4 v7
+	load v4 - v7
 	i := buffer2
-	load v0 v3
+	load v0 - v3
 
 Reads or writes proceed in the order the register arguments are provided. Thus, it is possible to use these instructions to do convenient in-place byte reversals:
 
 	i := buffer1
-	load v0 v3   # load 4 bytes sequentially
-	save v3 v0   # write them back in reversed order
+	load v0 - v3   # load 4 bytes sequentially
+	save v3 - v0   # write them back in reversed order
 
 These instructions also provide another useful function. Unlike normal `load` and `save`, they do not postincrement `i`. The `i` postincrement is useful in some situations but inconvenient in others. When a postincrement is desired the standard `load` and `save` instructions may be used, and when it is not desired a programmer may substitute the ranged version specifying `v0` as the minimum range.
 
