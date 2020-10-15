@@ -28,7 +28,7 @@ Third-party tools and references:
 - [Sublime Text syntax definitions](https://github.com/mattmikolay/octo-sublime)
 - [Atom syntax definitions](https://github.com/james0x0A/language-octo)
 - [Emacs syntax definitions](https://github.com/cryon/octo-mode)
-- [Vim syntax definitions](https://github.com/jackiekircher/vim-chip8)
+- [Vim syntax definitions](https://github.com/jackiekircher/vim-chip8) (Octo also has Vim keybindings; see _Options_ → _Keyboard Configuration_)
 - [VSCode syntax definitions/integration](https://github.com/hoovercj/vscode-octo)
 - [OctoFont](https://github.com/jdeeny/octofont) .TTF font converter.
 - [wernsey chip8](https://github.com/wernsey/chip8) an alternative assembler/disassembler.
