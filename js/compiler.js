@@ -532,8 +532,9 @@ Compiler.prototype.resolveLabel = function(offset) {
 	var label = this.checkName(this.next(), "label");
 	if ((target == 0x202 || target == 0x200) && (label == "main")) {
 		this.hasmain = false;
-		this.rom = [];
 		this.hereaddr = 0x200;
+		this.rom[0] = undefined; // erase reserved jump
+		this.rom[1] = undefined;
 		target = this.here();
 	}
 	if (label in this.dict) { throw "The name '"+label+"' has already been defined."; }
