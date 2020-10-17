@@ -530,7 +530,7 @@ Compiler.prototype.vassign = function(reg, token) {
 Compiler.prototype.resolveLabel = function(offset) {
 	var target = (this.here() + offset);
 	var label = this.checkName(this.next(), "label");
-	if ((target == 0x202) && (label == "main")) {
+	if ((target == 0x202 || target == 0x200) && (label == "main")) {
 		this.hasmain = false;
 		this.rom = [];
 		this.hereaddr = 0x200;
