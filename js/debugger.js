@@ -141,15 +141,33 @@ function haltLinter(desc) {
 
 let monitoring = false
 
+function applyFormat(format, data, offset) {
+	let index=offset||0, r=''
+	const byte=_=>data[index++]||0
+	const pad=(x,n)=>'0'.repeat(n-x.length)+x
+	const handlers={
+		t:x=>r+=x.value,
+		c:x=>{for(var z=0;z<x.len;z++)r+=String.fromCharCode(0x7F&byte())},
+		i:x=>{let n=0;for(var z=0;z<x.len;z++)n=(n<<8)|byte();r+=n},
+		b:x=>{for(var z=0;z<x.len;z++)r+=pad(byte().toString(2),8)},
+		x:x=>{for(var z=0;z<x.len;z++)r+=pad(byte().toString(16).toUpperCase(),2)},
+	}
+	format.forEach(x=>handlers[x.type](x))
+	return r
+}
+
 function updateMonitor() {
 	const d = Object.keys(emulator.metadata.monitors).map(name => {
 		const m = emulator.metadata.monitors[name]
 		let s = ''
-		if (m.type=='memory') {
+		if (typeof m.length != 'number') {
+			s=escapeHtml(applyFormat(m.length, m.type=='memory'?emulator.m:emulator.v, m.base)).replace(/\n/g,'<br>')
+		}
+		else if (m.type=='memory') {
 			const d = emulator.m.slice(m.base, m.base+m.length)
 			for (var x = 0; x < d.length; x++) s+= hexFormat(d[x]) + ' '
 		}
-		if (m.type=='register') {
+		else if (m.type=='register') {
 			const d = emulator.v.slice(m.base, m.base+m.length)
 			for (var x = 0; x < d.length; x++) s+= zeroPad(d[x].toString(16).toUpperCase(), 2)
 			s='0x'+s

@@ -45,6 +45,33 @@ function parseNumber(token) {
 	return NaN;
 }
 
+function compileFormat(text) {
+	/**
+	* %[bytes][typecode]
+	*
+	* if [bytes] is omitted, imply length 1.
+	*
+	* c -> 7-bit ascii character(s)
+	* i -> signed integer (two's complement)
+	* b -> binary (zero-padded)
+	* x -> hex (zero-padded, uppercase)
+	**/
+	let r=[], i=0
+	while(i<text.length) {
+		if (text[i]=='%') {
+			let m=/^([0-9]+)?([cibx])/.exec(text.slice(i+1))
+			if (!m) throw `Unknown format character %${text[i+1]}- should be %Nc,%Ni,%Nb, or %Nx.`
+			if (m[1]=='0') throw `format byte count cannot be 0.`
+			r.push({type:m[2],len:m[1]||1})
+			i+=m[0].length+1
+		}
+		let s=''
+		while(text[i]!='%'&&i<text.length)s+=text[i++]
+		if (s.length) r.push({type:'t',value:s})
+	}
+	return r
+}
+
 var escapeChars = {
 	't' : '\t',
 	'n' : '\n',
@@ -634,9 +661,17 @@ Compiler.prototype.instruction = function(token) {
 	}
 	else if (token == ":breakpoint") { this.breakpoints[this.here()] = this.next(); }
 	else if (token == ":monitor") {
-		this.monitors[this.peek()] = this.isRegister() ?
-			{ type:'register', base:this.register(),          length:this.tinyValue()         } :
-			{ type:'memory',   base:this.veryWideValue(true), length:this.veryWideValue(true) };
+		var name = this.peek()
+		if (this.isRegister()) {
+			var r = this.register()
+			var f = typeof this.peek() != 'number' && this.peek().indexOf('%')>=0 ? compileFormat(this.next()) : this.tinyValue()
+			this.monitors[name]={type:'register', base:r, length:f}
+		}
+		else {
+			var b = this.veryWideValue(true)
+			var f = typeof this.peek() != 'number' && this.peek().indexOf('%')>=0 ? compileFormat(this.next()) : this.veryWideValue(true)
+			this.monitors[name]={type:'memory', base:b, length:f}
+		}
 	}
 	else if (token == ":proto")  { this.next(); } // deprecated.
 	else if (token == ":alias") {

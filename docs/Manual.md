@@ -264,9 +264,17 @@ Pressing the "p" key will interrupt execution and display a profiler, indicating
 
 Breakpoints can also be placed in source code by using the command `:breakpoint` followed by a name- the name will be shown when the breakpoint is encountered so that multiple breakpoints can be readily distinguished. `:breakpoint` is an out-of-band debugging facility and inserting a breakpoint into your program will not add any code or modify any Chip-8 registers.
 
-The command `:monitor`, followed by a base address and a length, will create a memory monitor. Alternatively, `:monitor` can be given a base register name and a number of registers to display together as a single value. While your program runs, monitors will be updated continuously to reflect the contents of memory. Pressing "m" will toggle the memory monitor on and off. Like `:breakpoint`, `:monitor` is out-of-band and generates no instructions.
+The command `:monitor` is followed by a base address or register and then a length (in bytes) or format string. Format strings contain one or more formatting directive, which begins with a percent sign (`%`), followed by an optional length in bytes (if omitted, 1 byte), and finally a character indicating how the source bytes should be interpreted: `b` for binary digits, `i` for an integer, `x` for zero-padded hexadecimal digits, or `c` for a 7-bit ASCII character. Newline characters (`\n`) will appear as line breaks in the display. A few examples:
 
-The command `:assert` is followed by an optional name and a mandatory constant expression enclosed in curly braces (as with `:calc`). If the expression evaluates to zero during compilation, compilation will halt and display the message. This can provide useful sanity-checks while modifying your programs, and is especially helpful when writing macros. For example:
+```
+:monitor foobar 10                 # 10 bytes of RAM, starting at a label "foobar"
+:monitor v3 4                      # registers v3-v6, shown as a block of hex digits
+:monitor quux "x:%2i y:%2i z:%2i"  # a 3-component vector, starting at label "quux", where each digit is 2 bytes
+```
+
+Pressing "m" will toggle the memory monitor on and off. While your program runs, monitors will be updated continuously to reflect the contents of memory. Like `:breakpoint`, `:monitor` is out-of-band and generates no instructions.
+
+The command `:assert` is followed by an optional message and a mandatory constant expression enclosed in curly braces (as with `:calc`). If the expression evaluates to zero during compilation, compilation will halt and display the message. This can provide useful sanity-checks while modifying your programs, and is especially helpful when writing macros. For example:
 
 ```
 :macro rol REG {
