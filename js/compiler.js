@@ -220,7 +220,7 @@ function Compiler(source) {
 	this.schip = false;
 	this.xo = false;
 	this.breakpoints = {}; // map<address, name>
-	this.monitors = {}; // map<name, {base, length}>
+	this.monitors = {}; // map<name, {type, base, length}>
 	this.hereaddr = 0x200;
 
 	this.pos = null;
@@ -633,7 +633,11 @@ Compiler.prototype.instruction = function(token) {
 		this.inst(0x60 | this.aliases["unpack-lo"], a);
 	}
 	else if (token == ":breakpoint") { this.breakpoints[this.here()] = this.next(); }
-	else if (token == ":monitor") { this.monitors[this.peek()] = { base:this.veryWideValue(true), length:this.veryWideValue(true) }; }
+	else if (token == ":monitor") {
+		this.monitors[this.peek()] = this.isRegister() ?
+			{ type:'register', base:this.register(),          length:this.tinyValue()         } :
+			{ type:'memory',   base:this.veryWideValue(true), length:this.veryWideValue(true) };
+	}
 	else if (token == ":proto")  { this.next(); } // deprecated.
 	else if (token == ":alias") {
 		var name = this.checkName(this.next(), "alias");

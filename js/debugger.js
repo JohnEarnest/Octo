@@ -144,9 +144,16 @@ let monitoring = false
 function updateMonitor() {
 	const d = Object.keys(emulator.metadata.monitors).map(name => {
 		const m = emulator.metadata.monitors[name]
-		const d = emulator.m.slice(m.base, m.base+m.length)
 		let s = ''
-		for (var x = 0; x < d.length; x++) s+= hexFormat(d[x]) + ' '
+		if (m.type=='memory') {
+			const d = emulator.m.slice(m.base, m.base+m.length)
+			for (var x = 0; x < d.length; x++) s+= hexFormat(d[x]) + ' '
+		}
+		if (m.type=='register') {
+			const d = emulator.v.slice(m.base, m.base+m.length)
+			for (var x = 0; x < d.length; x++) s+= zeroPad(d[x].toString(16).toUpperCase(), 2)
+			s='0x'+s
+		}
 		return `<tr><td>${name}</td><td>${s}</td></tr>`
 	}).join('')
 	document.getElementById('monitor').innerHTML = `
