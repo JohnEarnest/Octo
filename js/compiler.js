@@ -318,13 +318,16 @@ Compiler.prototype.constantValue = function() {
 		if (number in this.protos) {
 			throw "Constants cannot refer to the address of a forward declaration.";
 		}
+		else if (number in this.reservedNames) {
+			throw "Expected a constant name, but found the keyword '"+number+"'. Missing a token?";
+		}
 		else if (number in this.dict) {
 			number = this.dict[number];
 		}
 		else if (number in this.constants) {
 			number = this.constants[number];
 		}
-		else { throw "Undefined name '"+number+"'."; }
+		else { throw "Undefined constant name '"+number+"'."; }
 	}
 	return number;
 }
@@ -356,6 +359,12 @@ Compiler.prototype.veryWideValue = function(noForward) {
 	// i := long NNNN
 	var nnnn = this.next();
 	if (typeof nnnn != "number") {
+		if (nnnn in this.reservedNames) {
+			throw "Expected a 16-bit value, but found the keyword '"+nnnn+"'. Missing a token?";
+		}
+		if (this.isRegister(nnnn)) {
+			throw "Expected a 16-bit value, but found a register: "+nnnn;
+		}
 		if (nnnn in this.constants) {
 			nnnn = this.constants[nnnn];
 		}
@@ -387,6 +396,9 @@ Compiler.prototype.wideValue = function(nnn) {
 	// call, jump, jump0, i:=
 	if (!nnn & (nnn != 0)) { nnn = this.next(); }
 	if (typeof nnn != "number") {
+		if (this.isRegister(nnn)) {
+			throw "Expected a 12-bit value, but found a register: "+nnn;
+		}
 		if (nnn in this.constants) {
 			nnn = this.constants[nnn];
 		}
@@ -412,6 +424,12 @@ Compiler.prototype.shortValue = function(nn) {
 	// vx:=, vx+=, vx==, v!=, random
 	if (!nn && (nn != 0)) { nn = this.next(); }
 	if (typeof nn != "number") {
+		if (this.isRegister(nn)) {
+			throw "Expected an 8-bit value, but found a register: "+nn;
+		}
+		if (nn in this.reservedNames) {
+			throw "Expected an 8-bit value, but found the keyword '"+nn+"'. Missing a token?";
+		}
 		if (nn in this.constants) { nn = this.constants[nn]; }
 		else { throw "Undefined name '"+nn+"'."; }
 	}
@@ -427,6 +445,12 @@ Compiler.prototype.tinyValue = function() {
 	// sprite length, unpack high nybble
 	var n = this.next();
 	if (typeof n != "number") {
+		if (this.isRegister(n)) {
+			throw "Expected a 4-bit value, but found a register: "+n;
+		}
+		if (n in this.reservedNames) {
+			throw "Expected a 4-bit value, but found the keyword '"+n+"'. Missing a token?";
+		}
 		if (n in this.constants) { n = this.constants[n]; }
 		else { throw "Undefined name '"+n+"'."; }
 	}
