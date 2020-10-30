@@ -262,7 +262,11 @@ When interrupted, pressing "i" again or clicking the "continue" icon will resume
 
 Pressing the "p" key will interrupt execution and display a profiler, indicating a best guess at the time spent in subroutines within your program so far. The profiler shows the top 20 results in a table, and you can also copy and paste a more detailed dump of profiling information for further analysis offline.
 
-Breakpoints can also be placed in source code by using the command `:breakpoint` followed by a name- the name will be shown when the breakpoint is encountered so that multiple breakpoints can be readily distinguished. `:breakpoint` is an out-of-band debugging facility and inserting a breakpoint into your program will not add any code or modify any Chip-8 registers.
+Breakpoints can also be placed in source code by using the command `:breakpoint` followed by a name- the name will be shown when the breakpoint is encountered so that multiple breakpoints can be readily distinguished. `:breakpoint` is an out-of-band debugging facility and inserting a breakpoint into your program will not add any code or modify any Chip-8 registers:
+
+```
+:breakpoint example-breakpoint
+```
 
 The command `:monitor` is followed by a base address or register and then a length (in bytes) or format string. Format strings contain one or more formatting directive, which begins with a percent sign (`%`), followed by an optional length in bytes (if omitted, 1 byte), and finally a character indicating how the source bytes should be interpreted: `b` for binary digits, `i` for an integer, `x` for zero-padded hexadecimal digits, or `c` for a 7-bit ASCII character. Newline characters (`\n`) will appear as line breaks in the display. A few examples:
 
