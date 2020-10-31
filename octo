@@ -8,6 +8,28 @@ const sharing    = require('./js/sharing')
 const fs         = require('fs')
 const path       = require('path')
 
+const defaults = {
+	tickrate:20,
+	fillColor:"#FFCC00",
+	fillColor2:"#FF6600",
+	blendColor:"#662200",
+	backgroundColor:"#996600",
+	buzzColor:"#FFAA00",
+	quietColor:"#000000",
+	shiftQuirks:false,
+	loadStoreQuirks:false,
+	vfOrderQuirks:false,
+	clipQuirks:false,
+	jumpQuirks:false,
+	logicQuirks:false,
+	vBlankQuirks:false,
+	screenRotation:0,
+	maxSize:3584,
+	touchInputMode:'none',
+	fontStyle:'octo',
+	displayScale:'6',
+}
+
 /**
 *
 *  Utilities:
@@ -171,8 +193,10 @@ if (process.argv.length <3 || process.argv.length>4) {
 	console.log("       if <source> has a .gif extension, unpack an existing octo cartridge into source code.")
 	console.log("       if <destination> has a .gif extension, create an octo cartridge file.")
 	console.log("       if <destination> has an .html extension, create a standalone HTML5 build.")
+	console.log("       if the specified options file does not exist, a new template will be created.")
 	process.exit(1)
 }
+if (optionsFile&&!fs.existsSync(optionsFile)) fs.writeFileSync(optionsFile,JSON.stringify(defaults,null,'\t'))
 const sourceFile = process.argv[2]
 const destFile   = process.argv[3]
 const options    = optionsFile ? JSON.parse(fs.readFileSync(optionsFile)) : {}

@@ -60,6 +60,7 @@ usage: octo [--decompile] [--options <file.json>] <source> [<destination>]
        if <source> has a .gif extension, unpack an existing octo cartridge.
        if <destination> has a .gif extension, create an octo cartridge file.
        if <destination> has an .html extension, create a standalone HTML5 build.
+       if the specified options file does not exist, a new template will be created.
 
 $ cat simple.8o
 	: main
@@ -75,7 +76,7 @@ $ hexdump simple.ch8
 
 The `--decompile` option can be used to send an existing Chip8 binary through Octo's general-purpose decompiler.
 
-The `--options` option allows you to specify a JSON file with settings for all of Octo's feature flags and palette configuration, which will be used for exports and as hints during decompilation.
+The `--options` option allows you to specify a JSON file with settings for all of Octo's feature flags and palette configuration, which will be used for exports and as hints during decompilation. If the specified file does not exist, a template will be created with default settings.
 
 Sharing Your Programs
 ---------------------
