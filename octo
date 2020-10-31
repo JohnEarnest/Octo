@@ -68,6 +68,12 @@ function extractParameter(name) {
 	return val
 }
 
+function readTextFile(path) {
+	// files from some systems might include a byte-order mark (BOM)
+	// which appears as leading whitespace. trim() strips this:
+	return fs.readFileSync(path, { encoding:'utf8' }).trim()
+}
+
 /**
 *
 *  Operations:
@@ -90,7 +96,7 @@ function compile(sourceCode) {
 }
 
 function compileFile(src, dst, options) {
-	const programText=fs.readFileSync(src, { encoding:'utf8' })
+	const programText=readTextFile(src)
 	const programRom=compile(programText)
 	const programBinary=Buffer.from(programRom)
 	if (/\.gif$/i.test(dst)) {
@@ -114,7 +120,7 @@ function compileFile(src, dst, options) {
 			{u:'./js/shared.js',   f:x=>`<script>${x}</script>\n`},
 			{u:'./js/input.js',    f:x=>`<script>${x}</script>\n`},
 			{u:'standalone.html',f:x=>x},
-		]).forEach(x => page += x.f(fs.readFileSync(path.resolve(__dirname, x.u), { encoding:'utf8' })))
+		]).forEach(x => page += x.f(readTextFile(path.resolve(__dirname, x.u))))
 		fs.writeFileSync(dst, page)
 	}
 	else if (dst) fs.writeFileSync(dst, programBinary, { encoding:'binary' })
@@ -199,7 +205,7 @@ if (process.argv.length <3 || process.argv.length>4) {
 if (optionsFile&&!fs.existsSync(optionsFile)) fs.writeFileSync(optionsFile,JSON.stringify(defaults,null,'\t'))
 const sourceFile = process.argv[2]
 const destFile   = process.argv[3]
-const options    = optionsFile ? JSON.parse(fs.readFileSync(optionsFile)) : {}
+const options    = optionsFile ? JSON.parse(readTextFile(optionsFile)) : {}
 
 if (decompileFlag&&roundTripFlag)     roundTripDecompile(sourceFile, destFile, options)
 else if (decompileFlag)               decompileFile     (sourceFile, destFile, options)
