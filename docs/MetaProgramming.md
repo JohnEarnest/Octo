@@ -657,6 +657,27 @@ Alternatively, if your program only has to display a handful of strings- or spee
 	print "EXAMPLE"
 ```
 
+One obvious refinement would be to special-case the space character, since it doesn't actually need anything to be "drawn". Likewise, we could add a case for newlines:
+
+```
+:stringmode print "ABCDEFGHIJKLMNOPQRSTUVWXYZ.,!?'" {
+	:calc addr { font-4x3 + VALUE * 4 }
+	i := addr
+	sprite v0 v1 4
+	v0 += 4
+}
+:stringmode print " " {
+	v0 += 4
+}
+:stringmode print "\n" {
+	v0 := 0
+	v1 += 5
+}
+
+: main
+	print "HERE ARE\nSOME WORDS"
+```
+
 If for some reason you want ASCII strings, (perhaps you have a CHIP-8 machine with a serial IO interface?) it's easy enough to furnish an appropriate stringmode. By wrapping it in an ordinary macro, we could even emulate the behavior of C-style null-terminated string literals, or pascal-style counted strings:
 
 ```
@@ -669,3 +690,24 @@ If for some reason you want ASCII strings, (perhaps you have a CHIP-8 machine wi
 ```
 
 Note: use caution with the `strlen` function. It will only tell you the size of a literal in bytes. If you intend to use multi-clause stringmodes to drop some characters or encode them in multiple bytes, `strlen` will not reflect this! For a more elaborate pascal string you might need to `:org` forward over the size byte and then use `HERE` to compute the correct length and patch it up after processing the entire string.
+
+Don't forget- stringmodes can be useful even when you aren't working with string data:
+
+```
+:const tape 256
+:alias ptr v1
+:alias tx  v2
+:alias ty  v3
+:stringmode bf ">" { ptr += 1 }
+:stringmode bf "<" { ptr -= 1 }
+:stringmode bf "+" { i := tape i += ptr load v0 - v0 v0 += 1 save v0 }
+:stringmode bf "-" { i := tape i += ptr load v0 - v0 v0 -= 1 save v0 }
+:stringmode bf "[" { loop i := tape i += ptr load v0 while v0 != 0 }
+:stringmode bf "]" { again }
+:stringmode bf "." { i := tape i += ptr load v0 i := hex v0 sprite tx ty 5 tx += 5 }
+
+: main
+    bf "++[.->++<]>[.-]"
+```
+
+Stringmodes can be used _anywhere_ you want to make a sequence of simple macro invocations more concise.
