@@ -12,6 +12,7 @@ Links
 General information:
 
 - [Language Manual](https://github.com/JohnEarnest/Octo/tree/gh-pages/docs/Manual.md)
+- [Frequently Asked Questions](https://github.com/JohnEarnest/Octo/tree/gh-pages/docs/FAQ.md)
 - [Beginner's Guide](https://github.com/JohnEarnest/Octo/blob/gh-pages/docs/BeginnersGuide.md)
 - [Intermediate Guide](https://github.com/JohnEarnest/Octo/blob/gh-pages/docs/IntermediateGuide.md)
 - [Programming Techniques Guide](https://github.com/JohnEarnest/Octo/blob/gh-pages/docs/Chip8%20Programming.md)
