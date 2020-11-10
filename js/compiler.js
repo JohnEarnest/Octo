@@ -355,9 +355,10 @@ Compiler.prototype.checkName = function(name, kind) {
 	return name;
 }
 
-Compiler.prototype.veryWideValue = function(noForward) {
+Compiler.prototype.veryWideValue = function(noForward, noOffset) {
 	// i := long NNNN
 	var nnnn = this.next();
+	var target = this.here() + (noOffset?0:2);
 	if (typeof nnnn != "number") {
 		if (nnnn in this.reservedNames) {
 			throw "Expected a 16-bit value, but found the keyword '"+nnnn+"'. Missing a token?";
@@ -375,13 +376,13 @@ Compiler.prototype.veryWideValue = function(noForward) {
 			throw "The reference to '"+nnnn+"' may not be forward-declared.";
 		}
 		else if (nnnn in this.protos) {
-			this.protos[nnnn].push(this.here()+2);
-			this.longproto[this.here()+2] = true;
+			this.protos[nnnn].push(target);
+			this.longproto[target] = true;
 			nnnn = 0;
 		}
 		else {
-			this.protos[this.checkName(nnnn, "label")] = [this.here()+2];
-			this.longproto[this.here()+2] = true;
+			this.protos[this.checkName(nnnn, "label")] = [target];
+			this.longproto[target] = true;
 			nnnn = 0;
 		}
 	}
