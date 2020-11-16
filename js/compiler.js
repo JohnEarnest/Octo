@@ -345,7 +345,7 @@ Compiler.prototype.reservedNames = {
 	"scroll-down":true, "scroll-right":true, "scroll-left":true,
 	"lores":true, "hires":true, "loadflags":true, "saveflags":true, "i":true,
 	"audio":true, "plane":true, "scroll-up":true, ":macro":true, ":calc":true, ":byte":true,
-	":call":true, ":stringmode":true, ":assert":true,
+	":call":true, ":stringmode":true, ":assert":true, ":monitor":true,
 };
 
 Compiler.prototype.checkName = function(name, kind) {
