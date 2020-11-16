@@ -403,9 +403,7 @@ loop if vf  key then again   # wait for release
 
 I wrote a CHIP-8 program, but didn't use Octo. Can I still make a standalone HTML page?
 ---------------------------------------------------------------------------------------
-In the _Binary Tools_ panel of the toolbox, choose "Open .ch8..." and select your pre-existing CHIP-8 ROM. This will load the file and display its contents as a hex dump in the field above.
-
-Create a minimal Octo program- A `main` label followed by the hex dump, like this:
+You can open a `.ch8` binary using the "Open" button in the top bar of Octo's user interface. This will generate a minimal Octo program- A `main` label followed by the hex dump, like this:
 ```
 : main
   0xA2 0x1E 0xC2 0x01 0x32 0x01 0xA2 0x1A 0xD0 0x14 0x70 0x04 0x30 0x40 0x12 0x00
@@ -420,7 +418,7 @@ How do I make a nice-looking label for an Octocart (Octo Cartridge File)?
 -------------------------------------------------------------------------
 "Nice-looking" is subjective, but we'll give it a shot.
 
-When creating an Octocart from _Save Cartridge..._ in the _Binary Tools_ panel of the toolbox, you can click on the preview image to choose a local file. This should be a 128x64 pixel `.GIF` image, without transparency. A recording made with Octo works just fine. Black and white images work best, but Octo will do its best to re-color whatever you profide.
+When creating an Octocart from _Save Cartridge..._ in the _Binary Tools_ panel of the toolbox, you can click on the preview image to choose a local file. This should be a 128x64 pixel `.GIF` image, without transparency. A recording made with Octo works just fine. Black-and-white images work best, but Octo will do its best to re-color whatever you profide.
 
 
 What do I do with an Octocart?

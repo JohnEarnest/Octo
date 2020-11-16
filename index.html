@@ -845,6 +845,16 @@ function openFile(file, runCart) {
     }
     reader.readAsText(file)
   }
+  else if (file.name.split(".").slice(-1)[0].toLowerCase() == 'ch8') {
+    reader.onload = _ => {
+      const bytes = new Uint8Array(reader.result)
+      let dump = ''
+      for(let z=0;z<bytes.length;z++) dump += hexFormat(bytes[z]) + ((z%16==15)?'\n\t':' ')
+      editor.setValue(`: main\n\t${dump}`)
+      setStatusMessage(`Imported binary file '${file.name}'.`,true);
+    }
+    reader.readAsArrayBuffer(file)
+  }
   else {
     reader.onload = _ => editor.setValue(reader.result)
     reader.readAsText(file)
