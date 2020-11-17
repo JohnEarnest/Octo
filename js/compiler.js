@@ -736,14 +736,14 @@ Compiler.prototype.instruction = function(token) {
 	else if (token == ':stringmode') {
 		var name = this.checkName(this.next(), "stringmode");
 		if (!(name in this.stringmodes)) {
-			this.stringmodes[name] = {values:{}, bodies:{}};
+			this.stringmodes[name] = {values:{}, bodies:{}, calls:0};
 		}
 		var mode = this.stringmodes[name];
 		var alphabet = this.next();
 		alphabet.split('').forEach(char => {
 			if (mode.bodies[char]) { throw "String mode '"+name+"' is already defined for the character '"+char+"'."; }
 		})
-		var macro = { args:[], body:this.macroBody(name, 'string mode'), calls:0 };
+		var macro = { args:[], body:this.macroBody(name, 'string mode') };
 		alphabet.split('').forEach((char,index) => {
 			mode.values[char] = index;
 			mode.bodies[char] = macro;
@@ -759,7 +759,7 @@ Compiler.prototype.instruction = function(token) {
 			if (!(char in mode.bodies)) { throw "String mode '"+token+"' is not defined for the character '"+char+"'."; }
 			var macro = mode.bodies[char];
 			var bindings = {
-				'CALLS':[macro.calls++,0,0],      // how many times have we expanded this character class?
+				'CALLS':[mode.calls++,0,0],       // how many times have we expanded this mode?
 				'CHAR' :[char.charCodeAt(0),0,0], // ascii value of the current character
 				'INDEX':[index,0,0],              // index of the current character in the input string
 				'VALUE':[mode.values[char],0,0],  // index of the current character in the character class's alphabet
