@@ -82,7 +82,7 @@ var escapeChars = {
 	'"' : '\"',
 }
 
-function tokenize(text) {
+function tokenize(text, compiler) {
 	var ret   = [];
 	var index = 0;
 	var token = "";
@@ -107,12 +107,22 @@ function tokenize(text) {
 			var str = '';
 			tokenStart = index;
 			while (true) {
-				if (index >= text.length) { throw "Missing a closing \" in a string literal."; }
+				if (index >= text.length) {
+					compiler.pos=['<EOF>',index+1,index+2];
+					throw `Missing a closing " in a string literal.`;
+				}
 				c = text.charAt(index++);
 				if (c == '"') { break; }
 				if (c == '\\') {
 					var esc = text.charAt(index++);
-					if (!(esc in escapeChars)) { throw "Unrecognized escape character '"+esc+"' in a string literal."; }
+					if (esc=='') {
+						compiler.pos=['<EOF>',index,index+1];
+						throw `Missing a closing " in a string literal.`;
+					}
+					if (!(esc in escapeChars)) {
+						compiler.pos=[esc,index,index+1];
+						throw "Unrecognized escape character '"+esc+"' in a string literal.";
+					}
 					c = escapeChars[esc];
 				}
 				str = str + c;
@@ -241,6 +251,7 @@ function Compiler(source) {
 		'OCTO_KEY_C': 0xB,
 		'OCTO_KEY_V': 0xF,
 	};
+	this.mutables  = {}; // map<name, bool> // distinguish :calc from :const
 	this.macros    = {}; // map<name, {args, body}>
 	this.stringmodes = {}; // map<name, map<chars,{args, body}>}>
 	this.hasmain = true;
@@ -258,15 +269,20 @@ function Compiler(source) {
 
 Compiler.prototype.data = function(a) {
 	if (typeof this.rom[this.hereaddr-0x200] != "undefined" && this.hereaddr-0x200 >= 0) {
-		throw "Data overlap. Address "+hexFormat(this.hereaddr)+" has already been defined.";
+		throw `Data overlap. Address 0x${this.hereaddr.toString(16).toUpperCase()} has already been defined.`;
 	}
 	this.rom[this.hereaddr-0x200] = (a & 0xFF);
 	if (this.pos) this.dbginfo.mapAddr(this.hereaddr, this.pos[1]);
 	this.hereaddr++;
 }
 
+Compiler.prototype.next = function() {
+	if (this.tokens[this.currentToken]==null) throw `Unexpected EOF.`;
+	this.pos = this.tokens[this.currentToken++];
+	return this.pos[0];
+}
+
 Compiler.prototype.end = function()     { return this.currentToken >= this.tokens.length }
-Compiler.prototype.next = function()    { this.pos = this.tokens[this.currentToken++]; return this.pos[0]; }
 Compiler.prototype.raw  = function()    { this.pos = this.tokens[this.currentToken++]; return this.pos; }
 Compiler.prototype.peek = function()    { return this.tokens[this.currentToken][0]; }
 Compiler.prototype.here = function()    { return this.hereaddr; }
@@ -298,7 +314,7 @@ Compiler.prototype.isRegister = function(name) {
 Compiler.prototype.register = function(name) {
 	if (!name) { name = this.next(); }
 	if (!this.isRegister(name)) {
-		throw "Expected register, got '" + name + "'";
+		throw "Expected register, got '" + name + "'.";
 	}
 	if (name in this.aliases) {
 		return this.aliases[name];
@@ -309,14 +325,14 @@ Compiler.prototype.register = function(name) {
 
 Compiler.prototype.expect = function(token) {
 	var thing = this.next();
-	if (thing != token) { throw "Expected '" + token + "', got '" + thing + "'!"; }
+	if (thing != token) throw `Expected ${token}, got '${thing}'.`;
 }
 
 Compiler.prototype.constantValue = function() {
 	var number = this.next();
 	if (typeof number != "number") {
 		if (number in this.protos) {
-			throw "Constants cannot refer to the address of a forward declaration.";
+			throw `A constant reference to '${number}' may not be forward-declared.`;
 		}
 		else if (number in this.reservedNames) {
 			throw "Expected a constant name, but found the keyword '"+number+"'. Missing a token?";
@@ -349,10 +365,32 @@ Compiler.prototype.reservedNames = {
 };
 
 Compiler.prototype.checkName = function(name, kind) {
-	if (name in this.reservedNames || name.indexOf('OCTO_') == 0) {
-		throw "The name '"+name+"' is reserved and cannot be used for a "+kind+".";
+	if (name in this.reservedNames || (''+name).indexOf('OCTO_') == 0) {
+		throw `The name '${name}' is reserved and cannot be used for a ${kind}.`;
 	}
 	return name;
+}
+Compiler.prototype.identifier = function(kind){
+	var n = this.next();
+	if (typeof n != 'string') throw `Expected a name for a ${kind}, got ${n}.`;
+	return this.checkName(n,kind);
+}
+Compiler.prototype.string = function(){
+	var n = this.next();
+	if (typeof n != 'string') throw `Expected a string, got ${n}.`;
+	return n;
+}
+
+Compiler.prototype.valueFail = function(type,value,checkIfDefined) {
+	if (this.isRegister(value))      throw `Expected ${type} value, but found the register ${value}.`;
+	if (value in this.reservedNames) throw `Expected ${type} value, but found the keyword '${value}'. Missing a token?`;
+	if (checkIfDefined&&!(value in this.constants) && !(value in this.dict))
+		throw `Expected ${type} value, but found the undefined name '${value}'.`;
+}
+Compiler.prototype.valueRange = function(type,value,min,max) {
+	if ((typeof value != "number") || (value < min) || (value > max)) {
+		throw `Argument ${typeof value=="number"?value:`'${value}'`} does not fit in ${type}.`;
+	}
 }
 
 Compiler.prototype.veryWideValue = function(noForward, noOffset) {
@@ -360,12 +398,7 @@ Compiler.prototype.veryWideValue = function(noForward, noOffset) {
 	var nnnn = this.next();
 	var target = this.here() + (noOffset?0:2);
 	if (typeof nnnn != "number") {
-		if (nnnn in this.reservedNames) {
-			throw "Expected a 16-bit value, but found the keyword '"+nnnn+"'. Missing a token?";
-		}
-		if (this.isRegister(nnnn)) {
-			throw "Expected a 16-bit value, but found a register: "+nnnn;
-		}
+		this.valueFail('a 16-bit value',nnnn,false);
 		if (nnnn in this.constants) {
 			nnnn = this.constants[nnnn];
 		}
@@ -373,7 +406,7 @@ Compiler.prototype.veryWideValue = function(noForward, noOffset) {
 			nnnn = this.dict[nnnn];
 		}
 		else if (noForward) {
-			throw "The reference to '"+nnnn+"' may not be forward-declared.";
+			throw `The reference to '${nnnn}' may not be forward-declared.`;
 		}
 		else if (nnnn in this.protos) {
 			this.protos[nnnn].push(target);
@@ -381,14 +414,14 @@ Compiler.prototype.veryWideValue = function(noForward, noOffset) {
 			nnnn = 0;
 		}
 		else {
-			this.protos[this.checkName(nnnn, "label")] = [target];
+			var pl=[target];
+			pl.proto_pos=this.pos.slice(0);
+			this.protos[this.checkName(nnnn, "label")] = pl;
 			this.longproto[target] = true;
 			nnnn = 0;
 		}
 	}
-	if ((typeof nnnn != "number") || (nnnn < 0) || (nnnn > 0xFFFF)) {
-		throw "Value '"+nnnn+"' cannot fit in 16 bits!";
-	}
+	this.valueRange('16 bits',nnnn,0,0xFFFF);
 	return (nnnn & 0xFFFF);
 }
 
@@ -398,7 +431,7 @@ Compiler.prototype.wideValue = function(nnn) {
 	if (!nnn & (nnn != 0)) { nnn = this.next(); }
 	if (typeof nnn != "number") {
 		if (this.isRegister(nnn)) {
-			throw "Expected a 12-bit value, but found a register: "+nnn;
+			throw `Expected a 12-bit value, but found the register ${nnn}.`;
 		}
 		if (nnn in this.constants) {
 			nnn = this.constants[nnn];
@@ -411,13 +444,13 @@ Compiler.prototype.wideValue = function(nnn) {
 			nnn = this.dict[nnn];
 		}
 		else {
-			this.protos[this.checkName(nnn, "label")] = [this.here()];
+			var pl=[this.here()];
+			pl.proto_pos=this.pos.slice(0);
+			this.protos[this.checkName(nnn, "label")] = pl;
 			nnn = 0;
 		}
 	}
-	if ((typeof nnn != "number") || (nnn < 0) || (nnn > 0xFFF)) {
-		throw "Value '"+nnn+"' cannot fit in 12 bits!";
-	}
+	this.valueRange('12 bits',nnn,0,0xFFF);
 	return (nnn & 0xFFF);
 }
 
@@ -425,19 +458,13 @@ Compiler.prototype.shortValue = function(nn) {
 	// vx:=, vx+=, vx==, v!=, random
 	if (!nn && (nn != 0)) { nn = this.next(); }
 	if (typeof nn != "number") {
-		if (this.isRegister(nn)) {
-			throw "Expected an 8-bit value, but found a register: "+nn;
-		}
-		if (nn in this.reservedNames) {
-			throw "Expected an 8-bit value, but found the keyword '"+nn+"'. Missing a token?";
-		}
-		if (nn in this.constants) { nn = this.constants[nn]; }
-		else { throw "Undefined name '"+nn+"'."; }
+		this.valueFail('an 8-bit',nn,true);
+		nn = this.constants[nn];
 	}
 	// silently trim negative numbers, but warn
 	// about positive numbers which are too large:
 	if ((typeof nn != "number") || (nn < -128) || (nn > 255)) {
-		throw "Argument '"+nn+"' does not fit in a byte- must be in range [-128, 255].";
+		throw `Argument ${typeof nn=="number"?nn:`'${nn}'`} does not fit in a byte- must be in range [-128,255].`;
 	}
 	return (nn & 0xFF);
 }
@@ -446,17 +473,11 @@ Compiler.prototype.tinyValue = function() {
 	// sprite length, unpack high nybble
 	var n = this.next();
 	if (typeof n != "number") {
-		if (this.isRegister(n)) {
-			throw "Expected a 4-bit value, but found a register: "+n;
-		}
-		if (n in this.reservedNames) {
-			throw "Expected a 4-bit value, but found the keyword '"+n+"'. Missing a token?";
-		}
-		if (n in this.constants) { n = this.constants[n]; }
-		else { throw "Undefined name '"+n+"'."; }
+		this.valueFail('a 4-bit',n,true);
+		n = this.constants[n];
 	}
 	if ((typeof n != "number") || (n < 0) || (n > 15)) {
-		throw "Invalid argument '"+n+"'; must be in range [0,15].";
+		throw `Argument ${typeof n=="number"?n:`'${n}'`} does not fit in 4 bits- must be in range [0,15].`;
 	}
 	return (n & 0xF);
 }
@@ -514,7 +535,7 @@ Compiler.prototype.conditional = function(negated) {
 		this.inst(0x3F, 0);                   // if vf == 0 then ...
 	}
 	else {
-		throw "Conditional flag expected, got '" + token + "!";
+		throw `Expected conditional operator, got ${typeof token=='string'?`'${token}'`:token}.`;
 	}
 }
 
@@ -547,11 +568,12 @@ Compiler.prototype.iassign = function(token) {
 		this.inst(0xF0 | this.register(), 0x1E);
 	}
 	else {
-		throw "The operator '"+token+"' cannot target the i register.";
+		throw `'${token}' is not an operator that can target the i register.`;
 	}
 }
 
-Compiler.prototype.vassign = function(reg, token) {
+Compiler.prototype.vassign = function(reg) {
+	var token = this.next();
 	if (token == ":=") {
 		var o = this.next();
 		if (this.isRegister(o)) { this.fourop(0x8, reg, this.register(o), 0x0); }
@@ -581,7 +603,7 @@ Compiler.prototype.vassign = function(reg, token) {
 
 Compiler.prototype.resolveLabel = function(offset) {
 	var target = (this.here() + offset);
-	var label = this.checkName(this.next(), "label");
+	var label = this.identifier("label");
 	if ((target == 0x202 || target == 0x200) && (label == "main")) {
 		this.hasmain = false;
 		this.hereaddr = 0x200;
@@ -600,16 +622,15 @@ Compiler.prototype.resolveLabel = function(offset) {
 				this.rom[addr - 0x200] = (target >> 8) & 0xFF;
 				this.rom[addr - 0x1FF] = (target & 0xFF);
 			}
+			else if ((target & 0xFFF) != target) {
+				throw `Value 0x${target.toString(16).toUpperCase()} for label '${label}' does not fit in 12 bits.`;
+			}
 			else if ((this.rom[addr - 0x200] & 0xF0) == 0x60) {
 				// :unpack target
-				if ((target & 0xFFF) != target)
-					throw "Value '" + target + "' for label '" + label + "' cannot fit in 12 bits!";
 				this.rom[addr - 0x1FF] = (this.rom[addr - 0x1FF] & 0xF0) | ((target >> 8)&0xF);
 				this.rom[addr - 0x1FD] = (target & 0xFF);
 			}
 			else {
-				if ((target & 0xFFF) != target)
-					throw "Value '" + target + "' for label '" + label + "' cannot fit in 12 bits!";
 				this.rom[addr - 0x200] = (this.rom[addr - 0x200] & 0xF0) | ((target >> 8)&0xF);
 				this.rom[addr - 0x1FF] = (target & 0xFF);
 			}
@@ -629,9 +650,10 @@ Compiler.prototype.parseTerminal = function(name) {
 	if (x in this.constants)  { return this.constants[this.next()]; }
 	if (x in this.dict)       { return this.dict[this.next()]; }
 	if (x in this.protos) {
-		throw "Cannot use forward declaration '"+x+"' in calculated constant '"+name+'".';
+		throw this.next(), `Cannot use forward declaration '${x}' when calculating constant '${name}'.`;
 	}
-	if (this.next() != '(') { throw "Undefined constant '"+x+"'."; }
+	var n = this.next();
+	if (n != '(') throw `Found undefined name '${n}' when calculating constant '${name}'.`;
 	var value = this.parseCalc(name);
 	if (this.next() != ')') { throw "Expected ')' for calculated constant '"+name+"'."; }
 	return value;
@@ -640,7 +662,7 @@ Compiler.prototype.parseTerminal = function(name) {
 Compiler.prototype.parseCalc = function(name) {
 	// UNARY expression | terminal BINARY expression | terminal
 	if (this.peek() == 'strlen') {
-		return this.next(), (''+this.next()).length;
+		return this.next(), this.string().length;
 	}
 	if (this.peek() in unaryFunc) {
 		return unaryFunc[this.next()](this.parseCalc(name), this.rom);
@@ -684,34 +706,35 @@ Compiler.prototype.instruction = function(token) {
 		this.inst(0x60 | this.aliases["unpack-hi"], (v << 4) | (a >> 8));
 		this.inst(0x60 | this.aliases["unpack-lo"], a);
 	}
-	else if (token == ":breakpoint") { this.breakpoints[this.here()] = this.next(); }
+	else if (token == ":breakpoint") { this.breakpoints[this.here()] = this.string(); }
 	else if (token == ":monitor") {
 		var name = this.peek()
 		if (this.isRegister()) {
 			var r = this.register()
-			var f = typeof this.peek() != 'number' && this.peek().indexOf('%')>=0 ? compileFormat(this.next()) : this.tinyValue()
+			var f = typeof this.peek() != 'number' && this.peek().indexOf('%')>=0 ? compileFormat(this.string()) : this.tinyValue()
 			this.monitors[name]={type:'register', base:r, length:f}
 		}
 		else {
 			var b = this.veryWideValue(true)
-			var f = typeof this.peek() != 'number' && this.peek().indexOf('%')>=0 ? compileFormat(this.next()) : this.veryWideValue(true)
+			var f = typeof this.peek() != 'number' && this.peek().indexOf('%')>=0 ? compileFormat(this.string()) : this.veryWideValue(true)
 			this.monitors[name]={type:'memory', base:b, length:f}
 		}
 	}
 	else if (token == ":proto")  { this.next(); } // deprecated.
 	else if (token == ":alias") {
-		var name = this.checkName(this.next(), "alias");
+		var name = this.identifier("alias");
 		var val = this.peek() == '{' ? this.parseCalculated('ANONYMOUS') : this.register();
 		if (val < 0 || val >= 16) { throw "Register index must be in the range [0,F]."; }
 		this.aliases[name] = val;
 	}
 	else if (token == ":const")  {
-		var name = this.checkName(this.next(), "constant");
-		if (name in this.constants) { throw "The name '"+name+"' has already been defined."; }
+		var name = this.identifier("constant");
+		if (name in this.constants) throw `The name '${name}' has already been defined.`;
 		this.constants[name] = this.constantValue();
 	}
 	else if (token == ":macro")  {
-		var name = this.checkName(this.next(), "macro");
+		var name = this.identifier("macro");
+		if (name in this.macros) throw `The name '${name}' has already been defined.`;
 		var args = [];
 		while(this.peek() != '{' && !this.end()) {
 			args.push(this.checkName(this.next(), "macro argument"));
@@ -723,7 +746,8 @@ Compiler.prototype.instruction = function(token) {
 		var bindings = { 'CALLS':[macro.calls++,0,0] };
 		for (var x = 0; x < macro.args.length; x++) {
 			if (this.end()) {
-				throw "Not enough arguments for expansion of macro '"+token+"'";
+				this.pos=['<EOF>',this.source.length+1,this.source.length+2];
+				throw `Not enough arguments for expansion of macro '${token}'.`;
 			}
 			bindings[macro.args[x]] = this.raw();
 		}
@@ -734,17 +758,19 @@ Compiler.prototype.instruction = function(token) {
 		}
 	}
 	else if (token == ':stringmode') {
-		var name = this.checkName(this.next(), "stringmode");
+		var name = this.identifier("stringmode");
 		if (!(name in this.stringmodes)) {
 			this.stringmodes[name] = {values:{}, bodies:{}, calls:0};
 		}
 		var mode = this.stringmodes[name];
-		var alphabet = this.next();
-		alphabet.split('').forEach(char => {
-			if (mode.bodies[char]) { throw "String mode '"+name+"' is already defined for the character '"+char+"'."; }
-		})
+		var alphabet = this.string();
+		var alphabet_pos = this.pos.slice(0);
 		var macro = { args:[], body:this.macroBody(name, 'string mode') };
 		alphabet.split('').forEach((char,index) => {
+			if (mode.bodies[char]) {
+				this.pos=[char,alphabet_pos[1]+index+1,alphabet_pos[1]+index+2];
+				throw `String mode '${name}' is already defined for the character '${char}'.`;
+			}
 			mode.values[char] = index;
 			mode.bodies[char] = macro;
 		})
@@ -752,11 +778,15 @@ Compiler.prototype.instruction = function(token) {
 	else if (token in this.stringmodes) {
 		var mode = this.stringmodes[token];
 		var string = this.next();
+		var string_pos = this.pos.slice(0);
 		if (typeof string == 'number') { throw "String mode '"+token+"' cannot be applied to a number ("+string+")."; }
 		var insertion = this.currentToken;
 
 		string.split('').forEach((char,index) => {
-			if (!(char in mode.bodies)) { throw "String mode '"+token+"' is not defined for the character '"+char+"'."; }
+			if (!(char in mode.bodies)) {
+				this.pos=[char,string_pos[1]+index+1,string_pos[1]+index+2];
+				throw `String mode '${token}' is not defined for the character '${char}'.`;
+			}
 			var macro = mode.bodies[char];
 			var bindings = {
 				'CALLS':[mode.calls++,0,0],       // how many times have we expanded this mode?
@@ -772,8 +802,9 @@ Compiler.prototype.instruction = function(token) {
 		})
 	}
 	else if (token == ':calc') {
-		var name = this.checkName(this.next(), "calculated constant");
-		this.constants[name] = this.parseCalculated(name);
+		var name = this.identifier("calculated constant");
+		if (name in this.constants && !(name in this.mutables)) throw `Cannot redefine the name '${name}' with :calc.`
+		this.constants[name] = this.parseCalculated(name); this.mutables[name]=true;
 	}
 	else if (token == ":byte") {
 		this.data(this.peek() == '{' ? this.parseCalculated('ANONYMOUS') : this.shortValue());
@@ -783,7 +814,7 @@ Compiler.prototype.instruction = function(token) {
 		this.hereaddr = 0xFFFF & addr;
 	}
 	else if (token == ":assert") {
-		var message = this.peek() == '{' ? null : this.next();
+		var message = this.peek() == '{' ? null : this.string();
 		var value = this.parseCalculated(message ? 'assert '+message : 'assert');
 		if (!value) { throw message ? "Assertion failed: "+message : "Assertion failed."; }
 	}
@@ -880,7 +911,7 @@ Compiler.prototype.instruction = function(token) {
 	}
 	else if (token == "plane") {
 		var plane = this.tinyValue();
-		if (plane > 3) { throw "the plane bitmask must be [0, 3]."; }
+		if (plane > 3) throw `The plane bitmask must be [0,3], was ${plane}.`
 		this.xo = true;
 		this.inst(0xF0 | plane, 0x01);
 	}
@@ -897,13 +928,13 @@ Compiler.prototype.instruction = function(token) {
 	else if (token == "hires")        { this.schip = true; this.inst(0x00, 0xFF); }
 	else if (token == "saveflags") {
 		var flags = this.register();
-		if (flags > 7) { throw "saveflags argument must be v[0,7]."; }
+		if (flags > 7) { throw "Argument to saveflags must be v[0,7]."; }
 		this.schip = true;
 		this.inst(0xF0 | flags, 0x75);
 	}
 	else if (token == "loadflags") {
 		var flags = this.register();
-		if (flags > 7) { throw "loadflags argument must be v[0,7]."; }
+		if (flags > 7) { throw "Argument to loadflags must be v[0,7]."; }
 		this.schip = true;
 		this.inst(0xF0 | flags, 0x85);
 	}
@@ -911,7 +942,7 @@ Compiler.prototype.instruction = function(token) {
 		this.iassign(this.next());
 	}
 	else if (this.isRegister(token)) {
-		this.vassign(this.register(token), this.next());
+		this.vassign(this.register(token));
 	}
 	else if (token == ":call") {
 		var addr = this.peek() == '{' ? this.parseCalculated('ANONYMOUS') : this.wideValue(this.next());
@@ -926,14 +957,12 @@ Compiler.prototype.go = function() {
 	this.aliases["unpack-hi"] = 0x0;
 	this.aliases["unpack-lo"] = 0x1;
 
-	this.tokens = tokenize(this.source);
+	this.tokens = tokenize(this.source,this);
 	this.inst(0, 0); // reserve a jump slot
 	while(!this.end()) {
 		if (typeof this.peek() == "number") {
 			var nn = this.next();
-			if (nn < -128 || nn > 255) {
-				throw "Literal value '"+nn+"' does not fit in a byte- must be in range [-128, 255].";
-			}
+			if (nn < -128 || nn > 255) throw `Literal value '${nn}' does not fit in a byte- must be in range [-128,255].`;
 			this.data(nn);
 		}
 		else {
@@ -941,21 +970,25 @@ Compiler.prototype.go = function() {
 		}
 	}
 	if (this.hasmain == true) {
-		// resolve the main branch
+		if (!('main' in this.constants) && !('main' in this.dict)) {
+			this.pos=['<EOF>',this.source.length+1,this.source.length+2];
+			throw "This program is missing a 'main' label."
+		}
 		this.jump(0x200, this.wideValue("main"));
 	}
-	var keys = [];
-	for (var k in this.protos) { keys.push(k); }
+	var keys=Object.keys(this.protos);
 	if (keys.length > 0) {
-		throw "Undefined names: " + keys;
+		this.pos = this.protos[keys[0]].proto_pos;
+		throw `Undefined forward reference: ${keys[0]}`;
 	}
 	if (this.loops.length > 0) {
-		this.pos = this.loops[0][1];
+		this.pos = this.loops.pop()[1];
 		throw "This 'loop' does not have a matching 'again'.";
 	}
 	if (this.branches.length > 0) {
-		this.pos = this.branches[0][1];
-		throw "This '"+this.branches[0][2]+"' does not have a matching 'end'.";
+		var flow=this.branches.pop()
+		this.pos = flow[1];
+		throw `This '${flow[2]}' does not have a matching 'end'.`;
 	}
 	for(var index = 0; index < this.rom.length; index++) {
 		if (typeof this.rom[index] == "undefined") { this.rom[index] = 0x00; }

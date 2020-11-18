@@ -69,9 +69,8 @@ function extractParameter(name) {
 }
 
 function readTextFile(path) {
-	// files from some systems might include a byte-order mark (BOM)
-	// which appears as leading whitespace. trim() strips this:
-	return fs.readFileSync(path, { encoding:'utf8' }).trim()
+	// files from some systems might include a byte-order mark (BOM):
+	return fs.readFileSync(path, { encoding:'utf8' }).replace(/\uFEFF/g, '')
 }
 
 /**
@@ -85,12 +84,19 @@ function compile(sourceCode) {
 	try {
 		comp = new compiler.Compiler(sourceCode)
 		comp.go()
-		return comp.rom
+		let len=comp.rom.length
+		while(comp.rom[len-1]===0) len-=1
+		return comp.rom.slice(0,len)
 	}
 	catch(err) {
-		var line=1
-		for(var x=0; x<comp.pos[1]-1; x++) if (sourceCode.charAt(x) == '\n') line++
-		console.error("line %d: %s", line, err)
+		let line=1, pos=1
+		if (comp.pos!=null) {
+			for(let x=0; x<comp.pos[1]-1; x++){
+				pos++;
+				if (sourceCode.charAt(x) == '\n') pos=1, line++
+			}
+		}
+		console.error("(%d:%d) %s", line, pos, err)
 		process.exit(1)
 	}
 }
