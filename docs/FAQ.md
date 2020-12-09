@@ -441,7 +441,7 @@ How do I run Octo programs without using a mouse like some kind of animal?
 --------------------------------------------------------------------------
 While in Octo's editor, pressing shift + enter will compile and run your program. While a program is running, you can press backtick (`` ` ``) to return to the editor.
 
-If you're really serious about removing mice from your life, you might be interested in Octo's [CLI Frontend](https://github.com/JohnEarnest/Octo#command-line-mode).
+If you're really serious about removing mice from your life, you might be interested in Octo's [CLI Frontend](https://github.com/JohnEarnest/Octo#command-line-mode), or [c-octo](https://github.com/JohnEarnest/c-octo).
 
 
 How do I see the bytes of my compiled program?

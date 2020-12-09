@@ -79,6 +79,8 @@ The `--decompile` option can be used to send an existing Chip8 binary through Oc
 
 The `--options` option allows you to specify a JSON file with settings for all of Octo's feature flags and palette configuration, which will be used for exports and as hints during decompilation. If the specified file does not exist, a template will be created with default settings.
 
+If you're interested in using Octo from the command line, you might like [c-octo](https://github.com/JohnEarnest/c-octo).
+
 Sharing Your Programs
 ---------------------
 Octo has a `share` feature which stores source code and configuration metadata and produces a URL you can share with others. By default, Octo stores programs in its own backend, indexed based on a `key`.
