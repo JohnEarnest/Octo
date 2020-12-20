@@ -201,23 +201,21 @@ If you really need indirection, the most general approach is self-modifying code
 
 Self-modifying code is especially handy if you want to access the same "pointer" repeatedly in a loop- you only need to overwrite the instruction _once_. Read up on `:unpack` and `:next` for more help setting up self-modifying code.
 
-If you need to _store_ a 16-bit pointer somewhere, a macro can be helpful:
+If you need to place a 16-bit pointer in registers, you can use `:unpack long NNNN`. If you need to _store_ a 16-bit pointer somewhere, use `:pointer`:
 ```
-:macro pointer ADDRESS {
-	:byte { ADDRESS >> 8 }
-	:byte { ADDRESS }
-}
+:pointer cucumber
+:pointer { 0xFF00 | foo }
+
 ```
 
-If you need to place a 16-bit pointer in registers, you can use `:unpack long NNNN`. Alternatively, you could write a macro:
+The `:pointer` construct works much like the following macro:
 ```
-:macro unpack ADDRESS {
-	:calc hi { 0xFF & ADDRESS >> 8 }
-	:calc lo { 0xFF & ADDRESS }
-	v0 := hi
-	v1 := lo
+:macro faux-pointer ADDR {
+	:byte { ADDR >> 8 }
+	:byte { ADDR }
 }
 ```
+Except it is allowed to forward-reference labels which have not yet been defined.
 
 
 How do I keep my program from flickering?

@@ -202,7 +202,16 @@ When using `:calc` and `:macro` together, it is often useful to write the conten
 		:byte Y
 	}
 
-For convenience and brevity, if `:byte` is immediately followed by `{` the expression is computed as with `:calc` and compiled as a byte, without defining an intermediate constant. The `:org` and `:call` directives can also accept a constant expression, truncated to a 16-bit or 12-bit address, respectively.
+XO-Chip programming often requires working with 16-bit pointers. If forward-referencing of labels is required, use `:pointer`. This directive assembles as two sequential bytes:
+
+	: label-a
+	...
+	:pointer label-a
+	:pointer label-b
+	...
+	: label-b
+
+For convenience and brevity, if `:byte` is immediately followed by `{` the expression is computed as with `:calc` and compiled as a byte, without defining an intermediate constant. The `:org`, `:pointer`, and `:call` directives can also accept a constant expression, truncated to a 16-bit or 12-bit address, as appropriate.
 
 Strings
 -------

@@ -361,7 +361,7 @@ Compiler.prototype.reservedNames = {
 	"scroll-down":true, "scroll-right":true, "scroll-left":true,
 	"lores":true, "hires":true, "loadflags":true, "saveflags":true, "i":true,
 	"audio":true, "plane":true, "scroll-up":true, ":macro":true, ":calc":true, ":byte":true,
-	":call":true, ":stringmode":true, ":assert":true, ":monitor":true,
+	":call":true, ":stringmode":true, ":assert":true, ":monitor":true, ":pointer":true,
 };
 
 Compiler.prototype.checkName = function(name, kind) {
@@ -819,6 +819,10 @@ Compiler.prototype.instruction = function(token) {
 	}
 	else if (token == ":byte") {
 		this.data(this.peek() == '{' ? this.parseCalculated('ANONYMOUS') : this.shortValue());
+	}
+	else if (token == ":pointer") {
+		var addr = this.peek() == '{' ? this.parseCalculated('ANONYMOUS') : this.veryWideValue(false, true);
+		this.inst(addr >> 8, addr);
 	}
 	else if (token == ":org") {
 		var addr = this.peek() == '{' ? this.parseCalculated('ANONYMOUS') : this.constantValue();
