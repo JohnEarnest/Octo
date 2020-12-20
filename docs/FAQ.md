@@ -63,7 +63,7 @@ CHIP-8 has a 4kb address space, and the bottom 512 bytes of that are reserved, f
 
 The instructions `jump NNN`, `:call NNN`, `jump0 NNN` and `i := NNN` only have space for a 12-bit immediate address. You cannot `jump` to an address outside the low 4kb of RAM! Octo's control structures like `if ... begin ... else ... end` and `loop ... again` use the `jump` instruction, so you can't have the head of a loop outside the low 4kb, either!
 
-Sometimes XO-CHIP documentation will talk about the low 4kb of RAM as "code RAM", since any code can go there freely, and the other 60kb of RAM as "data RAM". XO-CHIP programs should try to organize their data (graphics, audio, level data, etc.) in data RAM, and save space in code RAM for... code! If a label is outside code RAM, it will be necessary to use `i := long NNNN` to reference it instead of `i := NNN`.
+Sometimes XO-CHIP documentation will talk about the low 4kb of RAM as "code RAM", since any code can go there freely, and the other 60kb of RAM as "data RAM". XO-CHIP programs should try to organize their data (graphics, audio, level data, etc.) in data RAM, and save space in code RAM for... code! If a label is outside code RAM, it will be necessary to use `i := long NNNN` to reference it instead of `i := NNN`. Likewise, if you're using pointers you may have to switch to `:unpack long NNNN` instead of `:unpack 0xA NNN`.
 
 If you think your program's code may not fit in code ram, you can check by adding an assertion:
 ```
@@ -136,7 +136,7 @@ v0 += 1   # increment low byte
 v1 += vf  # carry into the high byte
 ```
 
-The behavior of that snippet is _totally undefined_, because `v0 += 1` will _never alter the carry flag_. The fact that it may appear to work, sometimes, is all the more infuriating. You meant to do this, instead:
+The behavior of that snippet is _totally undefined_, because `v0 += 1` will _never alter the carry flag_. Adding a constant to a register leaves vf unchanged; adding a register to a register sets vf with the carry flag. The fact that the original version may appear to work, sometimes, is all the more infuriating. You meant to do this instead:
 ```
 vf := 1   # put 1 in a temporary register
 v0 += vf  # increment low byte with our constant 1
@@ -209,7 +209,7 @@ If you need to _store_ a 16-bit pointer somewhere, a macro can be helpful:
 }
 ```
 
-And likewise if you need to place a 16-bit pointer in registers, a macro can do the needful:
+If you need to place a 16-bit pointer in registers, you can use `:unpack long NNNN`. Alternatively, you could write a macro:
 ```
 :macro unpack ADDRESS {
 	:calc hi { 0xFF & ADDRESS >> 8 }

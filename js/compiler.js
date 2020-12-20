@@ -394,7 +394,7 @@ Compiler.prototype.valueRange = function(type,value,min,max) {
 }
 
 Compiler.prototype.veryWideValue = function(noForward, noOffset) {
-	// i := long NNNN
+	// i := long NNNN, :unpack long NNNN
 	var nnnn = this.next();
 	var target = this.here() + (noOffset?0:2);
 	if (typeof nnnn != "number") {
@@ -617,7 +617,12 @@ Compiler.prototype.resolveLabel = function(offset) {
 	if (label in this.protos) {
 		for(var z = 0; z < this.protos[label].length; z++) {
 			var addr  = this.protos[label][z];
-			if (this.longproto[addr]) {
+			if (this.longproto[addr] && (this.rom[addr - 0x200] & 0xF0) == 0x60) {
+				// :unpack long target
+				this.rom[addr - 0x1FF] = (target >> 8) & 0xFF;
+				this.rom[addr - 0x1FD] = (target & 0xFF);
+			}
+			else if (this.longproto[addr]) {
 				// i := long target
 				this.rom[addr - 0x200] = (target >> 8) & 0xFF;
 				this.rom[addr - 0x1FF] = (target & 0xFF);
@@ -701,9 +706,15 @@ Compiler.prototype.instruction = function(token) {
 	if (token == ":") { this.resolveLabel(0); }
 	else if (token == ":next") { this.resolveLabel(1); }
 	else if (token == ":unpack") {
-		var v = this.tinyValue();
-		var a = this.wideValue();
-		this.inst(0x60 | this.aliases["unpack-hi"], (v << 4) | (a >> 8));
+		if (this.peek()=="long") {
+			this.next();
+			var a = this.veryWideValue(false,true);
+		}
+		else {
+			var v = this.tinyValue();
+			var a = (v << 12) | this.wideValue();
+		}
+		this.inst(0x60 | this.aliases["unpack-hi"], a >> 8);
 		this.inst(0x60 | this.aliases["unpack-lo"], a);
 	}
 	else if (token == ":breakpoint") { this.breakpoints[this.here()] = this.string(); }

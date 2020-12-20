@@ -137,7 +137,9 @@ Sometimes you may wish to have the 12-bit address represented by a label availab
 	
 	:unpack 0xA cucumber
 
-This operation makes it possible to write self-modifying code without hardcoding addresses as numeric literals. If you wish to unpack addresses into registers other than `v0` and `v1` you can define aliases called `unpack-hi` or `unpack-lo`, respectively.
+This operation makes it possible to write self-modifying code without hardcoding addresses as numeric literals. If you wish to unpack addresses into registers other than `v0` and `v1` you can define aliases called `unpack-hi` or `unpack-lo`, respectively. If you want a 16-bit address, you can use the keyword `long` in place of the high nybble:
+
+	:unpack long cucumber
 
 Another type of self-modifying code that comes up frequently is overwriting the second half of an instruction, particularly instructions like `vX := NN` whose second byte is an immediate operand. This requires a label at the second byte of an instruction, which can be achieved with `:next`:
 
@@ -150,7 +152,7 @@ Another type of self-modifying code that comes up frequently is overwriting the 
 	save v0
 	init # va will be set to 5 instead of 2.
 
-The behavior of `:unpack` and `:next` could also be obtained in a more general case using macros- see below.
+The behavior of `:unpack` and `:next` could also be obtained in a more general case using macros- see below. The main motivation for using these over macros with `:calc` is that with `:unpack` you may forward-reference labels which have not yet been defined.
 
 You can also specify an address at which subsequent instructions should be compiled by using `:org` followed by an address. The use of this directive is very brittle, so it should be avoided unless absolutely necessary.
 
