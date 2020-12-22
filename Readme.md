@@ -3,7 +3,7 @@ Octo
 
 ![Title Image](https://raw.githubusercontent.com/JohnEarnest/Octo/gh-pages/images/f8z.gif)
 
-[Octo](http://johnearnest.github.io/Octo/) is a high-level assembler for the [Chip8](http://mattmik.com/chip8.html) virtual machine, complete with an environment for testing programs, and tools for sharing your creations. Read about the project on [Itch.io](https://internet-janitor.itch.io/octo)!
+[Octo](http://johnearnest.github.io/Octo/) is a high-level assembler for the [Chip8](https://en.wikipedia.org/wiki/CHIP-8) virtual machine, complete with an environment for testing programs, and tools for sharing your creations. Read about the project on [Itch.io](https://internet-janitor.itch.io/octo)!
 
 ![IDE Screenshot](https://raw.githubusercontent.com/JohnEarnest/Octo/gh-pages/images/octo-screenshot.png)
 
