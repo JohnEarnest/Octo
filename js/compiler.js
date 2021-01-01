@@ -612,6 +612,7 @@ Compiler.prototype.resolveLabel = function(offset) {
 		target = this.here();
 	}
 	if (label in this.dict) { throw "The name '"+label+"' has already been defined."; }
+	if (label in this.aliases) { throw "The name '"+label+"' is already used by an alias."; }
 	this.dict[label] = target;
 
 	if (label in this.protos) {
@@ -734,6 +735,7 @@ Compiler.prototype.instruction = function(token) {
 	else if (token == ":proto")  { this.next(); } // deprecated.
 	else if (token == ":alias") {
 		var name = this.identifier("alias");
+		if (name in this.dict) { throw `The name '${name}' is already used by a constant.`; }
 		var val = this.peek() == '{' ? this.parseCalculated('ANONYMOUS') : this.register();
 		if (val < 0 || val >= 16) { throw "Register index must be in the range [0,F]."; }
 		this.aliases[name] = val;
