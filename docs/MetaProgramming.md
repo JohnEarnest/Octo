@@ -699,7 +699,7 @@ The idea is as follows: in XO-CHIP, the low 512 bytes of code RAM are normally u
 
 If we assembled our banks in their _storage_ location in data RAM, we would need to carefully align their base address modulo 4096 in order for branch destinations and other addresses to work properly once relocated. This is possible, but extremely error-prone! Fortunately, there's a better approach: we can `:org` to address 0, assemble the bank in-place, and then afterward copy it from "scratchpad" memory into its storage location. As you will see, declaring and calling into such banked routines is very straightforward.
 
-To declare a bank, we call `bank-begin` with a name for the bank, stash `HERE` and assembly then proceeds starting from address 0. When we have finished building the bank, we call `bank-end`, which copies address `0` to `512` to our previous `HERE`. Observe the use of `:stringmode` as a compact way of invoking a macro 512 (`8*16`) times:
+To declare a bank, we call `bank-begin` with a name for the bank, stash `HERE` and assembly then proceeds starting from address 0. When we have finished building the bank, we call `bank-end`, which copies address `0` to `512` to our previous `HERE`. Observe the use of `:stringmode` as a compact way of invoking a macro 512 (`16*32`) times:
 ```
 :macro bank-begin LABEL {
 	: LABEL
