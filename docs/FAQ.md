@@ -65,10 +65,16 @@ The instructions `jump NNN`, `:call NNN`, `jump0 NNN` and `i := NNN` only have s
 
 Sometimes XO-CHIP documentation will talk about the low 4kb of RAM as "code RAM", since any code can go there freely, and the other 60kb of RAM as "data RAM". XO-CHIP programs should try to organize their data (graphics, audio, level data, etc.) in data RAM, and save space in code RAM for... code! If a label is outside code RAM, it will be necessary to use `i := long NNNN` to reference it instead of `i := NNN`. Likewise, if you're using pointers you may have to switch to `:unpack long NNNN` instead of `:unpack 0xA NNN`.
 
-If you think your program's code may not fit in code ram, you can check by adding an assertion:
+If you think your program's code may not fit in code RAM, you can check by adding an assertion:
 ```
 :assert "overflowed code RAM" { HERE < 4096 }
 ```
+
+If you've made sure your data is all in data RAM and you still need more code RAM, there are a few ways to squeeze in some extra code:
+
+- One subroutine can dangle off the `0x1000` code RAM boundary if it doesn't contain any `jump`, `jump0`, or `:call` targets- try placing your longest branchless/loopless subroutine there!
+- You could write [an interpreter](https://internet-janitor.itch.io/octo/devlog/123567/scripting-in-octo) that executes "scripts" stored in data RAM, at the cost of speed. The example given takes up around 120 bytes, and can quickly pay for itself.
+- The metaprogramming guide describes a method for [bank-switching](https://github.com/JohnEarnest/Octo/blob/gh-pages/docs/MetaProgramming.md#bank-switching), by copying from data RAM to code RAM at runtime. Only one "bank" can be used at a time, but you can store many separate banks in data RAM.
 
 
 My program crashed with "breakpoint: call stack overflow". What gives?
@@ -89,6 +95,7 @@ In general, if you want to make a program use less space, _do less_. Try replaci
 - Don't use `if ... begin ... end` when `if ... then` will do- the former has to produce a `jump`, which costs 2 extra bytes.
 - Similarly, avoid the comparison pseudo-operationss (`<`,`>`,`<=`, and `>=`) if `!=` or `==` would work instead; the pseudo-ops each cost 4 extra bytes.
 - If a macro is used in many places, consider refactoring it into a subroutine instead.
+- Make `: main` the first declaration in your program. CHIP-8 execution starts at address `0x200`, so if your `main` label is later in the program Octo needs to insert a jump to that address, which costs 2 bytes.
 - Make your program more data-oriented. Can you replace a nest of conditional statements with a lookup table?
 - Try overlapping your data. Re-use the same memory for multiple arrays you never need at once. Done using the graphics for a title screen? Overwrite them with a scratch buffer.
 - Try overlapping your data with code. Do any of the instructions in your program happen to look like data or graphics your need elsewhere? Could you change your code to make some happy coincidences occur?
@@ -416,7 +423,7 @@ How do I make a nice-looking label for an Octocart (Octo Cartridge File)?
 -------------------------------------------------------------------------
 "Nice-looking" is subjective, but we'll give it a shot.
 
-When creating an Octocart from _Save Cartridge..._ in the _Binary Tools_ panel of the toolbox, you can click on the preview image to choose a local file. This should be a 128x64 pixel `.GIF` image, without transparency. A recording made with Octo works just fine. Black-and-white images work best, but Octo will do its best to re-color whatever you profide.
+When creating an Octocart from _Save Cartridge..._ in the _Binary Tools_ panel of the toolbox, you can click on the preview image to choose a local file. This should be a 128x64 pixel `.GIF` image, without transparency. A recording made with Octo works just fine. Black-and-white images work best, but Octo will do its best to re-color whatever you provide.
 
 
 What do I do with an Octocart?

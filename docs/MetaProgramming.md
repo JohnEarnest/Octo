@@ -445,62 +445,8 @@ The technique of using low memory as temporary storage for "compile time data st
 
 Custom Control Structures
 -------------------------
-In the previous example, we saw the use of low memory as a scratchpad for intermediate bytes. Octo will produce a compiler error if a program attempts to re-define the same portion of a ROM, but 0x000-0x200 are free game- these addresses will never be included in the final output of the compiler.
-
-The following macro is one way we could formulate a rewritable variable in this storage area. Given an address `A` and a number `X`, we increment the value at `A` by `X` and, as a side-effect, leave the previous value of that address in a calculated constant named `prev`:
-
+Let's look at another example of using scratchpad RAM, this time to build a BASIC-style `for` loop construct. We want to be able to write code like the following:
 ```
-:macro inc A X {
-	:calc there { HERE }
-	:org  A
-	:calc prev { @ HERE }
-	:byte { X + prev }
-	:org  there
-}
-```
-
-Read over the following fragment and consider how reads, writes, and re-definitions produce the sequence of compiled bytes indicated in the comments:
-
-```
-: main
-	exit            # 0x00FD
-	:const pos 32
-	inc pos 5
-	:byte { prev }  # 0
-	:byte { @ pos } # 5
-	inc pos 4
-	:byte { @ pos } # 9
-	inc pos -2
-	:byte { @ pos } # 7
-	:byte { prev }  # 9
-```
-
-We can use this as a building block for making a compile-time stack, which in turn allows us to synthesize our own specialized control structures:
-
-```
-:const for-stack-pointer 0
-inc for-stack-pointer 1
-
-:macro for REG FROM COUNT STEP {
-	REG := FROM loop
-	:calc for-prog { HERE }
-		inc for-stack-pointer 4
-		:org { -3 + @ for-stack-pointer }
-		REG += STEP
-		:calc to { FROM + COUNT * STEP }
-		if REG != to then
-	:org for-prog
-}
-:macro next {
-	inc for-stack-pointer -4
-	:byte { @ prev - 3 }
-	:byte { @ prev - 2 }
-	:byte { @ prev - 1 }
-	:byte { @ prev - 0 }
-	again
-}
-
-# usage example
 : main
 	for v0 16 6 5
 		for v1 3 4 6
@@ -509,8 +455,7 @@ inc for-stack-pointer 1
 	next
 ```
 
-Decompiling the output of the nested `for...next` constructs above helps show the behavior of the macros:
-
+Where `for` takes a register, a starting value, a number of iterations, and the amount to step the register by on each iteration. The above should translate into machine instructions like the following:
 ```
 : main
 	v0 := 16
@@ -526,7 +471,41 @@ Decompiling the output of the nested `for...next` constructs above helps show th
 	again
 ```
 
-The `for` macro builds the head of the loop in the program ROM, and then stages the two input-dependent instructions on a stack in scratchpad memory. The `next` macro pops the bytes of these instructions from this stack and closes the loop.
+The template for each loop looks something like:
+```
+REG := FROM
+loop
+
+	...
+
+	REG += STEP
+	if REG != ( FROM + COUNT * STEP )
+again
+```
+
+We can see from the template and our usage example that our `for` macro needs to construct the beginning of the loop, and then somehow defer the step and exit condition for `next`. We want our `for...next` construct to be nestable, so we can't just defer this information in a few `:calc` variables: we need a stack. A variable named `for-stack` is the stack pointer, initialized as 0. `for` assembles two instructions to this address and increments the pointer by 4 bytes. `next` pops these instructions from the stack and closes the loop:
+```
+:calc for-stack { 0 }
+:macro for REG FROM COUNT STEP {
+	REG := FROM
+	loop
+	:calc for-prog { HERE }
+	:org for-stack
+	REG += STEP
+	:calc to { FROM + COUNT * STEP }
+	if REG != to then
+	:org for-prog
+	:calc for-stack { for-stack + 4 }
+}
+:macro next {
+	:calc for-stack { for-stack - 4 }
+	:byte { @ for-stack + 0 }
+	:byte { @ for-stack + 1 }
+	:byte { @ for-stack + 2 }
+	:byte { @ for-stack + 3 }
+	again
+}
+```
 
 In general, be aware that macros of this nature tend to be _very_ difficult to design and debug, and prevent the compiler from producing useful error messages when things go off the rails- use them sparingly if at all.
 
@@ -711,3 +690,90 @@ Don't forget- stringmodes can be useful even when you aren't working with string
 ```
 
 Stringmodes can be used _anywhere_ you want to make a sequence of simple macro invocations more concise.
+
+Bank Switching
+--------------
+XO-CHIP extends the range of addressable RAM to 64k, but most CHIP-8 instructions which embed a 12-bit literal address (`jump`,`jump0`,`:call`) do not come in a variant which can handle a 16-bit address. As such, it is not possible to execute arbitrary code from RAM above address `0x1000`. For convenience, we will refer to memory below this point as "code RAM" and memory above this point as "data RAM". Despite these limitations of instruction encoding, there are still many ways to have more than 3.5kb of code in an XO-CHIP program, including the technique we'll look at here- scratchpad bank-switching.
+
+The idea is as follows: in XO-CHIP, the low 512 bytes of code RAM are normally used only for storing the built-in CHIP-8 fonts. If we composed subroutines and data just right, we could copy a 512-byte block from anywhere in data RAM into this space at runtime. While only one "bank" of code can be used in this fashion at a time, we could store _many_ separate banks in data RAM.
+
+If we assembled our banks in their _storage_ location in data RAM, we would need to carefully align their base address modulo 4096 in order for branch destinations and other addresses to work properly once relocated. This is possible, but extremely error-prone! Fortunately, there's a better approach: we can `:org` to address 0, assemble the bank in-place, and then afterward copy it from "scratchpad" memory into its storage location. As you will see, declaring and calling into such banked routines is very straightforward.
+
+To declare a bank, we call `bank-begin` with a name for the bank, stash `HERE` and assembly then proceeds starting from address 0. When we have finished building the bank, we call `bank-end`, which copies address `0` to `512` to our previous `HERE`. Observe the use of `:stringmode` as a compact way of invoking a macro 512 (`8*16`) times:
+```
+:macro bank-begin LABEL {
+	: LABEL
+	:calc bank-dst { HERE }
+	:org 0
+}
+:stringmode copy "A" { :byte { @ HERE - bank-dst } }
+:stringmode copy "B" { copy "AAAAAAAAAAAAAAAA" }
+:macro bank-end {
+	:org bank-dst
+	copy "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
+}
+```
+
+Next, we need a routine for copying the bank into place at runtime. `bank-load` takes a 16-bit pointer to a bank in registers `v0`-`v1`, and performs a straightforward copy 2 bytes at a time. (Note: There are many ways you could tweak this copy loop to optimize for speed or compactness!) The macro `indirect` is a convenient way to write `i := long NNNN` such that we can overwrite its target address with our 16-bit pointer:
+```
+:macro indirect LABEL {
+	i := long 0
+	:org { HERE - 2 }
+	: LABEL
+	:org { HERE + 2 }
+}
+
+: bank-load
+	i := bank-source
+	save v1
+	v2 := 0
+	loop
+		indirect bank-source
+		i += v2
+		i += v2
+		load v1
+		i := 0
+		i += v2
+		i += v2
+		save v1
+		v2 += 1
+		if v2 == 0 then return
+	again
+
+:macro bank-switch BANK {
+	:unpack long BANK
+	bank-load
+}
+```
+
+Finally, let's see how using this facility looks in practice- we declare two banks and then load each in turn, calling a routine within:
+```
+: main
+	bank-switch bank-one
+	draw-orb
+	bank-switch bank-two
+	draw-brick
+	loop again
+
+bank-begin bank-one
+	: orb 0x3C 0x7E 0xC9 0xDB 0xDB 0xFF 0x7A 0x3C
+	: draw-orb
+		i := orb
+		v0 := 10
+		v1 := 20
+		sprite v0 v1 8
+	;
+bank-end
+
+bank-begin bank-two
+	: brick 0xFF 0xFF 0xBD 0xFF 0xBB 0x83 0xBB 0xFF
+	: draw-brick
+		i := brick
+		v0 := 40
+		v1 := 35
+		sprite v0 v1 8
+	;
+bank-end
+```
+
+The only major downside of this formulation of bank-switching is that our banks always take up exactly 512 bytes, which will often waste some space and spend unnecessary time during runtime copying. More efficient approaches are possible, but require more book-keeping.
