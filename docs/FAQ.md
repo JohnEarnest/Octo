@@ -93,12 +93,12 @@ In general, if you want to make a program use less space, _do less_. Try replaci
 
 - Any time your program contains a subroutine call followed by a `return` (or `;`), replace the subroutine call with a `jump`- this process is called [Tail Call Elimination](https://en.wikipedia.org/wiki/Tail_call).
 - Don't use `if ... begin ... end` when `if ... then` will do- the former has to produce a `jump`, which costs 2 extra bytes.
-- Similarly, avoid the comparison pseudo-operationss (`<`,`>`,`<=`, and `>=`) if `!=` or `==` would work instead; the pseudo-ops each cost 4 extra bytes.
+- Similarly, avoid the comparison pseudo-operations (`<`,`>`,`<=`, and `>=`) if `!=` or `==` would work instead; the pseudo-ops each cost 4 extra bytes.
 - If a macro is used in many places, consider refactoring it into a subroutine instead.
 - Make `: main` the first declaration in your program. CHIP-8 execution starts at address `0x200`, so if your `main` label is later in the program Octo needs to insert a jump to that address, which costs 2 bytes.
 - Make your program more data-oriented. Can you replace a nest of conditional statements with a lookup table?
 - Try overlapping your data. Re-use the same memory for multiple arrays you never need at once. Done using the graphics for a title screen? Overwrite them with a scratch buffer.
-- Try overlapping your data with code. Do any of the instructions in your program happen to look like data or graphics your need elsewhere? Could you change your code to make some happy coincidences occur?
+- Try overlapping your data with code. Do any of the instructions in your program happen to look like data or graphics you need elsewhere? Could you change your code to make some happy coincidences occur?
 - Quantize brutally. Re-design your program to simplify the actions a user can take, and in turn the cases it must handle.
 - On SCHIP and XO-CHIP, you can overwrite `0x000-0x200`, provided you don't intend to use the built-in hexadecimal font(s). This region is a perfect place to put any scratch buffers.
 
@@ -110,7 +110,7 @@ In general, if you want a program to be faster, _do less_. Try replacing general
 - "Unroll" a loop into a fixed sequence of operations, saving a conditional and `jump` for each loop iteration.
 - "Inline" subroutines by substituting their bodies into call sites, saving a `:call` and `return`. Sometimes when you inline a subroutine, you'll realize there's other book-keeping instructions that can be removed.
 
-Reconsider your register choices. Are you making use of all your registers? Can you avoid recomputing something (or loading it from memory again) by stashing it in an available register? Sometimes it's worth it to reserve some registers simply to always have a useful constant on hand. Initialize registers in a batch. `i := NNN  load vf` can fill 16 registers in 2 cycles.
+Reconsider your register choices. Are you making use of all your registers? Can you avoid recomputing something (or loading it from memory again) by stashing it in an available register? Sometimes it is worthwhile to reserve some registers simply to always have a useful constant on hand. Initialize registers in a batch. `i := NNN  load vf` can fill 16 registers in 2 cycles.
 
 Instead of making a decision inside a hot loop, could you hoist the decision outside the loop? This might require you to split the loop into two or more alternate versions. Alternatively, could you use self-modifying code to rewrite part of the loop up-front?
 
