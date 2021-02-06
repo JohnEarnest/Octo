@@ -44,6 +44,40 @@ i += v1      # add an offset
 load ve - ve # ve=data[v1]
 ```
 
+How do I write loops?
+---------------------
+Octo provides a looping construct called `loop...again`. By itself, this is an infinite loop, but you can exit the loop immediately by using the `while` construct. You may have any number of `while` statements in a given `loop`.
+
+| Octo                             | C / JS / Java / etc.   |
+| :--------------------------------| :--------------------- |
+| `loop ... again`                 | `while(1){...}`        |
+| `loop ... if a == 0 then again`  | `do{...}while(a==0);`  |
+| `while a != 0`                   | `if(a!=0)break;`       |
+
+The most common use of `loop...again` is to repeat a body N times:
+```
+v0 := 0
+loop
+	...
+	v0 += 1
+	if v0 != N then
+again
+```
+Note how we can use `if...then` to skip over the `again` statement, which itself is compiled as a backward `jump` to the matching `loop`.
+
+If you wish, you can always eschew `loop...again` and use labels and `jump` explicitly. The following generates identical CHIP-8 instructions to the previous example:
+```
+v0 := 0
+: A
+	...
+	v0 += 1
+	if v0 !+ N then
+	jump A
+```
+Like `if...begin...else...end` and most other features of Octo, loops exist _purely_ as a tool for making your code easier to write and modify.
+
+If you want something fancier than what Octo provides natively, the metaprogramming guide has some ideas for using macros to implement [custom control structures](https://github.com/JohnEarnest/Octo/blob/gh-pages/docs/MetaProgramming.md#custom-control-structures).
+
 
 How do I decide what registers to use?
 --------------------------------------
