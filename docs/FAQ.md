@@ -71,7 +71,7 @@ v0 := 0
 : A
 	...
 	v0 += 1
-	if v0 !+ N then
+	if v0 != N then
 	jump A
 ```
 Like `if...begin...else...end` and most other features of Octo, loops exist _purely_ as a tool for making your code easier to write and modify.
