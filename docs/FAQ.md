@@ -52,7 +52,7 @@ Octo provides a looping construct called `loop...again`. By itself, this is an i
 | :--------------------------------| :--------------------- |
 | `loop ... again`                 | `while(1){...}`        |
 | `loop ... if a == 0 then again`  | `do{...}while(a==0);`  |
-| `while a != 0`                   | `if(a!=0)break;`       |
+| `while a != 0`                   | `if(a==0)break;`       |
 
 The most common use of `loop...again` is to repeat a body N times:
 ```
