@@ -24,7 +24,7 @@ General information:
 
 Third-party tools and references:
 
-- [Mastering Chip-8](http://mattmik.com/files/chip8/mastering/chip8.html) the most accurate Chip-8 reference online.
+- [Mastering Chip-8](https://github.com/mattmikolay/chip-8/wiki/Mastering-CHIP%E2%80%908) the most accurate Chip-8 reference online.
 - [HP48 SuperChip](https://github.com/Chromatophore/HP48-Superchip) research into the quirks and behavior of SuperChip.
 - [Sublime Text syntax definitions](https://github.com/mattmikolay/octo-sublime)
 - [Atom syntax definitions](https://github.com/james0x0A/language-octo)
