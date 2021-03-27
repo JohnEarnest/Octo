@@ -261,3 +261,88 @@ Here is a simple program which allows the player to draw a line on the screen by
 
 Note that the line is left behind because the `clear` statement is not used. Since we check each key individually, diagonal lines can be drawn if two directional keys are held at once.
  
+Subroutines
+-----------
+So far, we've seen two reasons for using a label: saying where our program begins with a label called `main`, and giving a name to data. Another way we can use labels is to give a name to a *subroutine*. A subroutine is a small program that we can "call" from our main program. When the subroutine is finished, the computer will "return" to the place from which the subroutine was called.
+
+That probably sounds a bit abstract, so let's look at an example:
+
+	: image
+		0xFF 0x81 0xA5 0x81 0xBD 0x81 0xFF
+
+	: draw
+		i := image
+		sprite v0 v1 7
+		v0 += 9
+		v1 += 2
+	;
+
+	: main
+		draw
+		draw
+		draw
+
+When you run this program, you will see three images drawn along a diagonal line. Starting from `main`, using the word `draw` will call the subroutine beginning at that label. The subroutine sets the `i` register, draws a sprite, and then adds to `v0` and `v1`. The `;` statement (a semicolon, not to be confused with `:`!) indicates the end of the subroutine, returning us back to "main". Having completed the first `draw`, our program will proceed to the second, carrying out all the same steps, and when the subroutine returns we can proceed to the third.
+
+Defining a subroutine has given us a different way of repeating things than `loop`s!
+
+Now, consider this alternate program:
+
+	: image1
+		0xFF 0x81 0xA5 0x81 0xBD 0x81 0xFF
+
+	: image2
+		0xFF 0x81 0xE7 0x81 0x81 0x99 0xFF
+
+	: draw1
+		i := image1
+		sprite v0 v1 7
+		v0 += 9
+		v1 += 2
+	;
+
+	: draw2
+		i := image2
+		sprite v0 v1 7
+		v0 += 9
+		v1 += 2
+	;
+
+	: main
+		draw1
+		draw1
+		draw2
+		draw1
+
+Now we have two subroutines, each for drawing a different object on the screen. The subroutines `draw1` and `draw2` are identical except for their first instruction. A different way of writing this program might look something like the following:
+
+	: image1
+		0xFF 0x81 0xA5 0x81 0xBD 0x81 0xFF
+
+	: image2
+		0xFF 0x81 0xE7 0x81 0x81 0x99 0xFF
+
+	: draw
+		sprite v0 v1 7
+		v0 += 9
+		v1 += 2
+	;
+
+	: main
+		i := image1
+		draw
+		draw
+		i := image2
+		draw
+		i := image1
+		draw
+
+There are often many different ways to break down repeated parts of your program into subroutines- experiment, and see what seems clearest!
+
+Remember: every subroutine starts with a label and ends with a semicolon. The statement `return` is identical in meaning to `;`. That last `draw` subroutine could also be written as:
+
+	: draw
+		sprite v0 v1 7
+		v0 += 9
+		v1 += 2
+		return

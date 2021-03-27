@@ -261,7 +261,7 @@ Except it is allowed to forward-reference labels which have not yet been defined
 
 How do I keep my program from flickering?
 -----------------------------------------
-The CHIP-8 virtual machine updates the display after executing some number of instructions. This speed varies, based Octo's settings. 15 cycles per frame is fairly realistic for CHIP-8 on a [COSMAC VIP](https://en.wikipedia.org/wiki/COSMAC_VIP), and 30 is realistic for SCHIP running on an [HP-48](https://en.wikipedia.org/wiki/HP_48_series). XO-CHIP programs can run at an arbitrary speed, but 200 or so is enough for many interesting programs.
+The CHIP-8 virtual machine updates the display after executing some number of instructions. This speed varies, based upon Octo's settings. 15 cycles per frame is fairly realistic for CHIP-8 on a [COSMAC VIP](https://en.wikipedia.org/wiki/COSMAC_VIP), and 30 is realistic for SCHIP running on an [HP-48](https://en.wikipedia.org/wiki/HP_48_series). XO-CHIP programs can run at an arbitrary speed, but 200 or so is enough for many interesting programs.
 
 If an object is drawn on the screen some frames, and missing other frames, it will appear to flicker. This may be a sign that your program is running too slowly or, sometimes, too quickly! To make programs run consistently on different emulators and execution speeds, it's a good idea to use the `delay` timer to burn off any excess time available at the end of a frame:
 ```
