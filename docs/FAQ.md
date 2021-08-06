@@ -529,6 +529,12 @@ When the name `foo` appears in a program, it will behave the same as a label: co
 :byte foo
 ```
 
+If you want the name `foo` to expand to a literal byte, you could also use a macro instead of declaring a constant:
+```
+:macro foo { 0xAB }
+...
+foo
+```
 
 Why doesn't my program play sound when I run it in standalone mode?
 -------------------------------------------------------------------
