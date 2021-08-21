@@ -238,6 +238,7 @@ function Emulator() {
 	this.hires = false; // are we in SuperChip high res mode?
 	this.flags = [];    // semi-persistent hp48 flag vars
 	this.pattern = [];  // audio pattern buffer
+	this.pitch = 128;   // audio pitch register
 	this.plane = 1;     // graphics plane
 	this.profile_data = {};
 
@@ -255,7 +256,9 @@ function Emulator() {
 	this.exitVector  = function() {}                                   // fired by 'exit'
 	this.importFlags = function() { return [0, 0, 0, 0, 0, 0, 0, 0]; } // load persistent flags
 	this.exportFlags = function(flags) {}                              // save persistent flags
-	this.buzzTrigger = function(ticks, remainingTicks) {}                              // fired when buzzer played
+	this.buzzTrigger = function(ticks, remainingTicks) {}              // fired when buzzer played
+	this.buzzBuffer  = function(buffer){}
+	this.buzzPitch   = function(pitch){}
 
 	this.init = function(rom) {
 		// initialise memory with a new array to ensure that it is of the right size and is initiliased to 0
@@ -284,6 +287,7 @@ function Emulator() {
 		this.st = 0;
 		this.hires = false;
 		this.plane = 1;
+		this.pitch = 128;
 
 		// initialize control/debug state
 		this.keys = {};
@@ -349,11 +353,13 @@ function Emulator() {
 				for(var z = 0; z < 16; z++) {
 					this.pattern[z] = this.m[this.i+z];
 				}
+				this.buzzBuffer(this.pattern);
 				break;
 			case 0x07: this.v[x] = this.dt; break;
 			case 0x0A: this.waiting = true; this.waitReg = x; break;
 			case 0x15: this.dt = this.v[x]; break;
-			case 0x18: this.buzzTrigger(this.v[x], this.st); this.st = this.v[x]; break;
+			case 0x18: this.st = this.v[x]; break; //this.buzzTrigger(this.v[x], this.st); 
+			case 0x1A: this.pitch = this.v[x]; this.buzzPitch(this.pitch); break;
 			case 0x1E: this.i = (this.i + this.v[x])&0xFFFF; break;
 			case 0x29: this.i = ((this.v[x] & 0xF) * 5); break;
 			case 0x30: this.i = ((this.v[x] & 0xF) * 10 + fontsets[this.fontStyle].small.length); break;
@@ -606,7 +612,7 @@ function Emulator() {
 			case 0xC: this.v[x] = (Math.random()*256)&nn;           break;
 			case 0xD: this.sprite(this.v[x], this.v[y], n);         break;
 			case 0xF: this.misc(x, nn);                             break;
-			default: haltBreakpoint("unknown opcode "+o.toString(16).toUppercase());
+			default: haltBreakpoint("unknown opcode "+o.toString(16).toUpperCase());
 		}
 	}
 

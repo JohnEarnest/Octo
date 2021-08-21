@@ -34,8 +34,9 @@ function dumpRegisters(showV, name) {
 	return (
 		line('tick count: ' + emulator.tickCounter) +
 		line('breakpoint: ' + name) +
+		line('pitch: '+ emulator.pitch)+
 		register('pc', emulator.pc, getLabel) +
-		register('i', emulator.i, getLabel) +
+		register('ix', emulator.i, getLabel) +
 		(showV ? range(16).map(x => register('v'+(x.toString(16).toUpperCase()), emulator.v[x], aliases)).join('') : '') +
 		'<br>'
 	)
@@ -116,7 +117,9 @@ function haltBreakpoint(name) {
 	setVisible(runContinue, true, 'inline')
 	setVisible(debugPanel,  true)
 	emulator.breakpoint = true
-	debugPanel.innerHTML = dumpRegisters(true, name) + dumpStack() + dumpContext()
+	debugPanel.innerHTML = 
+	"<table style='border-spacing:10px'><tr><td>"+dumpRegisters(true, name)+
+	"</td><td style='vertical-align:text-top'>"+dumpStack()+"</td></tr></table>"+dumpContext()
 }
 
 function haltProfiler(name) {

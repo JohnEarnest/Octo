@@ -153,8 +153,9 @@ function renderDisplay(emulator) {
 
 var audio;
 var audioNode;
-var audioSource;
 var audioData;
+/*
+var audioSource;
 
 var AudioBuffer = function(buffer, duration) {
 	if (!(this instanceof AudioBuffer)) {
@@ -185,7 +186,7 @@ AudioBuffer.prototype.write = function(buffer, index, size) {
 AudioBuffer.prototype.dequeue = function(duration) {
 	this.duration -= duration;
 }
-
+*/
 var FREQ = 4000;
 var TIMER_FREQ = 60;
 var SAMPLES = 16;
@@ -208,6 +209,7 @@ function audioSetup() {
 	}
 	audioEnable()
 	if (audio && !audioNode) {
+		/*
 		audioNode = audio.createScriptProcessor(4096, 1, 1);
 		audioNode.onaudioprocess = function(audioProcessingEvent) {
 			var outputBuffer = audioProcessingEvent.outputBuffer;
@@ -237,18 +239,39 @@ function audioSetup() {
 				}
 			}
 		}
-		audioData = [];
-		audioNode.connect(audio.destination);
-		return true;
+		*/
+		if(!audioData) audioData = []
+		if(!audioNode) audioNode = []
+		
+		audioNode.push(audio.createGain());
+		audioData.push(new Array(SAMPLES));
+		
+		var k = audioNode[audioNode.length-1];
+		
+		k.osc = audio.createOscillator();
+		k.connect(audio.destination);
+		k.osc.connect(k);
+		
+		k.osc.setPeriodicWave(audio.createPeriodicWave([0,0],[0,0]))
+		k.osc.frequency.value = FREQ/128;
+		k.gain.value = 0;
+		k.osc.start()
+		
+		return audioNode.length-1;
 	}
-	if (audio && audioNode) { return true; }
-	return false;
+	if (audio && audioNode) { return audioNode.length-1; }
+	return -1;
 }
 
 function stopAudio() {
 	if (!audio) { return; }
 	if (audioNode) {
-		audioNode.disconnect();
+		for (var k in audioNode) {
+			k = audioNode.pop();
+			k.osc.disconnect();
+			k.disconnect();
+			k.osc.stop();
+		}
 		audioNode = null;
 	}
 	audioData = [];
@@ -256,6 +279,84 @@ function stopAudio() {
 
 var VOLUME = 0.25;
 
+function FFT(R,I){
+//The original code is ported directly from:
+//https://youtu.be/h7apO7q16V0
+	var n = R.length;
+	if (n == 1)  return [R,I]
+	var Wr = Math.cos(2*Math.PI/n)
+	var Wi = Math.sin(2*Math.PI/n)
+	var PEr=new Float32Array(n/2)
+	var PEi=new Float32Array(n/2)
+	var POr=new Float32Array(n/2)
+	var POi=new Float32Array(n/2)
+	for(var z=0;z<n;z++){
+		if(z&1){
+			POr[z>>1]=R[z]
+			POi[z>>1]=I[z]
+		}else{
+			PEr[z>>1]=R[z]
+			PEi[z>>1]=I[z]
+		}
+	}
+	
+	var ye = FFT(PEr,PEi)
+	var yo = FFT(POr,POi)
+	var yer = ye[0], yei = ye[1];
+	var yor = yo[0], yoi = yo[1];
+	var yr = new Float32Array(n)
+	var yi = new Float32Array(n)
+	
+	for(var z=0,m=n/2,p=1,q=0,r=0;z<m;z++){
+		var a=yer[z],b=yei[z];
+		var c=yor[z],d=yoi[z];
+		yr[z  ]=a+p*c-q*d;
+		yi[z  ]=b+p*d+q*c;
+		yr[z+m]=a-p*c+q*d;
+		yi[z+m]=b-p*d-q*c;
+		r=p*Wr-q*Wi
+		q=p*Wi+q*Wr
+		p=r
+	}
+	return [yr,yi]
+}
+	
+function audioEngine(){
+	this.id = audioSetup()
+	this.audioData = audioData[this.id]
+	this.audioNode = audioNode[this.id]
+	this.waveData = []
+	
+	this.setBuffer = function(buffer){
+		if (!audio) { return; }
+		var wave = []
+		for(var a=0,b=0,bl=buffer.length;b<bl;b++){
+			var c = this.audioData[b] = buffer[b];
+			for(var d=7;d>=0;d--)
+				for(var e=0;e<16;e++)
+					wave[a++]=(c>>d)&1;
+		}
+		this.waveData = wave;
+		
+		var myFFT = FFT(wave,new Float32Array(wave.length))
+		var half  = Math.ceil(wave.length/2);
+		this.real = myFFT[0].slice(0,half);
+		this.imag = myFFT[1].slice(0,half);
+		
+		this.audioNode.osc.setPeriodicWave(
+			audio.createPeriodicWave(this.real,this.imag)
+		);
+	}
+	this.setPitch = function(pitch){
+		if (!audio) { return; }
+		this.audioNode.osc.detune.value = 1200*(pitch-128)/48;
+	}
+	this.setGain  = function(gain){
+		if (!audio) { return; }
+		this.audioNode.gain.value = gain*VOLUME;
+	}
+}
+/*
 function playPattern(soundLength, buffer, remainingTicks) {
 	if (!audio) { return; }
 	audioEnable()
@@ -274,7 +375,7 @@ function playPattern(soundLength, buffer, remainingTicks) {
 	}
 	audioData.push(new AudioBuffer(audioBuffer, Math.floor(soundLength * audio.sampleRate / TIMER_FREQ)));
 }
-
+*/
 function escapeHtml(str) {
     var div = document.createElement('div');
     div.appendChild(document.createTextNode(str));
