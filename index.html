@@ -638,7 +638,7 @@ input:focus { outline: none; }
 .debug-lint-message tt { color:orange; }
 
 #run-container { display: flex; flex-direction: row; justify-content: center;}
-#run-container canvas { z-index: 1000; }
+#run-container canvas { z-index: -1; }
 
 #monitor { font-family: monospace; text-shadow: black 0 0 5px; display:none; position:fixed; right:10px;top:10px; max-width:420px; }
 #monitor>table { border-collapse: collapse; }
@@ -980,10 +980,13 @@ function runRom(rom) {
   emulator.exitVector = stopRom
   emulator.importFlags = _ => getPref('octoFlagRegisters')
   emulator.exportFlags = f => setPref('octoFlagRegisters',f)
-  emulator.buzzTrigger = (ticks, remainingTicks) => playPattern(ticks, emulator.pattern, remainingTicks)
+  XOAudio = new audioEngine();
+  emulator.buzzPitch = (pitch) => XOAudio.setPitch(pitch)
+  emulator.buzzBuffer = (buffer) => XOAudio.setBuffer(buffer)
+  //emulator.buzzTrigger = (ticks, remainingTicks) => playPattern(ticks, emulator.pattern, remainingTicks)
   emulator.init(rom)
   clearBreakpoint()
-  audioSetup()
+  //audioSetup()
   setVisible(runCover, true, 'flex')
   updateMonitor()
   resetLinter()
@@ -999,6 +1002,7 @@ function runRom(rom) {
         if (emulator.r.length == emulator.stack_breakpoint) { emulator.stack_breakpoint = -1; haltBreakpoint('step out') }
       }
     }
+	XOAudio.setGain(emulator.st > 0)
     if (!emulator.breakpoint) {
       emulator.dt -= emulator.dt > 0
       emulator.st -= emulator.st > 0
