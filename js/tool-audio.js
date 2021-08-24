@@ -16,6 +16,8 @@ function writePattern(target, bytes) { return writeBytes(target, PATTERN_SIZE, b
 writePattern(audioPatternEditor, emptySound)
 writePattern(audioBlendEditor,   emptySound)
 
+var audioPreview;
+
 function shiftBytes(bytes, n) {
 	const r = bytes.map(x => x)
 	for (var x = 0; x < bytes.length*8; x++) {
@@ -80,8 +82,12 @@ drawOnCanvas(audioPatternCanvas, (x, y, draw) => {
 })
 
 document.getElementById('audio-play').onclick = _ => {
-	if (audioSetup()) {
-		playPattern(30, readPattern(audioPatternEditor))
+	if (!audioPreview) audioPreview = new audioEngine();
+	if (audioPreview) {
+		audioPreview.setBuffer(readPattern(audioPatternEditor));
+		audioPreview.setGain(1); audioPreview.setGain(0,0.5);
+		audioPreview.setTimer(255); audioPreview.refresh();
+		audioEnable();
 	}
 	else {
 		document.getElementById('audio-error').innerHTML = 'Your browser does not support HTML5 Audio!'

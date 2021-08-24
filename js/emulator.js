@@ -234,11 +234,14 @@ function Emulator() {
 	this.pc = 0;        // program counter
 	this.i  = 0;        // index register
 	this.dt = 0;        // delay timer
-	this.st = 0;        // sound timer
+	this.st = [0,0];    // sound timers
 	this.hires = false; // are we in SuperChip high res mode?
 	this.flags = [];    // semi-persistent hp48 flag vars
-	this.pattern = [];  // audio pattern buffer
-	this.pitch = 128;   // audio pitch register
+	this.pattern = [[],[]];  // audio pattern buffers
+	this.pitch = [64,64];  // audio pitch registers
+	this.volume = [255,255]; // audio volume registers
+	this.pitchramp = [0,0];  // audio pitch ramp registers
+	this.volumeramp = [0,0]; // audio volume ramp registers
 	this.plane = 1;     // graphics plane
 	this.profile_data = {};
 
@@ -257,8 +260,12 @@ function Emulator() {
 	this.importFlags = function() { return [0, 0, 0, 0, 0, 0, 0, 0]; } // load persistent flags
 	this.exportFlags = function(flags) {}                              // save persistent flags
 	this.buzzTrigger = function(ticks, remainingTicks) {}              // fired when buzzer played
-	this.buzzBuffer  = function(buffer){}
-	this.buzzPitch   = function(pitch){}
+	this.buzzBuffer  = [_=>_,_=>_]                                     // buzzer's buffer update
+	this.buzzTimer   = [_=>_,_=>_]                                     // buzzer's timer update
+	this.buzzPitch   = [_=>_,_=>_]                                     // buzzer's pitch update
+	this.buzzVolume  = [_=>_,_=>_]                                     // buzzer's volume update
+	this.buzzPitchRamp = [_=>_,_=>_]                                   // buzzer's pitchramp update
+	this.buzzVolumeRamp = [_=>_,_=>_]                                  // buzzer's volumeramp update
 
 	this.init = function(rom) {
 		// initialise memory with a new array to ensure that it is of the right size and is initiliased to 0
@@ -277,17 +284,21 @@ function Emulator() {
 		for(var z = 0; z < font.big.length;  z++) { this.m[z + font.small.length] = font.big[z]; }
 		for(var z = 0; z < rom.rom.length;   z++) { this.m[0x200+z] = rom.rom[z]; }
 		for(var z = 0; z < 16;               z++) { this.v[z] = 0; }
-		for(var z = 0; z < 16;               z++) { this.pattern[z] = 0; }
+		for(var z = 0; z < 16;               z++) {
+			for(var k=0;k<this.pattern.length;k++)this.pattern[k][z] = 0; }
 
 		// initialize interpreter state
 		this.r = [];
 		this.pc = 0x200;
 		this.i  = 0;
 		this.dt = 0;
-		this.st = 0;
+		this.st = [0,0];
 		this.hires = false;
 		this.plane = 1;
-		this.pitch = 128;
+		this.pitch = [64,64];
+		this.volume = [255,255];
+		this.pitchramp = [0,0];
+		this.volumeramp = [0,0];
 
 		// initialize control/debug state
 		this.keys = {};
@@ -339,27 +350,28 @@ function Emulator() {
 				this.writeCarry(x, t, ((this.v[y] >> 7) & 0x1));
 				break;
 			default:
-				haltBreakpoint("unknown math opcode "+op.toString(16).toUppercase());
+				haltBreakpoint("unknown math opcode "+op.toString(16).toUpperCase());
 		}
 	}
 
 	this.misc = function(x, rest) {
 		// miscellaneous opcodes
 		switch(rest) {
-			case 0x01:
-				this.plane = (x & 0x3);
-				break;
-			case 0x02:
-				for(var z = 0; z < 16; z++) {
-					this.pattern[z] = this.m[this.i+z];
-				}
-				this.buzzBuffer(this.pattern);
+			case 0x01: this.plane = (x & 0x3); break;
+			case 0x02: case 0x03: //case 0x04: case 0x05: case 0x06:
+				var r = rest - 0x02;
+				var sampleLength = 16<<(x&3);
+				this.pattern[r] = new Uint8Array(sampleLength)
+				for(var z=0; z < sampleLength; z++)
+					this.pattern[r][z] = this.m[this.i+z];
+				this.buzzBuffer[r](this.pattern[r],x>>2);
 				break;
 			case 0x07: this.v[x] = this.dt; break;
 			case 0x0A: this.waiting = true; this.waitReg = x; break;
 			case 0x15: this.dt = this.v[x]; break;
-			case 0x18: this.st = this.v[x]; break; //this.buzzTrigger(this.v[x], this.st); 
-			case 0x1A: this.pitch = this.v[x]; this.buzzPitch(this.pitch); break;
+			case 0x18: case 0x19: //case 0x1A: case 0x1B: case 0x1C:
+				var r = rest - 0x18;
+				this.buzzTimer[r](this.st[r] = this.v[x]); break;
 			case 0x1E: this.i = (this.i + this.v[x])&0xFFFF; break;
 			case 0x29: this.i = ((this.v[x] & 0xF) * 5); break;
 			case 0x30: this.i = ((this.v[x] & 0xF) * 10 + fontsets[this.fontStyle].small.length); break;
@@ -368,7 +380,19 @@ function Emulator() {
 				this.m[this.i+1] = Math.floor(this.v[x]/10)%10;
 				this.m[this.i+2] = this.v[x]%10;
 				break;
-			case 0x55:
+			case 0x3A: case 0x3B: //case 0x3C: case 0x3D: case 0x3E:
+				var r = rest - 0x3A;
+				this.buzzPitch[r](this.pitch[r] = this.v[x]); break;
+			case 0x40: case 0x41: //case 0x42: case 0x43: case 0x44:
+				var r = rest - 0x40;
+				this.buzzVolume[r](this.volume[r] = this.v[x]); break;
+			case 0x45: case 0x46: //case 0x47: case 0x48: case 0x49:
+				var r = rest - 0x45;
+				this.buzzPitchRamp[r](this.pitchramp[r] = this.v[x]); break;
+			case 0x4A: case 0x4B: //case 0x4C: case 0x4D: case 0x4E:
+				var r = rest - 0x4A;
+				this.buzzVolumeRamp[r](this.volumeramp[r] = this.v[x]); break;
+			case 0x55:  
 				for(var z = 0; z <= x; z++) { this.m[this.i+z] = this.v[z]; }
 				if (!this.loadStoreQuirks) { this.i = (this.i+x+1)&0xFFFF; }
 				break;
@@ -388,7 +412,7 @@ function Emulator() {
 				for(var z = 0; z <= x; z++) { this.v[z] = this.flags[z]; }
 				break;
 			default:
-				haltBreakpoint("unknown misc opcode "+rest.toString(16).toUppercase());
+				haltBreakpoint("unknown misc opcode "+rest.toString(16).toUpperCase());
 		}
 	}
 
@@ -588,11 +612,11 @@ function Emulator() {
 				return;
 			}
 			else {
-				haltBreakpoint("unknown opcode "+op.toString(16).toUppercase());
+				haltBreakpoint("unknown opcode "+op.toString(16).toUpperCase());
 			}
 		}
 		if (o == 0x9 && n != 0) {
-			haltBreakpoint("unknown opcode "+op.toString(16).toUppercase());
+			haltBreakpoint("unknown opcode "+op.toString(16).toUpperCase());
 		}
 
 		// dispatch complex opcodes
@@ -619,12 +643,12 @@ function Emulator() {
 	this.tick = function() {
 		if (this.halted) { return; }
 		this.tickCounter++;
-		try {
+		//try {
 			this.opcode();
-		}
-		catch(err) {
-			console.log("halted: " + err);
-			this.halted = true;
-		}
+		//}
+		//catch(err) {
+		//	console.log("halted: " + err);
+		//	this.halted = true;
+		//}
 	}
 }

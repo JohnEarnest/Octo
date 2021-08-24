@@ -152,8 +152,8 @@ function renderDisplay(emulator) {
 ////////////////////////////////////
 
 var audio;
-var audioNode;
-var audioData;
+var audioNode=[];
+var audioData=[];
 /*
 var audioSource;
 
@@ -187,10 +187,140 @@ AudioBuffer.prototype.dequeue = function(duration) {
 	this.duration -= duration;
 }
 */
+
+function FFT(R,I){
+	//The original code is ported directly from:
+	//https://youtu.be/h7apO7q16V0
+		var n = R.length;
+		if (n == 1)  return [R,I]
+		var Wr = Math.cos(2*Math.PI/n)
+		var Wi = Math.sin(2*Math.PI/n)
+		var PEr=new Float32Array(n/2)
+		var PEi=new Float32Array(n/2)
+		var POr=new Float32Array(n/2)
+		var POi=new Float32Array(n/2)
+		for(var z=0;z<n;z++){
+			if(z&1){
+				POr[z>>1]=R[z]
+				POi[z>>1]=I[z]
+			}else{
+				PEr[z>>1]=R[z]
+				PEi[z>>1]=I[z]
+			}
+		}
+		
+		var ye = FFT(PEr,PEi)
+		var yo = FFT(POr,POi)
+		var yer = ye[0], yei = ye[1];
+		var yor = yo[0], yoi = yo[1];
+		var yr = new Float32Array(n)
+		var yi = new Float32Array(n)
+		
+		for(var z=0,m=n/2,p=1,q=0,r=0;z<m;z++){
+			var a=yer[z],b=yei[z];
+			var c=yor[z],d=yoi[z];
+			yr[z  ]=a+p*c-q*d;
+			yi[z  ]=b+p*d+q*c;
+			yr[z+m]=a-p*c+q*d;
+			yi[z+m]=b-p*d-q*c;
+			r=p*Wr-q*Wi;
+			q=p*Wi+q*Wr;
+			p=r;
+		}
+		return [yr,yi];
+	}
+	
+function audioOscillator(k){
+	k.updateBuffer = false;
+	k.oscStopped = true;
+	k.reset = false;
+	
+	k.bins = 4096;
+	k.freq = FREQ/128;
+	k.norm = k.bins/2**0.5;
+	k.half = Math.ceil(k.bins/2);
+	k.real = new Float32Array(k.bins);
+	k.imag = new Float32Array(k.bins);
+	k.wave = audio.createPeriodicWave(k.real,k.imag);
+	
+	k.stopOsc = function(){
+		k.dcf.offset.value = 0;
+		if ( !k.oscStopped ){
+			k.oscStopped = true;
+			k.osc.disconnect();
+			k.osc.stop();
+		}
+	}
+	
+	k.runOsc = function(){
+		if( k.reset ){ k.reset = false; k.stopOsc();}
+		if ( k.oscStopped  )
+			k.osc = audio.createOscillator();
+		k.osc.detune.value = 1200*(k.pitch-64)/48;
+		k.osc.frequency.value = k.freq;
+		k.osc.setPeriodicWave(k.wave);
+		k.dcf.offset.value = k.dcof;
+		if ( k.oscStopped ){
+			k.oscStopped = false;
+			k.osc.connect(k);
+			k.osc.start();
+		}
+	}
+	
+	k.setTimer = function(timer){
+		if ( timer == 0 ) k.reset = true;
+		k.timer = timer;
+	}
+	
+	k.setBuffer = function(wave,length){
+		var pads = k.bins/length;
+		k.freq = FREQ/length;
+		k.updateBuffer = true;
+		for(var z=0,x=0;z<length;z++)
+			for(var y=0;y<pads;y++)
+				k.real[x++] = wave[z]/k.norm;
+	}
+	
+	k.refresh = function(){
+		if(k.updateBuffer){
+			k.updateBuffer = false;
+			var myFFT = FFT(k.real,k.imag);
+			k.wave = audio.createPeriodicWave(
+				myFFT[0].slice(0,k.half),
+				myFFT[1].slice(0,k.half),
+				{ disableNormalization: true }
+			)
+			k.dcof = ((myFFT[0][0]/2) ** 2 +
+				(myFFT[1][0]/2) ** 2 ) ** 0.5;
+		}
+		
+		if ( k.timer == 0 ) k.stopOsc(); else k.runOsc();
+		
+		k.setGain(k.volume/255); k.timer -= k.timer > 0;
+		k.pitch = Math.min(Math.max(k.pitch+k.pitchRamp,0),255);
+		k.volume = Math.min(Math.max(k.volume+k.volumeRamp,0),255);
+		
+		if ( k.timer == 0 ) k.reset = true;
+	}
+	
+	k.stop = function(){
+		k.disconnect();
+		k.dcf.stop();
+		k.stopOsc();
+	}
+
+	// this thing keeps the DC offset from
+	// the original wave for the oscillator
+	k.dcf = audio.createConstantSource();  
+	k.dcf.offset.value = 0;
+	k.dcf.connect(k);
+	k.dcf.start();
+	
+	return k;
+}
+
 var FREQ = 4000;
 var TIMER_FREQ = 60;
-var SAMPLES = 16;
-var BUFFER_SIZE = SAMPLES * 8
 
 
 function audioEnable() {
@@ -208,7 +338,7 @@ function audioSetup() {
 		}
 	}
 	audioEnable()
-	if (audio && !audioNode) {
+	if (audio) {
 		/*
 		audioNode = audio.createScriptProcessor(4096, 1, 1);
 		audioNode.onaudioprocess = function(audioProcessingEvent) {
@@ -240,22 +370,32 @@ function audioSetup() {
 			}
 		}
 		*/
-		if(!audioData) audioData = []
-		if(!audioNode) audioNode = []
+		var k = audio.createGain();
 		
-		audioNode.push(audio.createGain());
-		audioData.push(new Array(SAMPLES));
+		k.setTimer = _=>k.timer=_;
+		k.setPitch = _=>k.pitch=_;
+		k.setVolume = _=>k.volume=_;
+		k.setPitchRamp = _=>k.pitchRamp=_-256*(_>127);
+		k.setVolumeRamp = _=>k.volumeRamp=_-256*(_>127);
 		
-		var k = audioNode[audioNode.length-1];
+		k.timer = 0;
+		k.pitch = 0;
+		k.volume = 255;
+		k.pitchRamp = 0;
+		k.volumeRamp = 0;
 		
-		k.osc = audio.createOscillator();
+		k.gain.value=0;
+		k.refresh = _=>_;
+		k.setBuffer = _=>_;
+		k.stop = _=>k.disconnect();
+		k.setGain = function (gain,time=0) {
+			k.gain.setValueAtTime(gain*VOLUME, audio.currentTime+time);
+		}
+		
+		audioData.push(new Uint32Array(128));
+		audioNode.push(audioOscillator(k));
+		
 		k.connect(audio.destination);
-		k.osc.connect(k);
-		
-		k.osc.setPeriodicWave(audio.createPeriodicWave([0,0],[0,0]))
-		k.osc.frequency.value = FREQ/128;
-		k.gain.value = 0;
-		k.osc.start()
 		
 		return audioNode.length-1;
 	}
@@ -265,102 +405,71 @@ function audioSetup() {
 
 function stopAudio() {
 	if (!audio) { return; }
-	if (audioNode) {
-		for (var k in audioNode) {
-			k = audioNode.pop();
-			k.osc.disconnect();
-			k.disconnect();
-			k.osc.stop();
-		}
-		audioNode = null;
+	while(audioNode.length>0) {
+		var k = audioNode.pop();
+		audioData.pop();
+		k.stop();
 	}
-	audioData = [];
 }
 
-var VOLUME = 0.25;
-
-function FFT(R,I){
-//The original code is ported directly from:
-//https://youtu.be/h7apO7q16V0
-	var n = R.length;
-	if (n == 1)  return [R,I]
-	var Wr = Math.cos(2*Math.PI/n)
-	var Wi = Math.sin(2*Math.PI/n)
-	var PEr=new Float32Array(n/2)
-	var PEi=new Float32Array(n/2)
-	var POr=new Float32Array(n/2)
-	var POi=new Float32Array(n/2)
-	for(var z=0;z<n;z++){
-		if(z&1){
-			POr[z>>1]=R[z]
-			POi[z>>1]=I[z]
-		}else{
-			PEr[z>>1]=R[z]
-			PEi[z>>1]=I[z]
-		}
-	}
-	
-	var ye = FFT(PEr,PEi)
-	var yo = FFT(POr,POi)
-	var yer = ye[0], yei = ye[1];
-	var yor = yo[0], yoi = yo[1];
-	var yr = new Float32Array(n)
-	var yi = new Float32Array(n)
-	
-	for(var z=0,m=n/2,p=1,q=0,r=0;z<m;z++){
-		var a=yer[z],b=yei[z];
-		var c=yor[z],d=yoi[z];
-		yr[z  ]=a+p*c-q*d;
-		yi[z  ]=b+p*d+q*c;
-		yr[z+m]=a-p*c+q*d;
-		yi[z+m]=b-p*d-q*c;
-		r=p*Wr-q*Wi
-		q=p*Wi+q*Wr
-		p=r
-	}
-	return [yr,yi]
-}
+var VOLUME = 0.5;
 	
 function audioEngine(){
-	this.id = audioSetup()
-	this.audioData = audioData[this.id]
-	this.audioNode = audioNode[this.id]
-	this.waveData = []
+	this.id = audioSetup();
+	this.audioData = audioData[this.id];
+	this.audioNode = audioNode[this.id];
+	this.waveData = new Float32Array(1024);
+	this.waveMode = 0;
 	
-	this.setBuffer = function(buffer){
-		if (!audio) { return; }
-		var wave = []
-		for(var a=0,b=0,bl=buffer.length;b<bl;b++){
-			var c = this.audioData[b] = buffer[b];
-			for(var d=7;d>=0;d--)
-				for(var e=0;e<16;e++)
-					wave[a++]=(c>>d)&1;
+	this.setBuffer = function(buffer,mode){
+		var al=this.waveData.length;
+		var bl=buffer.length;
+		var bits = 1 << mode;
+		var samplesPerByte = 8 >> mode
+		var norm = ( 255 << bits ) & 0xFF00;
+		norm >>= bits; norm &= 255;
+		for(var a=0,b=0;a<al;b++){
+			var c = buffer[b%bl];
+			this.audioData[b] = c;
+			for(var d=samplesPerByte;d>0;d--){
+				var k = ( c <<= bits ) & 0xFF00;
+				k >>= bits; k &= 255;
+				for(var z=0;z<1;z++)
+					this.waveData[a++] = k / norm;
+			}
 		}
-		this.waveData = wave;
-		
-		var myFFT = FFT(wave,new Float32Array(wave.length))
-		var half  = Math.ceil(wave.length/2);
-		this.real = myFFT[0].slice(0,half);
-		this.imag = myFFT[1].slice(0,half);
-		
-		this.audioNode.osc.setPeriodicWave(
-			audio.createPeriodicWave(this.real,this.imag)
+		this.waveMode = mode;
+		this.audioNode.setBuffer(
+			this.waveData,buffer.length*samplesPerByte
 		);
 	}
-	this.setPitch = function(pitch){
-		if (!audio) { return; }
-		this.audioNode.osc.detune.value = 1200*(pitch-128)/48;
+	this.setTimer = function(timer){
+		this.audioNode.setTimer(timer);
 	}
-	this.setGain  = function(gain){
-		if (!audio) { return; }
-		this.audioNode.gain.value = gain*VOLUME;
+	this.setPitch = function(pitch){
+		this.audioNode.setPitch(pitch);
+	}
+	this.setVolume  = function(volume){
+		this.audioNode.setVolume(volume);
+	}
+	this.setPitchRamp = function(ramp){
+		this.audioNode.setPitchRamp(ramp);
+	}
+	this.setVolumeRamp  = function(ramp){
+		this.audioNode.setVolumeRamp(ramp);
+	}
+	this.setGain = function(gain,time=0){
+		this.audioNode.setGain(gain,time);
+	}
+	this.refresh = function(){
+		this.audioNode.refresh();
 	}
 }
+
 /*
 function playPattern(soundLength, buffer, remainingTicks) {
 	if (!audio) { return; }
 	audioEnable()
-
 	var samples = Math.floor(BUFFER_SIZE * audio.sampleRate / FREQ);
 	var audioBuffer = new Array(samples);
 	if (remainingTicks && audioData.length > 0) {
@@ -376,6 +485,7 @@ function playPattern(soundLength, buffer, remainingTicks) {
 	audioData.push(new AudioBuffer(audioBuffer, Math.floor(soundLength * audio.sampleRate / TIMER_FREQ)));
 }
 */
+
 function escapeHtml(str) {
     var div = document.createElement('div');
     div.appendChild(document.createTextNode(str));
