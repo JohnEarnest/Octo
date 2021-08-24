@@ -905,7 +905,7 @@ window.onkeyup = event => {
   if (event.key == 'p') { haltProfiler('profiler') }
   if (event.key == 'm') { monitoring = !monitoring; setVisible(document.getElementById('monitor'),monitoring) }
   if (emulator.breakpoint) {
-    if (event.key == 'o') { emulator.dt = emulator.st = 0; emulator.tick(); renderDisplay(emulator); haltBreakpoint('single step') }
+    if (event.key == 'o') { emulator.tick(); renderDisplay(emulator); haltBreakpoint('single step') }
     if (event.key == 'u') { const l = emulator.r.length; if (l>0) { emulator.stack_breakpoint = l-1; clearBreakpoint() } } // step out
     if (event.key == 'l') {
       if ((emulator.m[emulator.pc] & 0xF0) == 0x20) { const l = emulator.r.length; if (l >= 0) { emulator.stack_breakpoint = l; clearBreakpoint(); } }
@@ -973,6 +973,7 @@ function compile() {
 
 const runCover = document.getElementById('run-cover')
 var intervalHandle = null
+var XOAudio,XOAudio2,XOAudio3;
 
 function runRom(rom) {
   if (rom === null) return
@@ -980,13 +981,24 @@ function runRom(rom) {
   emulator.exitVector = stopRom
   emulator.importFlags = _ => getPref('octoFlagRegisters')
   emulator.exportFlags = f => setPref('octoFlagRegisters',f)
-  XOAudio = new audioEngine();
-  emulator.buzzPitch = (pitch) => XOAudio.setPitch(pitch)
-  emulator.buzzBuffer = (buffer) => XOAudio.setBuffer(buffer)
-  //emulator.buzzTrigger = (ticks, remainingTicks) => playPattern(ticks, emulator.pattern, remainingTicks)
+  //audio setup
+  XOAudioA = new audioEngine(); XOAudioA.setGain(1);
+  XOAudioB = new audioEngine(); XOAudioB.setGain(1);
+	emulator.buzzTimer[0] = timer => XOAudioA.setTimer(timer)
+	emulator.buzzTimer[1] = timer => XOAudioB.setTimer(timer)
+	emulator.buzzPitch[0] = pitch => XOAudioA.setPitch(pitch)
+	emulator.buzzPitch[1] = pitch => XOAudioB.setPitch(pitch)
+	emulator.buzzVolume[0] = volume => XOAudioA.setVolume(volume)
+	emulator.buzzVolume[1] = volume => XOAudioB.setVolume(volume)
+	emulator.buzzPitchRamp[0] = ramp => XOAudioA.setPitchRamp(ramp)
+	emulator.buzzPitchRamp[1] = ramp => XOAudioB.setPitchRamp(ramp)
+	emulator.buzzVolumeRamp[0] = ramp => XOAudioA.setVolumeRamp(ramp)
+	emulator.buzzVolumeRamp[1] = ramp => XOAudioB.setVolumeRamp(ramp)
+  emulator.buzzBuffer[0] = (buffer,mode) => XOAudioA.setBuffer(buffer,mode)
+  emulator.buzzBuffer[1] = (buffer,mode) => XOAudioB.setBuffer(buffer,mode)
+	//emulator setup
   emulator.init(rom)
   clearBreakpoint()
-  //audioSetup()
   setVisible(runCover, true, 'flex')
   updateMonitor()
   resetLinter()
@@ -1002,16 +1014,23 @@ function runRom(rom) {
         if (emulator.r.length == emulator.stack_breakpoint) { emulator.stack_breakpoint = -1; haltBreakpoint('step out') }
       }
     }
-	XOAudio.setGain(emulator.st > 0)
+		
     if (!emulator.breakpoint) {
+      emulator.st[0] -= emulator.st[0] > 0
+		  emulator.st[1] -= emulator.st[1] > 0
       emulator.dt -= emulator.dt > 0
-      emulator.st -= emulator.st > 0
-    }
+    }else{
+	    if (emulator.st[0] > 0) { XOAudioA.setTimer(0); emulator.st[0] = 0 }
+	    if (emulator.st[1] > 0) { XOAudioB.setTimer(0); emulator.st[1] = 0 }
+			emulator.dt = 0;
+	  }
+		
     recordFrame()
     renderDisplay(emulator)
+		XOAudioA.refresh(); XOAudioB.refresh();
     if (monitoring && !emulator.halted && !emulator.breakpoint) updateMonitor()
     if (emulator.halted) return
-    runCover.style.backgroundColor = (emulator.st > 0) ? emulator.buzzColor : emulator.quietColor
+    runCover.style.backgroundColor = (emulator.st[0] > 0) ? emulator.buzzColor : emulator.quietColor
   }, 1000/60)
 }
 
