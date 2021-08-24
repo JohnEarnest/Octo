@@ -379,7 +379,7 @@ function audioSetup() {
 		k.setVolumeRamp = _=>k.volumeRamp=_-256*(_>127);
 		
 		k.timer = 0;
-		k.pitch = 0;
+		k.pitch = 64;
 		k.volume = 255;
 		k.pitchRamp = 0;
 		k.volumeRamp = 0;
