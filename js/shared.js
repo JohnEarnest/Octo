@@ -268,12 +268,12 @@ function audioOscillator(k){
 		}
 	}
 	
-	k.setTimer = function(timer){
+	k.setTimer = (timer)=>{
 		if ( timer == 0 ) k.reset = true;
 		k.timer = timer;
 	}
 	
-	k.setBuffer = function(wave,length){
+	k.setBuffer = (wave,length)=>{
 		var pads = k.bins/length;
 		k.freq = FREQ/length;
 		k.updateBuffer = true;
@@ -282,7 +282,7 @@ function audioOscillator(k){
 				k.real[x++] = wave[z]/k.norm;
 	}
 	
-	k.refresh = function(time){
+	k.refresh = (time)=>{
 		if(k.updateBuffer){
 			k.updateBuffer = false;
 			var myFFT = FFT(k.real,k.imag);
@@ -307,7 +307,7 @@ function audioOscillator(k){
 		if ( k.timer == 0 ) k.reset = true;
 	}
 	
-	k.stop = function(){
+	k.stop = ()=>{
 		k.disconnect();
 		k.dcf.stop();
 		k.stopOsc();
@@ -393,7 +393,7 @@ function audioSetup() {
 		k.setBuffer = _=>_;
 		k.stop = _=>k.disconnect();
 		k.setGain = (gain,time=0)=>{
-			k.gain.setValueAtTime(gain*VOLUME, audio.currentTime+time);
+			k.gain.setValueAtTime(gain*VOLUME, time);
 		}
 		
 		audioData.push(new Uint32Array(128));

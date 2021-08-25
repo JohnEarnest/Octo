@@ -84,8 +84,10 @@ drawOnCanvas(audioPatternCanvas, (x, y, draw) => {
 document.getElementById('audio-play').onclick = _ => {
 	if (!audioPreview) audioPreview = new audioEngine();
 	if (audioPreview) {
+		var curTime = audio.currentTime;
 		audioPreview.setBuffer(readPattern(audioPatternEditor));
-		audioPreview.setGain(1); audioPreview.setGain(0,0.5);
+		audioPreview.setGain(1,curTime);
+		audioPreview.setGain(0,0.5+curTime);
 		audioPreview.setTimer(255); audioPreview.refresh();
 		audioEnable();
 	}
