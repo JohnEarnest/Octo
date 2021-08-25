@@ -234,14 +234,14 @@ function Emulator() {
 	this.pc = 0;        // program counter
 	this.i  = 0;        // index register
 	this.dt = 0;        // delay timer
-	this.st = [0,0];    // sound timers
+	this.st = [0,0,0,0,0];    // sound timers
 	this.hires = false; // are we in SuperChip high res mode?
 	this.flags = [];    // semi-persistent hp48 flag vars
-	this.pattern = [[],[]];  // audio pattern buffers
-	this.pitch = [64,64];  // audio pitch registers
-	this.volume = [255,255]; // audio volume registers
-	this.pitchramp = [0,0];  // audio pitch ramp registers
-	this.volumeramp = [0,0]; // audio volume ramp registers
+	this.pattern = [[],[],[],[],[]];  // audio pattern buffers
+	this.pitch = [64,64,64,64,64,];  // audio pitch registers
+	this.volume = [255,255,255,255,255]; // audio volume registers
+	this.pitchramp = [0,0,0,0,0];  // audio pitch ramp registers
+	this.volumeramp = [0,0,0,0,0]; // audio volume ramp registers
 	this.plane = 1;     // graphics plane
 	this.profile_data = {};
 
@@ -260,12 +260,12 @@ function Emulator() {
 	this.importFlags = function() { return [0, 0, 0, 0, 0, 0, 0, 0]; } // load persistent flags
 	this.exportFlags = function(flags) {}                              // save persistent flags
 	this.buzzTrigger = function(ticks, remainingTicks) {}              // fired when buzzer played
-	this.buzzBuffer  = [_=>_,_=>_]                                     // buzzer's buffer update
-	this.buzzTimer   = [_=>_,_=>_]                                     // buzzer's timer update
-	this.buzzPitch   = [_=>_,_=>_]                                     // buzzer's pitch update
-	this.buzzVolume  = [_=>_,_=>_]                                     // buzzer's volume update
-	this.buzzPitchRamp = [_=>_,_=>_]                                   // buzzer's pitchramp update
-	this.buzzVolumeRamp = [_=>_,_=>_]                                  // buzzer's volumeramp update
+	this.buzzBuffer  = [_=>_,_=>_,_=>_,_=>_,_=>_]                      // buzzer's buffer update
+	this.buzzTimer   = [_=>_,_=>_,_=>_,_=>_,_=>_]                      // buzzer's timer update
+	this.buzzPitch   = [_=>_,_=>_,_=>_,_=>_,_=>_]                      // buzzer's pitch update
+	this.buzzVolume  = [_=>_,_=>_,_=>_,_=>_,_=>_]                      // buzzer's volume update
+	this.buzzPitchRamp = [_=>_,_=>_,_=>_,_=>_,_=>_]                    // buzzer's pitchramp update
+	this.buzzVolumeRamp = [_=>_,_=>_,_=>_,_=>_,_=>_]                   // buzzer's volumeramp update
 
 	this.init = function(rom) {
 		// initialise memory with a new array to ensure that it is of the right size and is initiliased to 0
@@ -292,13 +292,13 @@ function Emulator() {
 		this.pc = 0x200;
 		this.i  = 0;
 		this.dt = 0;
-		this.st = [0,0];
+		this.st = [0,0,0,0,0];
 		this.hires = false;
 		this.plane = 1;
-		this.pitch = [64,64];
-		this.volume = [255,255];
-		this.pitchramp = [0,0];
-		this.volumeramp = [0,0];
+		this.pitch = [64,64,64,64,64];
+		this.volume = [255,255,255,255,255];
+		this.pitchramp = [0,0,0,0,0];
+		this.volumeramp = [0,0,0,0,0];
 
 		// initialize control/debug state
 		this.keys = {};
@@ -358,7 +358,7 @@ function Emulator() {
 		// miscellaneous opcodes
 		switch(rest) {
 			case 0x01: this.plane = (x & 0x3); break;
-			case 0x02: case 0x03: //case 0x04: case 0x05: case 0x06:
+			case 0x02: case 0x03: case 0x04: case 0x05: case 0x06:
 				var r = rest - 0x02;
 				var sampleLength = 16<<(x&3);
 				this.pattern[r] = new Uint8Array(sampleLength)
@@ -369,7 +369,7 @@ function Emulator() {
 			case 0x07: this.v[x] = this.dt; break;
 			case 0x0A: this.waiting = true; this.waitReg = x; break;
 			case 0x15: this.dt = this.v[x]; break;
-			case 0x18: case 0x19: //case 0x1A: case 0x1B: case 0x1C:
+			case 0x18: case 0x19: case 0x1A: case 0x1B: case 0x1C:
 				var r = rest - 0x18;
 				this.buzzTimer[r](this.st[r] = this.v[x]); break;
 			case 0x1E: this.i = (this.i + this.v[x])&0xFFFF; break;
@@ -380,16 +380,16 @@ function Emulator() {
 				this.m[this.i+1] = Math.floor(this.v[x]/10)%10;
 				this.m[this.i+2] = this.v[x]%10;
 				break;
-			case 0x3A: case 0x3B: //case 0x3C: case 0x3D: case 0x3E:
+			case 0x3A: case 0x3B: case 0x3C: case 0x3D: case 0x3E:
 				var r = rest - 0x3A;
 				this.buzzPitch[r](this.pitch[r] = this.v[x]); break;
-			case 0x40: case 0x41: //case 0x42: case 0x43: case 0x44:
+			case 0x40: case 0x41: case 0x42: case 0x43: case 0x44:
 				var r = rest - 0x40;
 				this.buzzVolume[r](this.volume[r] = this.v[x]); break;
-			case 0x45: case 0x46: //case 0x47: case 0x48: case 0x49:
+			case 0x45: case 0x46: case 0x47: case 0x48: case 0x49:
 				var r = rest - 0x45;
 				this.buzzPitchRamp[r](this.pitchramp[r] = this.v[x]); break;
-			case 0x4A: case 0x4B: //case 0x4C: case 0x4D: case 0x4E:
+			case 0x4A: case 0x4B: case 0x4C: case 0x4D: case 0x4E:
 				var r = rest - 0x4A;
 				this.buzzVolumeRamp[r](this.volumeramp[r] = this.v[x]); break;
 			case 0x55:  

@@ -243,27 +243,28 @@ function audioOscillator(k){
 	k.imag = new Float32Array(k.bins);
 	k.wave = audio.createPeriodicWave(k.real,k.imag);
 	
-	k.stopOsc = function(){
-		k.dcf.offset.value = 0;
+	k.stopOsc = function(time=0){
+		k.dcf.offset.setValueAtTime(0,time);
 		if ( !k.oscStopped ){
 			k.oscStopped = true;
-			k.osc.disconnect();
-			k.osc.stop();
+			k.osc.disconnect(time);
+			k.osc.stop(time);
 		}
 	}
 	
-	k.runOsc = function(){
-		if( k.reset ){ k.reset = false; k.stopOsc();}
+	k.runOsc = function(time=0){
+		if( k.reset ){ k.reset = false; k.stopOsc(time);}
 		if ( k.oscStopped  )
 			k.osc = audio.createOscillator();
-		k.osc.detune.value = 1200*(k.pitch-64)/48;
-		k.osc.frequency.value = k.freq;
+		var pitchVal = 1200*(k.pitch-64)/48;
+		k.osc.detune.setValueAtTime(pitchVal,time);
+		k.osc.frequency.setValueAtTime(k.freq,time);
 		k.osc.setPeriodicWave(k.wave);
 		k.dcf.offset.value = k.dcof;
 		if ( k.oscStopped ){
 			k.oscStopped = false;
 			k.osc.connect(k);
-			k.osc.start();
+			k.osc.start(time);
 		}
 	}
 	
@@ -281,22 +282,25 @@ function audioOscillator(k){
 				k.real[x++] = wave[z]/k.norm;
 	}
 	
-	k.refresh = function(){
+	k.refresh = function(time){
 		if(k.updateBuffer){
 			k.updateBuffer = false;
 			var myFFT = FFT(k.real,k.imag);
+			var real = myFFT[0].slice(0,k.half)
+			var imag = myFFT[1].slice(0,k.half)
+			for(var i=0,j=2**0.5;i<k.half;i++){
+				real[i]*=j; imag[i]*=j;
+			}
+			k.dcof = ((real[0]/2) ** 2 +
+				(imag[0]/2) ** 2 ) ** 0.5 - 0.5;
 			k.wave = audio.createPeriodicWave(
-				myFFT[0].slice(0,k.half),
-				myFFT[1].slice(0,k.half),
-				{ disableNormalization: true }
+				real,imag,{disableNormalization:true}
 			)
-			k.dcof = ((myFFT[0][0]/2) ** 2 +
-				(myFFT[1][0]/2) ** 2 ) ** 0.5;
 		}
 		
-		if ( k.timer == 0 ) k.stopOsc(); else k.runOsc();
+		if ( k.timer == 0 ) k.stopOsc(time); else k.runOsc(time);
 		
-		k.setGain(k.volume/255); k.timer -= k.timer > 0;
+		k.setGain(k.volume/255,time); k.timer -= k.timer > 0;
 		k.pitch = Math.min(Math.max(k.pitch+k.pitchRamp,0),255);
 		k.volume = Math.min(Math.max(k.volume+k.volumeRamp,0),255);
 		
@@ -384,7 +388,7 @@ function audioSetup() {
 		k.pitchRamp = 0;
 		k.volumeRamp = 0;
 		
-		k.gain.value=0;
+		k.gain.value = 0;
 		k.refresh = _=>_;
 		k.setBuffer = _=>_;
 		k.stop = _=>k.disconnect();
@@ -421,7 +425,7 @@ function audioEngine(){
 	this.waveData = new Float32Array(1024);
 	this.waveMode = 0;
 	
-	this.setBuffer = function(buffer,mode){
+	this.setBuffer = (buffer,mode)=>{
 		var al=this.waveData.length;
 		var bl=buffer.length;
 		var bits = 1 << mode;
@@ -443,27 +447,13 @@ function audioEngine(){
 			this.waveData,buffer.length*samplesPerByte
 		);
 	}
-	this.setTimer = function(timer){
-		this.audioNode.setTimer(timer);
-	}
-	this.setPitch = function(pitch){
-		this.audioNode.setPitch(pitch);
-	}
-	this.setVolume  = function(volume){
-		this.audioNode.setVolume(volume);
-	}
-	this.setPitchRamp = function(ramp){
-		this.audioNode.setPitchRamp(ramp);
-	}
-	this.setVolumeRamp  = function(ramp){
-		this.audioNode.setVolumeRamp(ramp);
-	}
-	this.setGain = function(gain,time=0){
-		this.audioNode.setGain(gain,time);
-	}
-	this.refresh = function(){
-		this.audioNode.refresh();
-	}
+	this.setTimer = this.audioNode.setTimer
+	this.setPitch = this.audioNode.setPitch
+	this.setVolume  = this.audioNode.setVolume
+	this.setPitchRamp = this.audioNode.setPitchRamp
+	this.setVolumeRamp = this.audioNode.setVolumeRamp
+	this.setGain = this.audioNode.setGain
+	this.refresh = this.audioNode.refresh
 }
 
 /*
