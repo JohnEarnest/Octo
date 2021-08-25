@@ -235,7 +235,7 @@ function audioOscillator(k){
 	k.oscStopped = true;
 	k.reset = false;
 	
-	k.bins = 4096;
+	k.bins = 2048;
 	k.freq = FREQ/128;
 	k.norm = k.bins/2**0.5;
 	k.half = Math.ceil(k.bins/2);
@@ -243,16 +243,16 @@ function audioOscillator(k){
 	k.imag = new Float32Array(k.bins);
 	k.wave = audio.createPeriodicWave(k.real,k.imag);
 	
-	k.stopOsc = function(time=0){
+	k.stopOsc = (time=0)=>{
 		k.dcf.offset.setValueAtTime(0,time);
 		if ( !k.oscStopped ){
 			k.oscStopped = true;
-			k.osc.disconnect(time);
+			k.osc.disconnect();
 			k.osc.stop(time);
 		}
 	}
 	
-	k.runOsc = function(time=0){
+	k.runOsc = (time=0)=>{
 		if( k.reset ){ k.reset = false; k.stopOsc(time);}
 		if ( k.oscStopped  )
 			k.osc = audio.createOscillator();
@@ -392,7 +392,7 @@ function audioSetup() {
 		k.refresh = _=>_;
 		k.setBuffer = _=>_;
 		k.stop = _=>k.disconnect();
-		k.setGain = function (gain,time=0) {
+		k.setGain = (gain,time=0)=>{
 			k.gain.setValueAtTime(gain*VOLUME, audio.currentTime+time);
 		}
 		
