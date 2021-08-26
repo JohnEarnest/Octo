@@ -244,7 +244,7 @@ function audioOscillator(k){
 	k.wave = audio.createPeriodicWave(k.real,k.imag);
 	
 	k.stopOsc = (time=0)=>{
-		k.dcf.offset.setValueAtTime(0,time);
+		if(k.dcf)k.dcf.offset.setValueAtTime(0,time);
 		if ( !k.oscStopped ){
 			k.oscStopped = true;
 			k.osc.disconnect();
@@ -260,7 +260,7 @@ function audioOscillator(k){
 		k.osc.detune.setValueAtTime(pitchVal,time);
 		k.osc.frequency.setValueAtTime(k.freq,time);
 		k.osc.setPeriodicWave(k.wave);
-		k.dcf.offset.value = k.dcof;
+		if(k.dcf)k.dcf.offset.value = k.dcof;
 		if ( k.oscStopped ){
 			k.oscStopped = false;
 			k.osc.connect(k);
@@ -309,16 +309,18 @@ function audioOscillator(k){
 	
 	k.stop = ()=>{
 		k.disconnect();
-		k.dcf.stop();
+		if(k.dcf)k.dcf.stop();
 		k.stopOsc();
 	}
 
 	// this thing keeps the DC offset from
 	// the original wave for the oscillator
-	k.dcf = audio.createConstantSource();  
-	k.dcf.offset.value = 0;
-	k.dcf.connect(k);
-	k.dcf.start();
+	if(audio.createConstantSource){
+		k.dcf = audio.createConstantSource();  
+		k.dcf.offset.value = 0;
+		k.dcf.connect(k);
+		k.dcf.start();
+	}
 	
 	return k;
 }
