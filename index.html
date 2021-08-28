@@ -986,12 +986,10 @@ function runRom(rom) {
   // audio setups
   audioSetup();
   XOAudio = new audioControl();
-  XOAudio.assignTimerSetter(emulator.buzzTimer);
-  XOAudio.assignBufferSetter(emulator.buzzBuffer);
-  XOAudio.assignPitchSetter(emulator.buzzPitch);
-  XOAudio.assignPitchRampSetter(emulator.buzzPitchRamp);
-  XOAudio.assignVolumeSetter(emulator.buzzVolume);
-  XOAudio.assignVolumeRampSetter(emulator.buzzVolumeRamp);
+  XOAudio.assignTimerSetter([emulator.buzzTimer]);
+  XOAudio.assignBufferSetter([emulator.buzzBuffer]);
+  XOAudio.assignPitchSetter([emulator.buzzPitch]);
+  XOAudio.assignPitchRampSetter([emulator.buzzPitchRamp]);
   clearBreakpoint()
   setVisible(runCover, true, 'flex')
   updateMonitor()
@@ -1010,12 +1008,10 @@ function runRom(rom) {
     }
     if (!emulator.breakpoint) {
       emulator.dt -= emulator.dt > 0
-      for(var k=0;k<emulator.st.length;k++)
-        emulator.st[k] -= emulator.st[k] > 0
+      emulator.st -= emulator.st > 0
     }else{
-      for(var k=0;k<emulator.st.length;k++)
-        if(emulator.st[k]>0){
-          emulator.buzzTimer[k](emulator.st[k]=0);
+        if(emulator.st>0){
+          emulator.buzzTimer(emulator.st=0);
         }
     }
     recordFrame()

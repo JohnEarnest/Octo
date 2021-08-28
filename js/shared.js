@@ -186,20 +186,14 @@ AudioBuffer.prototype.dequeue = function(duration) {
 	this.duration -= duration;
 }
 
-var FREQ = 4000;  // default sample playback rate
-var TIMER_FREQ = 62.5;  // framerate (62.5 is the perfect number)
-// since the setInterval() with 1000/60, always ran at 62.5 due to
-// the truncation to 16. 4000 also divisible by 62.5 which is perfect
-var SAMPLES = 128;  // max potential bytes of pattern loaded to buffer
+var FREQ = 4000;
+var TIMER_FREQ = Math.floor(1000/60);
+var SAMPLES = 128;
 var BUFFER_SIZE = SAMPLES * 8;
 
 var PITCH_BIAS = 64;
 var CHANNELS = 5;
 var DEFAULT_AUDIO_MODE = 0;
-// AUDIO MODE 0 = 1-bit
-// AUDIO MODE 1 = 2-bit
-// AUDIO MODE 2 = 4-bit
-// AUDIO MODE 3 = 8-bit
 
 
 function audioEnable() {
