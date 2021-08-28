@@ -326,8 +326,6 @@ function Emulator() {
 		this.st = 0;
 		this.pitch = 64;
 		this.pitchRamp = 0;
-		this.volume = 255;
-		this.volumeRamp = 0;
 		this.hires = false;
 		this.plane = 1;
 

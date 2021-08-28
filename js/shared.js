@@ -260,30 +260,28 @@ var VOLUME = 0.25;
 function playPattern(soundLength,buffer,remainingTicks,startPos=0,pitch=PITCH_BIAS) {
 	if (!audio) { return; }
 	audioEnable()
+
 	var freq = FREQ*2**((pitch-PITCH_BIAS)/48);
 	var samplesPerTick = audio.sampleRate / TIMER_FREQ;
-
-	//  Samples extraction from buffer's bytes
-	var sampleData = new Uint8Array(buffer.length*8);
-	for(var i=0,z=0;i<sampleData.length;z=++z%buffer.length)
-		for (var cell = buffer[z],j=0;j<8;j++,cell&=255)
-			sampleData[i++]=(cell<<=1)&256?255:0
 
 	if (remainingTicks && audioData.length > 0)
 		audioData[audioData.length - 1].dequeue(Math.floor(remainingTicks * samplesPerTick));
 	
-		
-	var samples = Math.ceil(samplesPerTick * soundLength);
+	var samples = samplesPerTick * soundLength ;
+	var bufflen = buffer.length * 8;
 
 	var audioBuffer = new Float32Array(samples);
+
 	var step = freq / audio.sampleRate, pos = startPos;
 	for(var i = 0, il = samples; i < il; i++) {
-		audioBuffer[i] = sampleData[Math.floor(pos)] / 255 - 0.5;
-		pos = ( pos + step ) % sampleData.length;
+		var cell = pos >> 3, shift = pos & 7;
+		audioBuffer[i] = buffer[cell]<<shift&128?1:-1;
+		pos = ( pos + step ) % bufflen;
 	}
-	audioData.push(new AudioBuffer(audioBuffer, Math.floor(soundLength * samplesPerTick)));
+
+	audioData.push(new AudioBuffer(audioBuffer, Math.floor(samples)));
 	
-	return pos;
+	return ( startPos + step * samples) % bufflen;
 }
 
 function audioControl(){
