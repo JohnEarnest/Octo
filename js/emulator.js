@@ -680,12 +680,12 @@ function Emulator() {
 	this.tick = function() {
 		if (this.halted) { return; }
 		this.tickCounter++;
-		//try {
+		try {
 			this.opcode();
-		//}
-		//catch(err) {
-		//	console.log("halted: " + err);
-		//	this.halted = true;
-		//}
+		}
+		catch(err) {
+			console.log("halted: " + err);
+			this.halted = true;
+		}
 	}
 }
