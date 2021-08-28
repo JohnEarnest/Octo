@@ -189,6 +189,7 @@
           <span data-value='dream6800'>Dream</span>
           <span data-value='eti660'>ETI</span>
           <span data-value='fish'>Fish'N'Chips</span>
+          <span data-value='fpchip'>FPChip-8</span>
         </div>
         <div class='preview-container'>
           <canvas id='font-draw' width="290" height="44"></canvas>
@@ -905,7 +906,7 @@ window.onkeyup = event => {
   if (event.key == 'p') { haltProfiler('profiler') }
   if (event.key == 'm') { monitoring = !monitoring; setVisible(document.getElementById('monitor'),monitoring) }
   if (emulator.breakpoint) {
-    if (event.key == 'o') { emulator.tick(); renderDisplay(emulator); haltBreakpoint('single step') }
+    if (event.key == 'o') { emulator.dt = emulator.st = 0; emulator.tick(); renderDisplay(emulator); haltBreakpoint('single step') }
     if (event.key == 'u') { const l = emulator.r.length; if (l>0) { emulator.stack_breakpoint = l-1; clearBreakpoint() } } // step out
     if (event.key == 'l') {
       if ((emulator.m[emulator.pc] & 0xF0) == 0x20) { const l = emulator.r.length; if (l >= 0) { emulator.stack_breakpoint = l; clearBreakpoint(); } }
@@ -973,7 +974,6 @@ function compile() {
 
 const runCover = document.getElementById('run-cover')
 var intervalHandle = null
-var XOAudio,XOAudio2,XOAudio3;
 
 function runRom(rom) {
   if (rom === null) return
@@ -981,31 +981,23 @@ function runRom(rom) {
   emulator.exitVector = stopRom
   emulator.importFlags = _ => getPref('octoFlagRegisters')
   emulator.exportFlags = f => setPref('octoFlagRegisters',f)
-	//emulator setup
+  emulator.buzzTrigger = (ticks, remainingTicks) => playPattern(ticks, emulator.pattern, remainingTicks)
   emulator.init(rom)
+  // audio setups
+  audioSetup();
+  XOAudio = new audioControl();
+  XOAudio.assignTimerSetter(emulator.buzzTimer);
+  XOAudio.assignBufferSetter(emulator.buzzBuffer);
+  XOAudio.assignPitchSetter(emulator.buzzPitch);
+  XOAudio.assignPitchRampSetter(emulator.buzzPitchRamp);
+  XOAudio.assignVolumeSetter(emulator.buzzVolume);
+  XOAudio.assignVolumeRampSetter(emulator.buzzVolumeRamp);
   clearBreakpoint()
   setVisible(runCover, true, 'flex')
   updateMonitor()
   resetLinter()
   runCover.style.backgroundColor = emulator.quietColor
   setRenderTarget(5, 'target')
-  XOAudio = [];
-	emulator.buzzRef = []
-	for(var z=0;z<emulator.st.length;z++){
-		var k = new audioEngine();
-		k.setGain(1); XOAudio[z] = k;
-		k.setBuffer(emulator.pattern[z]);
-		k.setVolume(emulator.volume[z]);
-		k.setPitch(emulator.pitch[z]);
-		emulator.buzzBuffer[z] = k.setBuffer;
-		emulator.buzzTimer[z] = k.setTimer;
-		emulator.buzzPitch[z] = k.setPitch;
-		emulator.buzzVolume[z] = k.setVolume;
-		emulator.buzzPitchRamp[z] = k.setPitchRamp;
-		emulator.buzzVolumeRamp[z] = k.setVolumeRamp;
-	}
-	//start emulation
-	var frameRate = 62.5;
   intervalHandle = setInterval(_ => {
     for(var z = 0; (z < emulator.tickrate) && (!emulator.waiting); z++) {
       if (!emulator.breakpoint) {
@@ -1016,30 +1008,23 @@ function runRom(rom) {
         if (emulator.r.length == emulator.stack_breakpoint) { emulator.stack_breakpoint = -1; haltBreakpoint('step out') }
       }
     }
-		
     if (!emulator.breakpoint) {
-			for(var z=0;z<emulator.st.length;z++)
-				emulator.st[z] -= emulator.st[z] > 0;
-      emulator.dt -= emulator.dt > 0;
+      emulator.dt -= emulator.dt > 0
+      for(var k=0;k<emulator.st.length;k++)
+        emulator.st[k] -= emulator.st[k] > 0
     }else{
-			for(var z=0;z<emulator.st.length;z++){
-				if (emulator.st[z] > 0) {
-					XOAudio[z].setTimer(0);
-					emulator.st[z] = 0
-				}
-			}
-			emulator.dt = 0;
-	  }
-		
+      for(var k=0;k<emulator.st.length;k++)
+        if(emulator.st[k]>0){
+          emulator.buzzTimer[k](emulator.st[k]=0);
+        }
+    }
     recordFrame()
+    XOAudio.refresh()
     renderDisplay(emulator)
-		var audioTimer = Math.ceil(frameRate*audio.currentTime)/frameRate;
-		for(var z=0;z<emulator.st.length;z++)
-				XOAudio[z].refresh(audioTimer);
     if (monitoring && !emulator.halted && !emulator.breakpoint) updateMonitor()
     if (emulator.halted) return
-    runCover.style.backgroundColor = (emulator.st[0] > 0) ? emulator.buzzColor : emulator.quietColor
-  }, 1000/frameRate)
+    runCover.style.backgroundColor = (emulator.st > 0) ? emulator.buzzColor : emulator.quietColor
+  }, 1000/60)
 }
 
 function stopRom() {
