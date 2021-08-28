@@ -390,7 +390,7 @@ function Emulator() {
 		switch(rest) {
 			case 0x01: this.plane = (x & 0x3); break;
 			case 0x02:
-				for(var z = 0; z < 16; z++) this.pattern[z] = this.m[this.i+z%l];
+				for(var z = 0; z < 16; z++) this.pattern[z] = this.m[this.i+z];
 				this.buzzBuffer(this.pattern); break;
 			case 0x07: this.v[x] = this.dt; break;
 			case 0x0A: this.waiting = true; this.waitReg = x; break;

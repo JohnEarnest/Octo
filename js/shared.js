@@ -187,12 +187,12 @@ AudioBuffer.prototype.dequeue = function(duration) {
 }
 
 var FREQ = 4000;
-var TIMER_FREQ = Math.floor(1000/60);
+var TIMER_FREQ = 62.5;
 var SAMPLES = 128;
 var BUFFER_SIZE = SAMPLES * 8;
 
+var CHANNELS = 1;
 var PITCH_BIAS = 64;
-var CHANNELS = 5;
 var DEFAULT_AUDIO_MODE = 0;
 
 
