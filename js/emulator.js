@@ -272,11 +272,11 @@ function Emulator() {
 	this.i  = 0;        // index register
 	this.dt = 0;        // delay timer
 	this.st = [0,0];    // sound timers
-	this.pitch     = [ 64, 64, 64, 64, 64];  // audio pitch registers        
-	this.pitchRamp = [  0,  0,  0,  0,  0];  // audio pitch ramp registers   
-	this.volume    = [255,255,255,255,255];  // audio envelope registers     
-	this.volumeRamp= [  0,  0,  0,  0,  0];  // audio envelope ramp registers
-	this.pattern   = [ [], [], [], [], []];  // audio pattern buffers
+	this.pitch     = [ 64] // , 64, 64, 64, 64];  // audio pitch registers        
+	this.pitchRamp = [  0] // ,  0,  0,  0,  0];  // audio pitch ramp registers   
+	this.volume    = [255] // ,255,255,255,255];  // audio envelope registers     
+	this.volumeRamp= [  0] // ,  0,  0,  0,  0];  // audio envelope ramp registers
+	this.pattern   = [ []] // , [], [], [], []];  // audio pattern buffers
 	this.hires = false; // are we in SuperChip high res mode?
 	this.flags = [];    // semi-persistent hp48 flag vars
 	this.plane = 1;     // graphics plane
@@ -296,12 +296,12 @@ function Emulator() {
 	this.exitVector  = function() {}                                   // fired by 'exit'
 	this.importFlags = function() { return [0, 0, 0, 0, 0, 0, 0, 0]; } // load persistent flags
 	this.exportFlags = function(flags) {}                              // save persistent flags
-	this.buzzTimer     = [_=>_,_=>_,_=>_,_=>_,_=>_]     // audio timer set         (5 channels)
-	this.buzzBuffer    = [_=>_,_=>_,_=>_,_=>_,_=>_]     // audio buffer flush      (5 channels)
-	this.buzzPitch     = [_=>_,_=>_,_=>_,_=>_,_=>_]     // audio pitch set         (5 channels)
-	this.buzzPitchRamp = [_=>_,_=>_,_=>_,_=>_,_=>_]     // audio pitch ramp set    (5 channels)
-	this.buzzVolume    = [_=>_,_=>_,_=>_,_=>_,_=>_]     // audio envelope set      (5 channels)
-	this.buzzVolumeRamp= [_=>_,_=>_,_=>_,_=>_,_=>_]     // audio envelope ramp set (5 channels)
+	this.buzzTimer     = [_=>_]//,_=>_,_=>_,_=>_,_=>_]     // audio timer set         (5 channels)
+	this.buzzBuffer    = [_=>_]//,_=>_,_=>_,_=>_,_=>_]     // audio buffer flush      (5 channels)
+	this.buzzPitch     = [_=>_]//,_=>_,_=>_,_=>_,_=>_]     // audio pitch set         (5 channels)
+	this.buzzPitchRamp = [_=>_]//,_=>_,_=>_,_=>_,_=>_]     // audio pitch ramp set    (5 channels)
+	this.buzzVolume    = [_=>_]//,_=>_,_=>_,_=>_,_=>_]     // audio envelope set      (5 channels)
+	this.buzzVolumeRamp= [_=>_]//,_=>_,_=>_,_=>_,_=>_]     // audio envelope ramp set (5 channels)
 
 	this.init = function(rom) {
 		// initialise memory with a new array to ensure that it is of the right size and is initiliased to 0
@@ -320,8 +320,11 @@ function Emulator() {
 		for(var z = 0; z < font.big.length;  z++) { this.m[z + font.small.length] = font.big[z]; }
 		for(var z = 0; z < rom.rom.length;   z++) { this.m[0x200+z] = rom.rom[z]; }
 		for(var z = 0; z < 16;               z++) { this.v[z] = 0; }
-		for(var k = 0; k < this.pattern.length ; k++)
-			for(var z = 0; z < 128;          z++) { this.pattern[k][z] = 0; }
+		for(var k = 0; k < this.pattern.length ; k++){
+			this.pattern[k] = new Uint8Array(16)//128)
+			for(var z = 0; z < this.pattern[k].length;z++)
+				this.pattern[k][z] = 0;
+		}
 
 		// initialize interpreter state
 		this.r = [];
@@ -394,15 +397,16 @@ function Emulator() {
 			case 0x01:
 				this.plane = (x & 0x3);
 				break;
-			case 0x02: case 0x03: case 0x04: case 0x05: case 0x06:
+			case 0x02: //case 0x03: case 0x04: case 0x05: case 0x06:
 				var ch = rest - 0x02;
 				for(var z = 0, l = 16 << (x&3); z < this.pattern[ch].length; z++)
 					this.pattern[ch][z] = this.m[this.i+z%l];
-				this.buzzBuffer[ch](this.pattern[ch],x>>2&3); break;
+				this.buzzBuffer[ch](this.pattern[ch])//,x>>2&3);
+				break;
 			case 0x07: this.v[x] = this.dt; break;
 			case 0x0A: this.waiting = true; this.waitReg = x; break;
 			case 0x15: this.dt = this.v[x]; break;
-			case 0x18: case 0x19: case 0x1A: case 0x1B: case 0x1C:
+			case 0x18: //case 0x19: case 0x1A: case 0x1B: case 0x1C:
 				var ch = rest - 0x18;
 				this.buzzTimer[ch](this.st[ch] = this.v[x]); break;
 			case 0x1E: this.i = (this.i + this.v[x])&0xFFFF; break;
@@ -413,18 +417,18 @@ function Emulator() {
 				this.m[this.i+1] = Math.floor(this.v[x]/10)%10;
 				this.m[this.i+2] = this.v[x]%10;
 				break;
-			case 0x3A: case 0x3B: case 0x3C: case 0x3D: case 0x3E:
+			case 0x3A: //case 0x3B: case 0x3C: case 0x3D: case 0x3E:
 				var ch = rest - 0x3A;
 				this.buzzPitch[ch](this.pitch[ch] = this.v[x]); break
-			case 0x40: case 0x41: case 0x42: case 0x43: case 0x44:
-				var ch = rest - 0x40; 
-				this.buzzVolume[ch](this.volume[ch] = this.v[x]); break
-			case 0x45: case 0x46: case 0x47: case 0x48: case 0x49:
+		//	case 0x40: //case 0x41: case 0x42: case 0x43: case 0x44:
+		//		var ch = rest - 0x40; 
+		//		this.buzzVolume[ch](this.volume[ch] = this.v[x]); break
+			case 0x45: //case 0x46: case 0x47: case 0x48: case 0x49:
 				var ch = rest - 0x45; 
 				this.buzzPitchRamp[ch](this.pitchRamp[ch] = this.v[x]); break
-			case 0x4A: case 0x4B: case 0x4C: case 0x4D: case 0x4E:
-				var ch = rest - 0x4A;
-				this.buzzVolumeRamp[ch](this.volumeRamp[ch] = this.v[x]); break
+		//	case 0x4A: case 0x4B: case 0x4C: case 0x4D: case 0x4E:
+		//		var ch = rest - 0x4A;
+		//		this.buzzVolumeRamp[ch](this.volumeRamp[ch] = this.v[x]); break
 			case 0x55:
 				for(var z = 0; z <= x; z++) { this.m[this.i+z] = this.v[z]; }
 				if (!this.loadStoreQuirks) { this.i = (this.i+x+1)&0xFFFF; }
