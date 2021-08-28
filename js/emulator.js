@@ -296,12 +296,12 @@ function Emulator() {
 	this.exitVector  = function() {}                                   // fired by 'exit'
 	this.importFlags = function() { return [0, 0, 0, 0, 0, 0, 0, 0]; } // load persistent flags
 	this.exportFlags = function(flags) {}                              // save persistent flags
-	this.buzzTimer     = [_=>_]//,_=>_,_=>_,_=>_,_=>_]     // audio timer set         (5 channels)
-	this.buzzBuffer    = [_=>_]//,_=>_,_=>_,_=>_,_=>_]     // audio buffer flush      (5 channels)
-	this.buzzPitch     = [_=>_]//,_=>_,_=>_,_=>_,_=>_]     // audio pitch set         (5 channels)
-	this.buzzPitchRamp = [_=>_]//,_=>_,_=>_,_=>_,_=>_]     // audio pitch ramp set    (5 channels)
-	this.buzzVolume    = [_=>_]//,_=>_,_=>_,_=>_,_=>_]     // audio envelope set      (5 channels)
-	this.buzzVolumeRamp= [_=>_]//,_=>_,_=>_,_=>_,_=>_]     // audio envelope ramp set (5 channels)
+	this.buzzTimer     = [_=>_]//,_=>_,_=>_,_=>_,_=>_]     // audio timer set
+	this.buzzBuffer    = [_=>_]//,_=>_,_=>_,_=>_,_=>_]     // audio buffer flush
+	this.buzzPitch     = [_=>_]//,_=>_,_=>_,_=>_,_=>_]     // audio pitch set
+	this.buzzPitchRamp = [_=>_]//,_=>_,_=>_,_=>_,_=>_]     // audio pitch ramp set
+	this.buzzVolume    = [_=>_]//,_=>_,_=>_,_=>_,_=>_]     // audio envelope set
+	this.buzzVolumeRamp= [_=>_]//,_=>_,_=>_,_=>_,_=>_]     // audio envelope ramp set
 
 	this.init = function(rom) {
 		// initialise memory with a new array to ensure that it is of the right size and is initiliased to 0
