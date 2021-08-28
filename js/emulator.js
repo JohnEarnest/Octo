@@ -331,9 +331,11 @@ function Emulator() {
 		this.pc = 0x200;
 		this.i  = 0;
 		this.dt = 0;
-		this.st = [0,0];
-		this.pitch = [64,64];
-		this.pitchRamp = [0,0];
+		this.st = [0]//,0,0,0,0];
+		this.pitch = [64]//,64,64,64,64];
+		this.pitchRamp = [0]//,0,0,0,0];
+		this.volume = [255]//,255,255,255,255];
+		this.volumeRamp = [0]//,0,0,0,0];
 		this.hires = false;
 		this.plane = 1;
 
