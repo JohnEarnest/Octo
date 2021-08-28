@@ -334,8 +334,8 @@ function channelControl(channelTarget){
 		if (this.timer>0)
 			this.position = playPattern(1,this.buffer,0,this.channel,
 				this.mode,this.position,this.pitch,this.volume/255);
-		this.pitch=Math.min(Math.max(this.pitch+this.pitchRamp/4,0),255);
-		this.volume=Math.min(Math.max(this.volume+this.volumeRamp/4,0),255);
+		this.pitch=Math.min(Math.max(this.pitch+this.pitchRamp/4,0),255.75);
+		this.volume=Math.min(Math.max(this.volume+this.volumeRamp/4,0),255.75);
 		this.timer-=this.timer>0;
 		if(this.timer == 0) this.reset = true;
 	}
