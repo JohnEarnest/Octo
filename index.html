@@ -1001,7 +1001,7 @@ function runRom(rom) {
   var last = Date.now(), diff, origin = last;
   intervalHandle = setInterval(_ => {
     diff = (Date.now() - last); last += diff; origin += frameTime;
-    XOAudio.refresh((Math.abs(last-origin)>1000?diff:frameTime)/1000);
+    XOAudio.refresh((Math.abs(last-origin)/2>frameTime?diff:frameTime)/1000);
     for(var z = 0; (z < emulator.tickrate) && (!emulator.waiting); z++) {
       if (!emulator.breakpoint) {
         if (emulator.vBlankQuirks && ((emulator.m[emulator.pc] & 0xF0) == 0xD0)) { z = emulator.tickrate }
