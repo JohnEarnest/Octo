@@ -638,7 +638,7 @@ input:focus { outline: none; }
 .debug-lint-message tt { color:orange; }
 
 #run-container { display: flex; flex-direction: row; justify-content: center;}
-#run-container canvas { z-index: -1; }
+#run-container canvas { z-index: 1000; }
 
 #monitor { font-family: monospace; text-shadow: black 0 0 5px; display:none; position:fixed; right:10px;top:10px; max-width:420px; }
 #monitor>table { border-collapse: collapse; }
@@ -901,7 +901,10 @@ window.onkeyup = event => {
     emulator.v[emulator.waitReg] = kindex
   }
   if (event.key == '`') { stopRom() }
-  if (event.key == 'i') { emulator.breakpoint ? clearBreakpoint() : haltBreakpoint('user interrupt') }
+  if (event.key == 'i') {
+    emulator.breakpoint ? clearBreakpoint() : haltBreakpoint('user interrupt');
+    var k = document.getElementById("run-overlay").style.zIndex = "1001";
+  }
   if (event.key == 'p') { haltProfiler('profiler') }
   if (event.key == 'm') { monitoring = !monitoring; setVisible(document.getElementById('monitor'),monitoring) }
   if (emulator.breakpoint) {
@@ -1018,7 +1021,7 @@ function runRom(rom) {
     if (monitoring && !emulator.halted && !emulator.breakpoint) updateMonitor()
     if (emulator.halted) return
     runCover.style.backgroundColor = (emulator.st > 0) ? emulator.buzzColor : emulator.quietColor
-  }, 1000/60)
+  }, Math.floor(1000/60))
 }
 
 function stopRom() {

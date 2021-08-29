@@ -175,7 +175,7 @@ AudioBuffer.prototype.write = function(buffer, index, size) {
 	var end = index + size;
 
 	for(var i = index; i < end; ++i) {
-		buffer[i] += this.buffer[this.pointer++];
+		buffer[i] = this.buffer[this.pointer++];
 		this.pointer %= bufferSize;
 	}
 
@@ -187,9 +187,8 @@ AudioBuffer.prototype.dequeue = function(duration) {
 }
 
 var FREQ = 4000;
-var TIMER_FREQ = 62.5;
-var CHANNELS = 1;
 var PITCH_BIAS = 64;
+var TIMER_FREQ = 62.5;
 
 function audioEnable() {
 	// this will only work if called directly from a user-generated input handler:
@@ -225,7 +224,7 @@ function audioSetup() {
 			}
 
 			while(index < samples_n) {
-				outputData[index++] += 0;
+				outputData[index++] = 0;
 			}
 			//the last one can be long sound with high value of buzzer, so always keep it
 			if (audioData.length > 1) {
