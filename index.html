@@ -998,33 +998,35 @@ function runRom(rom) {
   runCover.style.backgroundColor = emulator.quietColor
   setRenderTarget(5, 'target')
   var frameTime = Math.floor(1000/60);
-  var last = Date.now(), diff, origin = last;
+  var last = Date.now(), diff, origin = last+frameTime/2;
   intervalHandle = setInterval(_ => {
-    diff = (Date.now() - last); last += diff; origin += frameTime;
-    XOAudio.refresh((Math.abs(last-origin)/2>frameTime?diff:frameTime)/1000);
-    for(var z = 0; (z < emulator.tickrate) && (!emulator.waiting); z++) {
+    diff = (Date.now() - last); last += diff;
+    for(var k = 0; origin < last - frameTime;origin += frameTime,k++){
+      for(var z = 0; (z < emulator.tickrate) && (!emulator.waiting); z++) {
+        if (!emulator.breakpoint) {
+          if (emulator.vBlankQuirks && ((emulator.m[emulator.pc] & 0xF0) == 0xD0)) { z = emulator.tickrate }
+          if (emulator.linted) lint()
+          emulator.tick()
+          if (emulator.pc in emulator.metadata.breakpoints) { haltBreakpoint(emulator.metadata.breakpoints[emulator.pc]) }
+          if (emulator.r.length == emulator.stack_breakpoint) { emulator.stack_breakpoint = -1; haltBreakpoint('step out') }
+        }
+      }
       if (!emulator.breakpoint) {
-        if (emulator.vBlankQuirks && ((emulator.m[emulator.pc] & 0xF0) == 0xD0)) { z = emulator.tickrate }
-        if (emulator.linted) lint()
-        emulator.tick()
-        if (emulator.pc in emulator.metadata.breakpoints) { haltBreakpoint(emulator.metadata.breakpoints[emulator.pc]) }
-        if (emulator.r.length == emulator.stack_breakpoint) { emulator.stack_breakpoint = -1; haltBreakpoint('step out') }
+        emulator.dt -= emulator.dt > 0
+        emulator.st -= emulator.st > 0
+      }else{
+        if(emulator.st>0){
+          emulator.buzzTimer(emulator.st=0);
+        }
       }
+      recordFrame()
+      XOAudio.refresh(frameTime/1000);
     }
-    if (!emulator.breakpoint) {
-      //console.log(diff+"ms, "+audioData.length+" queue"+(audioData.length>1?"s":""));
-      emulator.dt -= emulator.dt > 0
-      emulator.st -= emulator.st > 0
-    }else{
-      if(emulator.st>0){
-        emulator.buzzTimer(emulator.st=0);
-      }
-    }
-    recordFrame()
     renderDisplay(emulator)
     if (monitoring && !emulator.halted && !emulator.breakpoint) updateMonitor()
     if (emulator.halted) return
     runCover.style.backgroundColor = (emulator.st > 0) ? emulator.buzzColor : emulator.quietColor
+    //console.log(diff+"ms, "+k+" ticks, "+audioData.length+" queues");
   }, frameTime)
 }
 
