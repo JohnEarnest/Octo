@@ -997,8 +997,11 @@ function runRom(rom) {
   resetLinter()
   runCover.style.backgroundColor = emulator.quietColor
   setRenderTarget(5, 'target')
-  var last = Date.now(), diff;
+  var frameTime = Math.floor(1000/60);
+  var last = Date.now(), diff, origin = last;
   intervalHandle = setInterval(_ => {
+    diff = (Date.now() - last); last += diff; origin += frameTime;
+    XOAudio.refresh((Math.abs(last-origin)>1000?diff:frameTime)/1000);
     for(var z = 0; (z < emulator.tickrate) && (!emulator.waiting); z++) {
       if (!emulator.breakpoint) {
         if (emulator.vBlankQuirks && ((emulator.m[emulator.pc] & 0xF0) == 0xD0)) { z = emulator.tickrate }
@@ -1009,6 +1012,7 @@ function runRom(rom) {
       }
     }
     if (!emulator.breakpoint) {
+      //console.log(diff+"ms, "+audioData.length+" queue"+(audioData.length>1?"s":""));
       emulator.dt -= emulator.dt > 0
       emulator.st -= emulator.st > 0
     }else{
@@ -1018,11 +1022,10 @@ function runRom(rom) {
     }
     recordFrame()
     renderDisplay(emulator)
-    last += diff = Date.now() - last; XOAudio.refresh(diff/1000); console.log(diff)
     if (monitoring && !emulator.halted && !emulator.breakpoint) updateMonitor()
     if (emulator.halted) return
     runCover.style.backgroundColor = (emulator.st > 0) ? emulator.buzzColor : emulator.quietColor
-  }, 1000/60)
+  }, frameTime)
 }
 
 function stopRom() {

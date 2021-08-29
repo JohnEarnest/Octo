@@ -260,11 +260,12 @@ function playPattern(soundLength,buffer,remainingTime,startPos=0,pitch=PITCH_BIA
 	audioEnable()
 
 	var freq = FREQ*2**((pitch-PITCH_BIAS)/48);
+	var samples = Math.ceil(audio.sampleRate * soundLength);
+	var samplesBack = Math.ceil(audio.sampleRate * remainingTime);
 
 	if (remainingTime && audioData.length > 0)
-		audioData[audioData.length - 1].dequeue(Math.floor(remainingTime * audio.sampleRate));
+		audioData[audioData.length - 1].dequeue(samplesBack);
 	
-	var samples = audio.sampleRate * soundLength ;
 	var bufflen = buffer.length * 8;
 
 	var audioBuffer = new Float32Array(samples);
@@ -276,9 +277,9 @@ function playPattern(soundLength,buffer,remainingTime,startPos=0,pitch=PITCH_BIA
 		pos = ( pos + step ) % bufflen;
 	}
 
-	audioData.push(new AudioBuffer(audioBuffer, Math.floor(samples)));
+	audioData.push(new AudioBuffer(audioBuffer, samples));
 	
-	return ( startPos + step * ( samples - audio.sampleRate * remainingTime ) ) % bufflen;
+	return ( startPos + step * ( samples - samplesBack) ) % bufflen;
 }
 
 function audioControl(){
