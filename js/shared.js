@@ -292,12 +292,8 @@ function audioControl(){
 	this.ramp = 0;
 
 	this.refresh = _ => {
-		if (this.reset) {
-			this.position = 0; this.reset = false;
-			if (this.timer>0) playPattern(1/20,[0],0,0) // stuff a queue back
-		}
-		if (this.timer>0)
-			this.position = playPattern(_,this.buffer,0,this.position,this.pitch);
+		if (this.reset) this.position = 0; this.reset = false;
+		if (this.timer>0) this.position = playPattern(_,this.buffer,0,this.position,this.pitch);
 		this.pitch=Math.min(Math.max(this.pitch+this.ramp/4,0),255.75);
 		this.timer-=this.timer>0;
 		if(this.timer == 0) this.reset = true;
