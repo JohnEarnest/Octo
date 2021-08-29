@@ -188,7 +188,6 @@ AudioBuffer.prototype.dequeue = function(duration) {
 
 var FREQ = 4000;
 var PITCH_BIAS = 64;
-var TIMER_FREQ = 62.5;
 
 function audioEnable() {
 	// this will only work if called directly from a user-generated input handler:
@@ -256,31 +255,30 @@ function stopAudio() {
 
 var VOLUME = 0.25;
 
-function playPattern(soundLength,buffer,remainingTicks,startPos=0,pitch=PITCH_BIAS) {
+function playPattern(soundLength,buffer,remainingTime,startPos=0,pitch=PITCH_BIAS) {
 	if (!audio) { return; }
 	audioEnable()
 
 	var freq = FREQ*2**((pitch-PITCH_BIAS)/48);
-	var samplesPerTick = audio.sampleRate / TIMER_FREQ;
 
-	if (remainingTicks && audioData.length > 0)
-		audioData[audioData.length - 1].dequeue(Math.floor(remainingTicks * samplesPerTick));
+	if (remainingTime && audioData.length > 0)
+		audioData[audioData.length - 1].dequeue(Math.floor(remainingTime * audio.sampleRate));
 	
-	var samples = samplesPerTick * soundLength ;
+	var samples = audio.sampleRate * soundLength ;
 	var bufflen = buffer.length * 8;
 
 	var audioBuffer = new Float32Array(samples);
 
 	var step = freq / audio.sampleRate, pos = startPos;
 	for(var i = 0, il = samples; i < il; i++) {
-		var cell = pos >> 3, shift = pos & 7;
-		audioBuffer[i] = buffer[cell]<<shift&128?1:-1;
+		var cell = pos >> 3, shift = pos & 7 ^ 7;
+		audioBuffer[i] = buffer[cell] >> shift & 1;
 		pos = ( pos + step ) % bufflen;
 	}
 
 	audioData.push(new AudioBuffer(audioBuffer, Math.floor(samples)));
 	
-	return ( startPos + step * ( samples - samplesPerTick * remainingTicks ) ) % bufflen;
+	return ( startPos + step * ( samples - audio.sampleRate * remainingTime ) ) % bufflen;
 }
 
 function audioControl(){
@@ -293,9 +291,12 @@ function audioControl(){
 	this.ramp = 0;
 
 	this.refresh = _ => {
-		if (this.reset) { this.position = 0; this.reset = false; }
+		if (this.reset) {
+			this.position = 0; this.reset = false;
+			if (this.timer>0) playPattern(1/20,[0],0,0) // stuff a queue back
+		}
 		if (this.timer>0)
-			this.position = playPattern(2,this.buffer,1,this.position,this.pitch);
+			this.position = playPattern(_,this.buffer,0,this.position,this.pitch);
 		this.pitch=Math.min(Math.max(this.pitch+this.ramp/4,0),255.75);
 		this.timer-=this.timer>0;
 		if(this.timer == 0) this.reset = true;

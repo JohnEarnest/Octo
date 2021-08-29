@@ -997,6 +997,7 @@ function runRom(rom) {
   resetLinter()
   runCover.style.backgroundColor = emulator.quietColor
   setRenderTarget(5, 'target')
+  var last = Date.now(), diff;
   intervalHandle = setInterval(_ => {
     for(var z = 0; (z < emulator.tickrate) && (!emulator.waiting); z++) {
       if (!emulator.breakpoint) {
@@ -1011,17 +1012,17 @@ function runRom(rom) {
       emulator.dt -= emulator.dt > 0
       emulator.st -= emulator.st > 0
     }else{
-        if(emulator.st>0){
-          emulator.buzzTimer(emulator.st=0);
-        }
+      if(emulator.st>0){
+        emulator.buzzTimer(emulator.st=0);
+      }
     }
     recordFrame()
-    XOAudio.refresh()
     renderDisplay(emulator)
+    last += diff = Date.now() - last; XOAudio.refresh(diff/1000); console.log(diff)
     if (monitoring && !emulator.halted && !emulator.breakpoint) updateMonitor()
     if (emulator.halted) return
     runCover.style.backgroundColor = (emulator.st > 0) ? emulator.buzzColor : emulator.quietColor
-  }, Math.floor(1000/60))
+  }, 1000/60)
 }
 
 function stopRom() {

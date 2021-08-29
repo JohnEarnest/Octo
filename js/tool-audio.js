@@ -85,7 +85,7 @@ drawOnCanvas(audioPatternCanvas, (x, y, draw) => {
 
 document.getElementById('audio-play').onclick = _ => {
 	if (audioSetup()) {
-		playPattern(30, readPattern(audioPatternEditor))
+		playPattern(0.5, readPattern(audioPatternEditor))
 	}
 	else {
 		document.getElementById('audio-error').innerHTML = 'Your browser does not support HTML5 Audio!'
