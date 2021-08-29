@@ -187,12 +187,12 @@ var bigfonts = {
 	none: new Array(16*10).fill(0x00),
 }
 var fontsets = {
-	octo     : { small: smallfonts.octo,      big: bigfonts.octo   },
-	vip      : { small: smallfonts.vip,       big: bigfonts.none   },
-	dream6800: { small: smallfonts.dream6800, big: bigfonts.none   },
-	eti660   : { small: smallfonts.eti660,    big: bigfonts.none   },
-	schip    : { small: smallfonts.octo,      big: bigfonts.schip  },
-	fish     : { small: smallfonts.fish,      big: bigfonts.fish   },
+	octo     : { small: smallfonts.octo,      big: bigfonts.octo  },
+	vip      : { small: smallfonts.vip,       big: bigfonts.none  },
+	dream6800: { small: smallfonts.dream6800, big: bigfonts.none  },
+	eti660   : { small: smallfonts.eti660,    big: bigfonts.none  },
+	schip    : { small: smallfonts.octo,      big: bigfonts.schip },
+	fish     : { small: smallfonts.fish,      big: bigfonts.fish  },
 }
 
 ////////////////////////////////////
@@ -235,9 +235,9 @@ function Emulator() {
 	this.i  = 0;        // index register
 	this.dt = 0;        // delay timer
 	this.st = 0;        // sound timer
-	this.pitch     = 64; // audio pitch register
-	this.pitchRamp =  0; // audio pitch ramp register
-	this.pattern   = []; // audio pattern buffer
+	this.pitch   = 64;  // audio pitch register
+	this.ramp    =  0;  // audio pitch ramp register
+	this.pattern = [];  // audio pattern buffer
 	this.hires = false; // are we in SuperChip high res mode?
 	this.flags = [];    // semi-persistent hp48 flag vars
 	this.plane = 1;     // graphics plane
@@ -257,10 +257,10 @@ function Emulator() {
 	this.exitVector  = function() {}                                   // fired by 'exit'
 	this.importFlags = function() { return [0, 0, 0, 0, 0, 0, 0, 0]; } // load persistent flags
 	this.exportFlags = function(flags) {}                              // save persistent flags
-	this.buzzTimer     = function(timer) {}
-	this.buzzBuffer    = function(buffer) {}
-	this.buzzPitch     = function(pitch) {}
-	this.buzzPitchRamp = function(ramp) {}
+	this.buzzTimer   = function(timer) {}
+	this.buzzBuffer  = function(buffer) {}
+	this.buzzPitch   = function(pitch) {}
+	this.buzzRamp    = function(ramp) {}
 
 	this.init = function(rom) {
 		// initialise memory with a new array to ensure that it is of the right size and is initiliased to 0
@@ -288,7 +288,7 @@ function Emulator() {
 		this.dt = 0;
 		this.st = 0;
 		this.pitch = 64;
-		this.pitchRamp = 0;
+		this.ramp = 0;
 		this.hires = false;
 		this.plane = 1;
 
@@ -366,7 +366,7 @@ function Emulator() {
 				this.m[this.i+2] = this.v[x]%10;
 				break;
 			case 0x3A: this.buzzPitch(this.pitch = this.v[x]); break;
-			case 0x45: this.buzzPitchRamp(this.pitchRamp = this.v[x]); break;
+			case 0x45: this.buzzRamp(this.ramp = this.v[x]); break;
 			case 0x55:
 				for(var z = 0; z <= x; z++) { this.m[this.i+z] = this.v[z]; }
 				if (!this.loadStoreQuirks) { this.i = (this.i+x+1)&0xFFFF; }

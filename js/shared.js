@@ -280,7 +280,7 @@ function playPattern(soundLength,buffer,remainingTicks,startPos=0,pitch=PITCH_BI
 
 	audioData.push(new AudioBuffer(audioBuffer, Math.floor(samples)));
 	
-	return ( startPos + step * samples) % bufflen;
+	return ( startPos + step * ( samples - samplesPerTick * remainingTicks ) ) % bufflen;
 }
 
 function audioControl(){
@@ -295,7 +295,7 @@ function audioControl(){
 	this.refresh = _ => {
 		if (this.reset) { this.position = 0; this.reset = false; }
 		if (this.timer>0)
-			this.position = playPattern(1,this.buffer,0,this.position,this.pitch);
+			this.position = playPattern(2,this.buffer,1,this.position,this.pitch);
 		this.pitch=Math.min(Math.max(this.pitch+this.ramp/4,0),255.75);
 		this.timer-=this.timer>0;
 		if(this.timer == 0) this.reset = true;

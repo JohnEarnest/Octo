@@ -987,10 +987,10 @@ function runRom(rom) {
   // audio setups
   audioSetup();
   XOAudio = new audioControl();
-  emulator.buzzTimer = _ => XOAudio.setTimer(_);
+  emulator.buzzTimer  = _ => XOAudio.setTimer(_);
   emulator.buzzBuffer = _ => XOAudio.setBuffer(_);
-  emulator.buzzPitch = _ => XOAudio.setPitch(_);
-  emulator.buzzPitchRamp = _ => XOAudio.setRamp(_);
+  emulator.buzzPitch  = _ => XOAudio.setPitch(_);
+  emulator.buzzRamp   = _ => XOAudio.setRamp(_);
   clearBreakpoint()
   setVisible(runCover, true, 'flex')
   updateMonitor()
