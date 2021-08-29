@@ -48,11 +48,15 @@ function generateFrequency(frequency, cutoff) {
 	// 128 samples is (1 seconds / 4000 * 128) = .032 seconds.
 	// This also means that a full 128 bit pattern is ~ 2/60ths of a second.
 	// A sine wave at N hz would be given by sin(t * N * 2Pi).
+	// A sawtooth wave at N hz would be given by ( t * N ) % 1
 	var word = 0, r = []
 	for(var z = 0; z < 8*PATTERN_SIZE; z++) {
 		var t = z * (1 / 4000)                         // time in seconds
+		/*
 		var v = Math.sin(t * frequency * 2 * Math.PI)  // sine wave
 		var s = Math.floor((v + 1) * 128)              // offset and scale
+		*/
+		var s = 256 * t * frequency % 256;             // sawtooth wave
 
 		word = (word << 1) | ((s >= cutoff) ? 1 : 0)
 		if ((z % 8) == 7) { r.push(word); word = 0 }
@@ -81,7 +85,7 @@ drawOnCanvas(audioPatternCanvas, (x, y, draw) => {
 
 document.getElementById('audio-play').onclick = _ => {
 	if (audioSetup()) {
-		playPattern(30, readPattern(audioPatternEditor))
+		playPattern(0.5, readPattern(audioPatternEditor))
 	}
 	else {
 		document.getElementById('audio-error').innerHTML = 'Your browser does not support HTML5 Audio!'

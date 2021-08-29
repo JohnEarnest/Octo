@@ -901,7 +901,10 @@ window.onkeyup = event => {
     emulator.v[emulator.waitReg] = kindex
   }
   if (event.key == '`') { stopRom() }
-  if (event.key == 'i') { emulator.breakpoint ? clearBreakpoint() : haltBreakpoint('user interrupt') }
+  if (event.key == 'i') {
+    emulator.breakpoint ? clearBreakpoint() : haltBreakpoint('user interrupt');
+    var k = document.getElementById("run-overlay").style.zIndex = "1001";
+  }
   if (event.key == 'p') { haltProfiler('profiler') }
   if (event.key == 'm') { monitoring = !monitoring; setVisible(document.getElementById('monitor'),monitoring) }
   if (emulator.breakpoint) {
@@ -980,35 +983,51 @@ function runRom(rom) {
   emulator.exitVector = stopRom
   emulator.importFlags = _ => getPref('octoFlagRegisters')
   emulator.exportFlags = f => setPref('octoFlagRegisters',f)
-  emulator.buzzTrigger = (ticks, remainingTicks) => playPattern(ticks, emulator.pattern, remainingTicks)
   emulator.init(rom)
+  // audio setups
+  audioSetup();
+  XOAudio = new audioControl();
+  emulator.buzzTimer  = _ => XOAudio.setTimer(_);
+  emulator.buzzBuffer = _ => XOAudio.setBuffer(_);
+  emulator.buzzPitch  = _ => XOAudio.setPitch(_);
+  emulator.buzzRamp   = _ => XOAudio.setRamp(_);
   clearBreakpoint()
-  audioSetup()
   setVisible(runCover, true, 'flex')
   updateMonitor()
   resetLinter()
   runCover.style.backgroundColor = emulator.quietColor
   setRenderTarget(5, 'target')
+  var frameTime = Math.floor(1000/60);
+  var last = Date.now(), diff, origin = last+frameTime/2;
   intervalHandle = setInterval(_ => {
-    for(var z = 0; (z < emulator.tickrate) && (!emulator.waiting); z++) {
-      if (!emulator.breakpoint) {
-        if (emulator.vBlankQuirks && ((emulator.m[emulator.pc] & 0xF0) == 0xD0)) { z = emulator.tickrate }
-        if (emulator.linted) lint()
-        emulator.tick()
-        if (emulator.pc in emulator.metadata.breakpoints) { haltBreakpoint(emulator.metadata.breakpoints[emulator.pc]) }
-        if (emulator.r.length == emulator.stack_breakpoint) { emulator.stack_breakpoint = -1; haltBreakpoint('step out') }
+    diff = (Date.now() - last); last += diff;
+    for(var k = 0; origin < last - frameTime;origin += frameTime,k++){
+      for(var z = 0; (z < emulator.tickrate) && (!emulator.waiting); z++) {
+        if (!emulator.breakpoint) {
+          if (emulator.vBlankQuirks && ((emulator.m[emulator.pc] & 0xF0) == 0xD0)) { z = emulator.tickrate }
+          if (emulator.linted) lint()
+          emulator.tick()
+          if (emulator.pc in emulator.metadata.breakpoints) { haltBreakpoint(emulator.metadata.breakpoints[emulator.pc]) }
+          if (emulator.r.length == emulator.stack_breakpoint) { emulator.stack_breakpoint = -1; haltBreakpoint('step out') }
+        }
       }
+      if (!emulator.breakpoint) {
+        emulator.dt -= emulator.dt > 0
+        emulator.st -= emulator.st > 0
+      }else{
+        if(emulator.st>0){
+          emulator.buzzTimer(emulator.st=0);
+        }
+      }
+      recordFrame()
+      XOAudio.refresh(frameTime/1000);
     }
-    if (!emulator.breakpoint) {
-      emulator.dt -= emulator.dt > 0
-      emulator.st -= emulator.st > 0
-    }
-    recordFrame()
     renderDisplay(emulator)
     if (monitoring && !emulator.halted && !emulator.breakpoint) updateMonitor()
     if (emulator.halted) return
     runCover.style.backgroundColor = (emulator.st > 0) ? emulator.buzzColor : emulator.quietColor
-  }, 1000/60)
+    //console.log(diff+"ms, "+k+" ticks, "+audioData.length+" queues");
+  }, frameTime)
 }
 
 function stopRom() {
