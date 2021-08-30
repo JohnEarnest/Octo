@@ -202,7 +202,7 @@ When using `:calc` and `:macro` together, it is often useful to write the conten
 		:byte Y
 	}
 
-XO-Chip programming often requires working with 16-bit pointers. If forward-referencing of labels is required, use `:pointer`. This directive assembles as two sequential bytes:
+XO-Chip programming often requires working with 16-bit pointers. If forward-referencing of labels is required, use `:pointer`. This directive assembles as two sequential 16-bit addresses:
 
 	: label-a
 	...
