@@ -255,7 +255,7 @@ function stopAudio() {
 
 var VOLUME = 0.25;
 
-function playPattern(soundLength,buffer,remainingTime,startPos=0,pitch=PITCH_BIAS) {
+function playPattern(soundLength,buffer,remainingTime=0,startPos=0,pitch=PITCH_BIAS) {
 	if (!audio) { return; }
 	audioEnable()
 
@@ -282,7 +282,7 @@ function playPattern(soundLength,buffer,remainingTime,startPos=0,pitch=PITCH_BIA
 	return ( startPos + step * ( samples - samplesBack) ) % bufflen;
 }
 
-function audioControl(){
+function AudioControl(){
 	this.position = 0;
 	this.reset = true;
 	this.buffer = [];
@@ -293,17 +293,18 @@ function audioControl(){
 
 	this.refresh = _ => {
 		if (this.reset) this.position = 0; this.reset = false;
-		if (this.timer>0) this.position = playPattern(_,this.buffer,0,this.position,this.pitch);
-		this.pitch=Math.min(Math.max(this.pitch+this.ramp/4,0),255.75);
-		this.timer-=this.timer>0;
-		if(this.timer == 0) this.reset = true;
+		this.pitch = Math.min(Math.max(this.pitch+this.ramp/4,0),255.75);
+		if (this.timer == 0) playPattern(_,[0]); // play silence
+		else this.position = playPattern(_,this.buffer,0,this.position,this.pitch);
+		if((this.timer -= this.timer>0) == 0) this.reset = true;
+		while(audioData > 16) audioData.shift();
 	}
 	this.setTimer = (timer) => {
 		if(timer == 0) this.reset = true;
 		this.timer = timer;
 	}
-	this.setBuffer= buffer => this.buffer = buffer;
-	this.setPitch = pitch  => this.pitch = pitch;
+	this.setBuffer = buffer => this.buffer = buffer;
+	this.setPitch = pitch => this.pitch = pitch;
 	this.setRamp = ramp => this.ramp = ramp-(ramp<<1&256);
 }
 
