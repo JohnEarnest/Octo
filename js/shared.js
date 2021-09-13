@@ -295,7 +295,7 @@ function AudioControl(){
 		if (this.timer == 0) playPattern(_,[0]); // play silence
 		else this.position = playPattern(_,this.buffer,0,this.position,this.pitch);
 		if((this.timer -= this.timer>0) == 0) this.reset = true;
-		while(audioData > 16) audioData.shift();
+		while(audioData.length > 16) audioData.shift();
 	}
 	this.setTimer = (timer) => {
 		if(timer == 0) this.reset = true;
