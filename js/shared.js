@@ -289,11 +289,9 @@ function AudioControl(){
 
 	this.timer = 0;
 	this.pitch = PITCH_BIAS;
-	this.ramp = 0;
 
 	this.refresh = _ => {
 		if (this.reset) this.position = 0; this.reset = false;
-		this.pitch = Math.min(Math.max(this.pitch+this.ramp/4,0),255.75);
 		if (this.timer == 0) playPattern(_,[0]); // play silence
 		else this.position = playPattern(_,this.buffer,0,this.position,this.pitch);
 		if((this.timer -= this.timer>0) == 0) this.reset = true;
@@ -305,7 +303,6 @@ function AudioControl(){
 	}
 	this.setBuffer = buffer => this.buffer = buffer;
 	this.setPitch = pitch => this.pitch = pitch;
-	this.setRamp = ramp => this.ramp = ramp-(ramp<<1&256);
 }
 
 function escapeHtml(str) {
