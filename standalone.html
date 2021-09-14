@@ -37,7 +37,7 @@ intervalHandle=setInterval(_=>{
 		}
 		if (emulator.dt > 0) emulator.dt--
 		if (emulator.st > 0) emulator.st--
-		XOAudio.refresh(frameTime/1000)
+		XOAudio && XOAudio.refresh(frameTime/1000)
 	}
 	renderDisplay(emulator)
 	document.body.style.backgroundColor = emulator.st?emulator.buzzColor:emulator.quietColor
