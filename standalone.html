@@ -9,7 +9,7 @@ emulator.importFlags = _ => getPref('octoFlagRegisters')
 emulator.exportFlags = f => setPref('octoFlagRegisters',f)
 emulator.buzzTrigger = (ticks,rest)=> playPattern(ticks, emulator.pattern, rest)
 const kd = e=>{
-	if (!audio) audioSetup()
+	if (!audio) audioSetup(emulator)
 	if (!(e.key in emulator.keys)) emulator.keys[e.key]=true
 	e.preventDefault()
 }
@@ -25,14 +25,22 @@ const ku = e=>{
 }
 window.addEventListener('keydown',kd,false)
 window.addEventListener('keyup',ku,false)
-intervalHandle = setInterval(_=>{
+const frameTime=1000/60
+let last=Date.now(), origin=last+frameTime/2
+intervalHandle=setInterval(_=>{
+	last+=(Date.now()-last)
 	if (emulator.halted) return
-	for(var z = 0; (z<emulator.tickrate) && (!emulator.waiting); z++) emulator.tick()
-	if (emulator.dt > 0) emulator.dt--
-	if (emulator.st > 0) emulator.st--
+	for(var k=0; origin<last-frameTime&&k<2; origin+=frameTime,k++){
+		for(var z=0;(z<emulator.tickrate) && (!emulator.waiting); z++){
+			if (emulator.vBlankQuirks &&((emulator.m[emulator.pc] & 0xF0)==0xD0)) z=emulator.tickrate
+			emulator.tick()
+		}
+		if (emulator.dt > 0) emulator.dt--
+		if (emulator.st > 0) emulator.st--
+		XOAudio.refresh(frameTime/1000)
+	}
 	renderDisplay(emulator)
 	document.body.style.backgroundColor = emulator.st?emulator.buzzColor:emulator.quietColor
-}, 1000/60)
-
+}, frameTime)
 injectAdaptiveControls(emulator.touchInputMode,document.getElementById('target'),ku,kd)
 </script>

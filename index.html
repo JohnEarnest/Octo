@@ -984,13 +984,7 @@ function runRom(rom) {
   emulator.importFlags = _ => getPref('octoFlagRegisters')
   emulator.exportFlags = f => setPref('octoFlagRegisters',f)
   emulator.init(rom)
-  // audio setups
-  audioSetup();
-  XOAudio = new AudioControl();
-  emulator.buzzTimer  = _ => XOAudio.setTimer(_);
-  emulator.buzzBuffer = _ => XOAudio.setBuffer(_);
-  emulator.buzzPitch  = _ => XOAudio.setPitch(_);
-
+  audioSetup(emulator)
   clearBreakpoint()
   setVisible(runCover, true, 'flex')
   updateMonitor()

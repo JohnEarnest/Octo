@@ -155,6 +155,7 @@ var audio;
 var audioNode;
 var audioSource;
 var audioData;
+var XOAudio;
 
 var AudioBuffer = function(buffer, duration) {
 	if (!(this instanceof AudioBuffer)) {
@@ -194,7 +195,7 @@ function audioEnable() {
 	if (audio && audio.state == 'suspended') audio.resume()
 }
 
-function audioSetup() {
+function audioSetup(emulator) {
 	if (!audio) {
 		if (typeof AudioContext !== 'undefined') {
 			audio = new AudioContext();
@@ -238,10 +239,13 @@ function audioSetup() {
 		audioData = [];
 		audioNode.connect(audioNode.gain);
 		audioNode.gain.connect(audio.destination);
-		return true;
+
+		XOAudio = new AudioControl();
+		emulator.buzzTimer  = _ => XOAudio.setTimer(_);
+		emulator.buzzBuffer = _ => XOAudio.setBuffer(_);
+		emulator.buzzPitch  = _ => XOAudio.setPitch(_);
 	}
-	if (audio && audioNode) { return true; }
-	return false;
+	return audio && audioNode
 }
 
 function stopAudio() {
