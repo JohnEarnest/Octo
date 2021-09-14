@@ -187,10 +187,7 @@ AudioBuffer.prototype.dequeue = function(duration) {
 }
 
 var FREQ = 4000;
-var TIMER_FREQ = 60;
-var SAMPLES = 16;
-var BUFFER_SIZE = SAMPLES * 8
-
+var PITCH_BIAS = 64;
 
 function audioEnable() {
 	// this will only work if called directly from a user-generated input handler:
@@ -209,11 +206,12 @@ function audioSetup() {
 	audioEnable()
 	if (audio && !audioNode) {
 		audioNode = audio.createScriptProcessor(4096, 1, 1);
+		audioNode.gain = audio.createGain();
+		audioNode.gain.gain.value = VOLUME ;
 		audioNode.onaudioprocess = function(audioProcessingEvent) {
 			var outputBuffer = audioProcessingEvent.outputBuffer;
 			var outputData = outputBuffer.getChannelData(0);
 			var samples_n = outputBuffer.length;
-
 			var index = 0;
 			while(audioData.length && index < samples_n) {
 				var size = samples_n - index;
@@ -238,7 +236,8 @@ function audioSetup() {
 			}
 		}
 		audioData = [];
-		audioNode.connect(audio.destination);
+		audioNode.connect(audioNode.gain);
+		audioNode.gain.connect(audio.destination);
 		return true;
 	}
 	if (audio && audioNode) { return true; }
@@ -256,23 +255,54 @@ function stopAudio() {
 
 var VOLUME = 0.25;
 
-function playPattern(soundLength, buffer, remainingTicks) {
+function playPattern(soundLength,buffer,remainingTime=0,startPos=0,pitch=PITCH_BIAS) {
 	if (!audio) { return; }
 	audioEnable()
 
-	var samples = Math.floor(BUFFER_SIZE * audio.sampleRate / FREQ);
-	var audioBuffer = new Array(samples);
-	if (remainingTicks && audioData.length > 0) {
-		audioData[audioData.length - 1].dequeue(Math.floor(remainingTicks * audio.sampleRate / TIMER_FREQ));
+	var freq = FREQ*2**((pitch-PITCH_BIAS)/48);
+	var samples = Math.ceil(audio.sampleRate * soundLength);
+	var samplesBack = Math.ceil(audio.sampleRate * remainingTime);
+
+	if (remainingTime && audioData.length > 0)
+		audioData[audioData.length - 1].dequeue(samplesBack);
+	
+	var bufflen = buffer.length * 8;
+
+	var audioBuffer = new Float32Array(samples);
+
+	var step = freq / audio.sampleRate, pos = startPos;
+	for(var i = 0, il = samples; i < il; i++) {
+		var cell = pos >> 3, shift = pos & 7 ^ 7;
+		audioBuffer[i] = buffer[cell] >> shift & 1;
+		pos = ( pos + step ) % bufflen;
 	}
 
-	for(var i = 0; i < samples; ++i) {
-		var srcIndex = Math.floor(i * FREQ / audio.sampleRate);
-		var cell = srcIndex >> 3;
-		var bit = srcIndex & 7;
-		audioBuffer[i] = (buffer[srcIndex >> 3] & (0x80 >> bit)) ? VOLUME: 0;
+	audioData.push(new AudioBuffer(audioBuffer, samples));
+	
+	return ( startPos + step * ( samples - samplesBack) ) % bufflen;
+}
+
+function AudioControl(){
+	this.position = 0;
+	this.reset = true;
+	this.buffer = [];
+
+	this.timer = 0;
+	this.pitch = PITCH_BIAS;
+
+	this.refresh = _ => {
+		if (this.reset) this.position = 0; this.reset = false;
+		if (this.timer == 0) playPattern(_,[0]); // play silence
+		else this.position = playPattern(_,this.buffer,0,this.position,this.pitch);
+		if((this.timer -= this.timer>0) == 0) this.reset = true;
+		while(audioData.length > 16) audioData.shift();
 	}
-	audioData.push(new AudioBuffer(audioBuffer, Math.floor(soundLength * audio.sampleRate / TIMER_FREQ)));
+	this.setTimer = (timer) => {
+		if(timer == 0) this.reset = true;
+		this.timer = timer;
+	}
+	this.setBuffer = buffer => this.buffer = buffer;
+	this.setPitch = pitch => this.pitch = pitch;
 }
 
 function escapeHtml(str) {
