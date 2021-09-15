@@ -92,34 +92,27 @@
           <canvas id='audio-pattern-view' width='256' height='32'></canvas>
         </div>
         <div id='audio-pattern-editor'></div>
-        <div class='buttonbar'>
-          <div id='audio-play'  >Play</div>
-          <div id='audio-random'>Randomize</div>
-          <div id='audio-clear' >Clear</div>
-          <div id='audio-left'  >&lt;&lt;1</div>
-          <div id='audio-right' >&gt;&gt;1</div>
-          <div id='audio-not'>NOT</div>
-        </div>
-
-        <h1>Blend With Pattern</h1>
-        <div id='audio-blend-editor'></div>
-        <div class='buttonbar'>
-          <div id='audio-and'>AND</div>
-          <div id='audio-or'>OR</div>
-          <div id='audio-xor'>XOR</div>
-          <div id='audio-swap'>Swap With Pattern</div>
+        <div id='audio-tone-group'>
+          <div class='pair'>Pitch: <input id='audio-pitch' value='64'></div>
+          <div id='audio-clear'  class='button'>Clear</div>
+          <div id='audio-random' class='button'>Randomize</div>
+          <div id='audio-play'   class='button'>Play</div>
         </div>
 
         <h1>Tone Generator</h1>
-        <div class='preview-container'>
-          <canvas id='audio-tone-view' width='256' height='32'></canvas>
+        <div>Duty Cycle:</div>
+        <div id='audio-tone-duty'>
+          <span data-value=  '2'>  2</span>
+          <span data-value=  '4'>  4</span>
+          <span data-value=  '8'>  8</span>
+          <span data-value= '16'> 16</span>
+          <span data-value= '32'> 32</span>
+          <span data-value= '64'> 64</span>
+          <span data-value='128'>128</span>
         </div>
-        <div id='audio-tone-editor'></div>
         <div id='audio-tone-group'>
           <div class='pair'>Frequency: <input id='audio-freq' value='440'> Hz</div>
-          <div class='pair'>Cutoff: <input id='audio-cutoff' value='128'></div>
-          <div id='audio-toblend' class='button'>To Blend</div>
-          <div id='audio-topat' class='button'>To Pattern</div>
+          <div id='audio-generate' class='button'>Generate</div>
         </div>
       </div>
 
@@ -564,13 +557,11 @@ input:focus { outline: none; }
 
 #sprite-palette { margin-top: 10px; display: none; }
 #sprite-editor .CodeMirror { height: 115px; }
-#audio-pattern-editor .CodeMirror,
-#audio-blend-editor   .CodeMirror,
-#audio-tone-editor    .CodeMirror { height: 40px; }
+#audio-pattern-editor .CodeMirror { height: 40px; }
 #audio-tone-group { display: flex; flex-direction: row; margin-top: 10px; align-items: center; }
 #audio-tone-group .pair { margin-right: 15px; }
 #audio-tone-group .button { margin-left: 10px; }
-#audio-tone-group input { width:40px; height:30px; margin-left:5px; }
+#audio-tone-group input { width:60px; height:30px; margin-left:5px; }
 #binary-editor        .CodeMirror { height: 100px; }
 #binary-filename { width: 100%; }
 

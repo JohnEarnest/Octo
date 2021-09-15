@@ -3,10 +3,8 @@
 **/
 
 const audioPatternEditor = textBox(document.getElementById('audio-pattern-editor'), false, '')
-const audioBlendEditor   = textBox(document.getElementById('audio-blend-editor'), false, '')
-const audioToneEditor    = textBox(document.getElementById('audio-tone-editor'), true, '')
 const audioPatternCanvas = document.getElementById('audio-pattern-view')
-const audioToneCanvas    = document.getElementById('audio-tone-view')
+const audioToneDuty = radioBar(document.getElementById('audio-tone-duty'), '2', x => {})
 
 const PATTERN_SIZE = 16
 const PATTERN_SCALE = 2
@@ -14,15 +12,7 @@ const emptySound = range(PATTERN_SIZE).map(_ => 0)
 function readPattern(source)         { return readBytes(source, PATTERN_SIZE) }
 function writePattern(target, bytes) { return writeBytes(target, PATTERN_SIZE, bytes) }
 writePattern(audioPatternEditor, emptySound)
-writePattern(audioBlendEditor,   emptySound)
 
-function shiftBytes(bytes, n) {
-	const r = bytes.map(x => x)
-	for (var x = 0; x < bytes.length*8; x++) {
-		setBit(r, x, getBit(bytes, mod(x+n, bytes.length*8)))
-	}
-	return r
-}
 function drawBytes(target, bytes) {
 	const w = target.width
 	const h = target.height
@@ -36,44 +26,12 @@ function drawBytes(target, bytes) {
 		g.fillRect(z * PATTERN_SCALE, 0, PATTERN_SCALE * ((bytes[a] >> b) & 1), 32)
 	})
 }
-function generateFrequency(frequency, cutoff) {
-	const w = audioToneCanvas.width
-	const h = audioToneCanvas.height
-	const g = audioToneCanvas.getContext('2d')
-	g.fillStyle = emulator.backgroundColor
-	g.fillRect(0, 0, w, h)
-	g.fillStyle = emulator.fillColor
-
-	// Samples are played at 4000 samples/second.
-	// 128 samples is (1 seconds / 4000 * 128) = .032 seconds.
-	// This also means that a full 128 bit pattern is ~ 2/60ths of a second.
-	// A sine wave at N hz would be given by sin(t * N * 2Pi).
-	// A sawtooth wave at N hz would be given by ( t * N ) % 1
-	var word = 0, r = []
-	for(var z = 0; z < 8*PATTERN_SIZE; z++) {
-		var t = z * (1 / 4000)                         // time in seconds
-		/*
-		var v = Math.sin(t * frequency * 2 * Math.PI)  // sine wave
-		var s = Math.floor((v + 1) * 128)              // offset and scale
-		*/
-		var s = 256 * t * frequency % 256;             // sawtooth wave
-
-		word = (word << 1) | ((s >= cutoff) ? 1 : 0)
-		if ((z % 8) == 7) { r.push(word); word = 0 }
-
-		g.fillStyle = emulator.fillColor2
-		g.fillRect(z*(w/128), h-(s*(h/256)), (w/128), s*(h/256))
-		if (s >= cutoff) {
-			g.fillStyle = emulator.fillColor
-			g.fillRect(z*(w/128), h-(cutoff*(h/256)), (w/128), cutoff*(h/256))
-		}
-	}
-	return r
-}
 
 /**
 * Pattern panel
 **/
+
+const audioPitch = document.getElementById('audio-pitch')
 
 drawOnCanvas(audioPatternCanvas, (x, y, draw) => {
 	const index   = Math.min(PATTERN_SIZE*8, Math.max(0, Math.floor(x / PATTERN_SCALE)))
@@ -82,69 +40,24 @@ drawOnCanvas(audioPatternCanvas, (x, y, draw) => {
 	writePattern(audioPatternEditor, pattern)
 	updateAudio()
 })
-
-document.getElementById('audio-play').onclick = _ => {
-	if (audioSetup()) {
-		playPattern(0.5, readPattern(audioPatternEditor))
+function audioPreview(){
+	const pitch = Math.max(0,Math.min(+audioPitch.value,255))
+	if (audioSetup(emulator)) {
+		playPattern(0.5, readPattern(audioPatternEditor),undefined,undefined,pitch)
 	}
 	else {
 		document.getElementById('audio-error').innerHTML = 'Your browser does not support HTML5 Audio!'
 	}
 }
+document.getElementById('audio-play').onclick = _ => audioPreview()
 document.getElementById('audio-random').onclick = _ => {
+	audioPitch.value=(Math.random() * 256) & 0xFF
 	writePattern(audioPatternEditor, emptySound.map(_ => (Math.random() * 256) & 0xFF))
 	updateAudio()
+	audioPreview()
 }
 document.getElementById('audio-clear').onclick = _ => {
 	writePattern(audioPatternEditor, emptySound)
-	updateAudio()
-}
-document.getElementById('audio-left').onclick = _ => {
-	writePattern(audioPatternEditor, shiftBytes(readPattern(audioPatternEditor), 1))
-	updateAudio()
-}
-document.getElementById('audio-right').onclick = _ => {
-	writePattern(audioPatternEditor, shiftBytes(readPattern(audioPatternEditor), -1))
-	updateAudio()
-}
-document.getElementById('audio-not').onclick = _ => {
-	writePattern(audioPatternEditor, readPattern(audioPatternEditor).map(a => ~a))
-	updateAudio()
-}
-
-/**
-* Blend panel
-**/
-
-document.getElementById('audio-and').onclick = _ => {
-	writePattern(audioPatternEditor, zip(
-		readPattern(audioPatternEditor),
-		readPattern(audioBlendEditor),
-		(a,b) => a&b
-	))
-	updateAudio()
-}
-document.getElementById('audio-or').onclick = _ => {
-	writePattern(audioPatternEditor, zip(
-		readPattern(audioPatternEditor),
-		readPattern(audioBlendEditor),
-		(a,b) => a|b
-	))
-	updateAudio()
-}
-document.getElementById('audio-xor').onclick = _ => {
-	writePattern(audioPatternEditor, zip(
-		readPattern(audioPatternEditor),
-		readPattern(audioBlendEditor),
-		(a,b) => a^b
-	))
-	updateAudio()
-}
-document.getElementById('audio-swap').onclick = _ => {
-	const a = readPattern(audioPatternEditor)
-	const b = readPattern(audioBlendEditor)
-	writePattern(audioPatternEditor, b)
-	writePattern(audioBlendEditor,   a)
 	updateAudio()
 }
 
@@ -152,29 +65,20 @@ document.getElementById('audio-swap').onclick = _ => {
 * Tone Generator panel
 **/
 
-const audioFreq   = document.getElementById('audio-freq')
-const audioCutoff = document.getElementById('audio-cutoff')
+const audioFreq = document.getElementById('audio-freq')
 
-function updateAudioTone() {
-	writePattern(audioToneEditor, generateFrequency(
-		(+audioFreq.value)   || 0,
-		(+audioCutoff.value) || 0
-	))
-}
-updateAudioTone()
-
-audioFreq.onchange   = updateAudioTone
-audioFreq.onkeyup    = updateAudioTone
-audioCutoff.onchange = updateAudioTone
-audioCutoff.onkeyup  = updateAudioTone
-
-document.getElementById('audio-toblend').onclick = _ => {
-	writePattern(audioBlendEditor, readPattern(audioToneEditor))
+document.getElementById('audio-generate').onclick = _ => {
+	const duty = audioToneDuty.getValue()
+	const freq = +audioFreq.value
+	writePattern(audioPatternEditor, emptySound.map((_,i) => {
+		let r=0
+		for(let b=0;b<8;b++) r |= ((i*8+b)%duty<(duty/2)?1:0)*(1<<(7-b))
+		return r
+	}))
+	const pitch = Math.log2((freq*duty)/4000)*48+64
+	audioPitch.value=0|Math.max(0,Math.min(pitch,255))
 	updateAudio()
-}
-document.getElementById('audio-topat').onclick = _ => {
-	writePattern(audioPatternEditor, readPattern(audioToneEditor))
-	updateAudio()
+	audioPreview()
 }
 
 /**
@@ -183,9 +87,6 @@ document.getElementById('audio-topat').onclick = _ => {
 
 function updateAudio() {
 	audioPatternEditor.refresh()
-	audioBlendEditor.refresh()
-	audioToneEditor.refresh()
 	drawBytes(audioPatternCanvas, readPattern(audioPatternEditor))
-	updateAudioTone()
 }
 audioPatternEditor.on('change', updateAudio)
