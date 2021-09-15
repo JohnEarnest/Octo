@@ -43,7 +43,7 @@ drawOnCanvas(audioPatternCanvas, (x, y, draw) => {
 function audioPreview(){
 	const pitch = Math.max(0,Math.min(+audioPitch.value,255))
 	if (audioSetup(emulator)) {
-		playPattern(0.5, readPattern(audioPatternEditor),undefined,undefined,pitch)
+		playPattern(0.5, readPattern(audioPatternEditor),pitch)
 	}
 	else {
 		document.getElementById('audio-error').innerHTML = 'Your browser does not support HTML5 Audio!'
