@@ -260,7 +260,7 @@ function stopAudio() {
 var VOLUME = 0.25;
 
 function playPattern(soundLength,buffer,pitch=PITCH_BIAS,
-	sampleState={"pos":0,"pole1":0,"pole2":0}) {
+	sampleState={"pos":0,"val":0,"vel":0}) {
 
 	if (!audio) { return; }
 	audioEnable()
@@ -269,32 +269,36 @@ function playPattern(soundLength,buffer,pitch=PITCH_BIAS,
 	var samples = Math.ceil(audio.sampleRate * soundLength);
 	
 	var bufflen = buffer.length * 8;
-
 	var audioBuffer = new Float32Array(samples);
 
-	var step = freq / audio.sampleRate, pos = sampleState.pos;
+	var step = freq / audio.sampleRate;
+	
+	// get sample states
+	var pos = sampleState.pos;
+	var vel = sampleState.vel;
+	var val = sampleState.val;
 
-	var pole1 = sampleState.pole1, pole2 = sampleState.pole2;
-	var quality = 64, lowpass = 64;
-
+	// lowpass settings
+	var qty = 16, rnd = 64, dec = 8;
+	
 	for(var i = 0, il = samples; i < il; i++) {
-		for(var j = 0; j < quality; j++){
+		for(var j = 0; j < qty; j++){
 			var cell = pos >> 3, shift = pos & 7 ^ 7;
 			var sample = buffer[cell] >> shift & 1;
-			pos = ( pos + step / quality ) % bufflen;
-			pole1 += (sample-pole1) / lowpass;
-			pole2 += (pole1-pole2) / lowpass;
+			pos = ( pos + step / qty ) % bufflen;
+			vel += sample - val - vel / dec;
+			val += vel / rnd;
 		}
-		audioBuffer[i] = pole2;
+		audioBuffer[i] = val;
 	}
 
 	audioData.push(new AudioBuffer(audioBuffer, samples));
 	
-	return {"pos":pos,"pole1":pole1,"pole2":pole2}
+	return {"pos":pos,"val":val,"vel":vel}
 }
 
 function AudioControl(){
-	this.state = {"pos":0,"pole1":0,"pole2":0};
+	this.state = {"pos":0,"val":0,"vel":0};
 	this.reset = true;
 	this.buffer = [];
 
