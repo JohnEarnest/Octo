@@ -65,14 +65,13 @@ document.getElementById('audio-clear').onclick = _ => {
 * Tone Generator panel
 **/
 
-const audioFreq = document.getElementById('audio-freq')
-
 document.getElementById('audio-generate').onclick = _ => {
 	const duty = audioToneDuty.getValue()
-	const freq = +audioFreq.value
+	const freq = +document.getElementById('audio-freq').value
+	const pulse = Math.ceil(document.getElementById('audio-pulse').value*duty)
 	writePattern(audioPatternEditor, emptySound.map((_,i) => {
 		let r=0
-		for(let b=0;b<8;b++) r |= ((i*8+b)%duty<(duty/2)?1:0)*(1<<(7-b))
+		for(let b=0;b<8;b++) r |= ((i*8+b)%duty<pulse?1:0)*(1<<(7-b))
 		return r
 	}))
 	const pitch = Math.log2((freq*duty)/4000)*48+64
