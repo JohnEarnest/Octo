@@ -94,26 +94,31 @@
         <div id='audio-pattern-editor'></div>
         <div id='audio-tone-group'>
           <div class='pair'>Pitch: <input id='audio-pitch' value='64'></div>
-          <div id='audio-clear'  class='button'>Clear</div>
+          <div id='audio-left'   class='button'>&lt;&lt;</div>
+          <div id='audio-right'  class='button'>&gt;&gt;</div>
           <div id='audio-random' class='button'>Randomize</div>
           <div id='audio-play'   class='button'>Play</div>
         </div>
 
         <h1>Tone Generator</h1>
-        <div>Duty Cycle:</div>
-        <div id='audio-tone-duty'>
-          <span data-value=  '2'>  2</span>
-          <span data-value=  '4'>  4</span>
-          <span data-value=  '8'>  8</span>
-          <span data-value= '16'> 16</span>
-          <span data-value= '32'> 32</span>
-          <span data-value= '64'> 64</span>
-          <span data-value='128'>128</span>
+        <div class='preview-container'>
+          <canvas id='audio-tone-view' width='256' height='32'></canvas>
+        </div>
+        <div>Blend Mode</div>
+        <div id='audio-blend-mode'>
+          <span data-value='none'>None</span>
+          <span data-value='or'  >OR  </span>
+          <span data-value='and' >AND </span>
+          <span data-value='xor' >XOR </span>
         </div>
         <div id='audio-tone-group'>
+          <div class='pair'>Width: <input id='audio-width' value='16'></div>
+          <div class='pair'>Pulse: <input id='audio-pulse' value='0.5'></div>
           <div class='pair'>Frequency: <input id='audio-freq' value='440'> Hz</div>
-          <div class='pair'>Pulse Width: <input id='audio-pulse' value='0.5'></div>
-          <div id='audio-generate' class='button'>Generate</div>
+        </div>
+        <div id='audio-tone-group'>
+          <div id='audio-tone-preview' class='button'>Play</div>
+          <div id='audio-generate'     class='button'>Generate</div>
         </div>
       </div>
 
