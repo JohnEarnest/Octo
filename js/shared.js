@@ -206,7 +206,7 @@ function audioSetup(emulator) {
 	}
 	audioEnable()
 	if (audio && !audioNode) {
-		audioNode = audio.createScriptProcessor(4096, 1, 1);
+		audioNode = audio.createScriptProcessor(2048, 1, 1);
 		audioNode.gain = audio.createGain();
 		audioNode.gain.gain.value = VOLUME ;
 		audioNode.onaudioprocess = function(audioProcessingEvent) {
@@ -259,35 +259,46 @@ function stopAudio() {
 
 var VOLUME = 0.25;
 
-function playPattern(soundLength,buffer,remainingTime=0,startPos=0,pitch=PITCH_BIAS) {
+function playPattern(soundLength,buffer,pitch=PITCH_BIAS,
+	sampleState={"pos":0,"val":0,"vel":0}) {
+
 	if (!audio) { return; }
 	audioEnable()
 
 	var freq = FREQ*2**((pitch-PITCH_BIAS)/48);
 	var samples = Math.ceil(audio.sampleRate * soundLength);
-	var samplesBack = Math.ceil(audio.sampleRate * remainingTime);
-
-	if (remainingTime && audioData.length > 0)
-		audioData[audioData.length - 1].dequeue(samplesBack);
 	
 	var bufflen = buffer.length * 8;
-
 	var audioBuffer = new Float32Array(samples);
 
-	var step = freq / audio.sampleRate, pos = startPos;
+	var step = freq / audio.sampleRate;
+	
+	// get sample states
+	var pos = sampleState.pos;
+	var vel = sampleState.vel;
+	var val = sampleState.val;
+
+	// lowpass settings
+	var qty = 16, rnd = 64, dec = 8;
+	
 	for(var i = 0, il = samples; i < il; i++) {
-		var cell = pos >> 3, shift = pos & 7 ^ 7;
-		audioBuffer[i] = buffer[cell] >> shift & 1;
-		pos = ( pos + step ) % bufflen;
+		for(var j = 0; j < qty; j++){
+			var cell = pos >> 3, shift = pos & 7 ^ 7;
+			var sample = buffer[cell] >> shift & 1;
+			pos = ( pos + step / qty ) % bufflen;
+			vel += sample - val - vel / dec;
+			val += vel / rnd;
+		}
+		audioBuffer[i] = val;
 	}
 
 	audioData.push(new AudioBuffer(audioBuffer, samples));
 	
-	return ( startPos + step * ( samples - samplesBack) ) % bufflen;
+	return {"pos":pos,"val":val,"vel":vel}
 }
 
 function AudioControl(){
-	this.position = 0;
+	this.state = {"pos":0,"val":0,"vel":0};
 	this.reset = true;
 	this.buffer = [];
 
@@ -295,11 +306,11 @@ function AudioControl(){
 	this.pitch = PITCH_BIAS;
 
 	this.refresh = _ => {
-		if (this.reset) this.position = 0; this.reset = false;
+		if (this.reset) this.state.pos = 0; this.reset = false;
 		if (this.timer == 0) playPattern(_,[0]); // play silence
-		else this.position = playPattern(_,this.buffer,0,this.position,this.pitch);
+		else this.state = playPattern(_,this.buffer,this.pitch,this.state);
 		if((this.timer -= this.timer>0) == 0) this.reset = true;
-		while(audioData.length > 16) audioData.shift();
+		while(audioData.length > 8) audioData.shift();
 	}
 	this.setTimer = (timer) => {
 		if(timer == 0) this.reset = true;
