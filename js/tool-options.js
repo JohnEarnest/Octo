@@ -88,10 +88,10 @@ document.getElementById('key-config-done').onclick = _ => {
 const touchDescs = {
   none:      'Do not attempt to handle touch input.',
   swipe:     'Taps on the screen are treated like pressing key 6. Swipes or dragging and holding on the screen are treated like a virtual directional pad based on keys 5,8,7 and 9.',
-  seg16:     'Treat taps and holds on the center of the screen like an invisible 4x4 hex keypad.',
-  seg16fill: 'The same as <b>Seg16</b>, but the virtual keys take up the entire display, rather than a square region.',
+  seg16:     'Treat taps and holds on the center of the screen like an invisible 4x4 hex keypad. Also supports mouse input.',
+  seg16fill: 'The same as <b>Seg16</b>, but the virtual keys take up the entire display, rather than a square region. Also supports mouse input.',
   gamepad:   'Draw a translucent virtual gamepad around the screen. The directional pad is mapped to keys 5,8,7 and 9, and buttons A and B are mapped to keyboard keys 6 and 4, respectively.',
-  vip:       'Display a 4x4 hex keypad under the screen.',
+  vip:       'Display a 4x4 hex keypad under the screen. Also supports mouse input.',
 }
 function setTouchInputMode(mode) {
   emulator.touchInputMode = mode

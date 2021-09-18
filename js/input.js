@@ -6,6 +6,27 @@ const ael = (element, event, listener) => element.addEventListener   (event, lis
 const rel = (element, event, listener) => element.removeEventListener(event, listener, { passive:false })
 const pd  = event => (event.preventDefault(),event.stopPropagation())
 
+function addPointer(element,start,move,end){
+  function mouseToTouch(f){
+    return event=>{
+      const to={indentifier:1,target:element,clientX:event.clientX,clientY:event.clientY}
+      f({changedTouches:[to],touches:[to],preventDefault:_=>{},stopPropagation:_=>{}})
+    }
+  }
+  let mousedown=false
+  const events={
+    touchstart: start,
+    touchmove:  move,
+    touchend:   end,
+    mousedown:  mouseToTouch(e=>{mousedown=true;start(e)}),
+    mousemove:  mouseToTouch(e=>{if(mousedown)move(e)}),
+    mouseup:    mouseToTouch(e=>{mousedown=false;end(e)}),
+    mouseout:   mouseToTouch(e=>{mousedown=false;end(e)}),
+  }
+  Object.keys(events).forEach(k=>ael(element,k,events[k]))
+  return _=>{Object.keys(events).forEach(k=>rel(element,k,events[k]))}
+}
+
 const VIP_HEX  = '123c456d789ea0bf'.split('')
 const VIP_KEYS = VIP_HEX.map(x => parseInt(x,16))
 
@@ -339,14 +360,7 @@ const INPUT_MODULES = {
         }
         pd(e)
       }
-      ael(screen, 'touchstart', start)
-      ael(screen, 'touchmove',  move )
-      ael(screen, 'touchend',   end  )
-      screen.uninstallSeg16 = _ => {
-        rel(screen, 'touchstart', start)
-        rel(screen, 'touchmove',  move )
-        rel(screen, 'touchend',   end  )
-      }
+      screen.uninstallSeg16=addPointer(screen,start,move,end)
     },
     remove:  (screen) => {
       screen.uninstallSeg16()
@@ -386,15 +400,12 @@ const INPUT_MODULES = {
         for(let z = 0; z<e.changedTouches.length; z++) {
           const t = e.changedTouches[z]
           const i = t.identifier
-          if (held[i]) { up(held[i]); delete held[i] }
+          if (held[i] != undefined) { up(held[i]); delete held[i] }
           t.target.classList.remove('active')
         }
         pd(e)
       }
-      buttons.forEach(b => {
-        ael(b, 'touchstart', start)
-        ael(b, 'touchend',   end  )
-      })
+      buttons.forEach(b => addPointer(b,start,_=>{},end))
     },
     remove:  (screen) => {
       document.querySelector('.vip-pad').remove()
@@ -417,6 +428,7 @@ function injectAdaptiveControls(type, screen, keyup, keydown) {
   const lookup = vk => Object.keys(keymap[vk])[0]
   const install = _ => {
     rel(screen, 'touchstart', install)
+    rel(screen, 'mousedown',  install)
     adaptiveControlsInstalled = type
     INPUT_MODULES[type].install(
       screen,
@@ -427,6 +439,7 @@ function injectAdaptiveControls(type, screen, keyup, keydown) {
   }
   // uninstall anything that's already there:
   rel(screen, 'touchstart', install)
+  rel(screen, 'mousedown' , install)
   if (adaptiveControlsInstalled) INPUT_MODULES[adaptiveControlsInstalled].remove(screen)
 
   if (type == 'none') return
@@ -434,4 +447,5 @@ function injectAdaptiveControls(type, screen, keyup, keydown) {
   // defer installing adaptive input until we actually see
   // an input event from the user:
   ael(screen, 'touchstart', install)
+  ael(screen, 'mousedown',  install)
 }
