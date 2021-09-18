@@ -87,7 +87,6 @@
       <div data-panel='audio' class='tool-header'>Audio Editor</div>
       <div data-panel='audio' class='tool-body'>
         <h1>Audio Pattern</h1>
-        <div id='audio-error'></div>
         <div class='preview-container'>
           <canvas id='audio-pattern-view' width='256' height='32'></canvas>
         </div>
@@ -100,6 +99,7 @@
           <div id='audio-random' class='button'>Noise</div>
         </div>
         <h1>Audio Preview</h1>
+        <div id='audio-error'></div>
         <div class='preview-container'>
           <canvas id='audio-piano-keys' width='280' height='32'></canvas>
         </div>
@@ -119,12 +119,13 @@
           <span data-value='xor' >XOR </span>
         </div>
         <div id='audio-tone-group'>
-          <div class='pair'>Cycles: <input id='audio-width' value='2'></div>
-          <div class='pair'>Duty: <input id='audio-pulse' value='50'> %</div>
+          <div class='pair'>Duty: <input id='tone-duty' value='50'> %</div>
+          <div class='pair'>Cycles: <input id='tone-cycles' value='2'></div>
           <div id='audio-tone-preview' class='button'>Play</div>
           <div id='audio-generate'     class='button'>Generate</div>
         </div>
         <div id='audio-tone-group'></div>
+        <center><i><div id='tone-info'></div></i></center>
       </div>
 
       <div data-panel='binary' class='tool-header'>Binary Tools</div>

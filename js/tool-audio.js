@@ -139,8 +139,9 @@ document.getElementById('audio-random').onclick = _ => {
 * Tone Generator panel
 **/
 
-const toneDuty  = document.getElementById('audio-width')
-const tonePulse = document.getElementById('audio-pulse')
+const toneCycles = document.getElementById('tone-cycles')
+const toneDuty   = document.getElementById('tone-duty')
+const toneInfo   = document.getElementById('tone-info')
 
 function audioBlend(){
 	return ({
@@ -150,20 +151,23 @@ function audioBlend(){
 		xor : (x,y)=>x^y,
 	})[audioBlendMode.getValue()]
 }
+
 function audioTone(){
-	const duty=128/Math.max(0,Math.min(+toneDuty.value,64))
-	const pulse=Math.ceil(tonePulse.value*duty/100)
+	const cycles=128/Math.max(0,Math.min(+toneCycles.value,64))
+	const duty=Math.ceil(toneDuty.value*cycles/100)
 	const blend=audioBlend()
 	const pattern=readPattern(audioPatternEditor).map((old,i) => {
 		let r=0
-		for(let b=0;b<8;b++) r |= ((i*8+b)%duty<pulse?1:0)*(1<<(7-b))
+		for(let b=0;b<8;b++) r |= ((i*8+b)%cycles<duty?1:0)*(1<<(7-b))
 		return blend(old,r)
 	})
 	const pitch=+audioPitch.value;
+	updateNoteInfo(pitch,128/cycles);
 	return {pattern,pitch}
 }
-toneDuty.onchange =toneDuty.onkeyup =updateAudio
-tonePulse.onchange=tonePulse.onkeyup=updateAudio
+
+toneDuty.onchange=toneDuty.onkeyup=updateAudio
+toneCycles.onchange =toneCycles.onkeyup =updateAudio
 audioPitch.onchange = audioPitch.onkeyup = updatePiano;
 
 document.getElementById('audio-tone-preview').onclick = _ => {
@@ -191,7 +195,20 @@ function updateAudio() {
 }
 
 function updatePiano() {
-	drawPiano(Math.floor((+audioPitch.value-16)/4),Math.floor((+audioPitch.value-16)/4));
+	drawPiano(Math.floor((+audioPitch.value-19)/4),Math.floor((+audioPitch.value-19)/4));
+	updateNoteInfo(+audioPitch.value,+toneCycles.value);
+}
+
+function updateNoteInfo(pitch,multiply) {
+	let freq = multiply*4000*2**((pitch-64)/48)/128
+	let note = Math.round(Math.log2(freq/440)*12);
+	let nfrq = 2**(note/12)*440;
+	let nkey =
+		"AABCCDDEFFGG"[(12+note%12)%12]+
+		"-$--$-$--$-$"[(12+note%12)%12]+
+		Math.floor((note-3)/12+5);
+	toneInfo.innerHTML = freq.toFixed(2)+" hz ≈ "+
+		nfrq.toFixed(2)+" hz ("+nkey+")";
 }
 
 audioPatternEditor.on('change', updateAudio)
