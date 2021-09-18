@@ -19,6 +19,11 @@ function binaryFormat (n)         { return '0b' + zeroPad(n.toString(2), 8) }
 function maskFormat   (n)         { return emulator.maskFormatOverride ? binaryFormat(n) : numericFormat(n) }
 function numericFormat(n, format) { return (FORMATS[format||emulator.numericFormatStr])(n) }
 
+const saveFile=(n,u)=>{const t=document.querySelector('#mainlink');t.download=n,t.href=u,t.click()}
+const saveText=(n,x)=>{saveFile(n,`data:text/plain;base64,${btoa(x)}`)}
+const saveGif =(n,x)=>{saveFile(n,`data:image/octet-stream;base64,${btoa(x.map(x=>String.fromCharCode(x)).join(''))}`)}
+const saveBin =(n,x)=>{saveFile(n,`data:application/octet-stream;base64,${btoa(x.map(x=>String.fromCharCode(x)).join(''))}`)}
+
 function ajax(method, url, payload, then) {
   const x = new XMLHttpRequest()
   x.open(method, url)

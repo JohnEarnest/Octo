@@ -69,13 +69,10 @@ document.getElementById('binary-open').onclick = _ => {
 }
 document.getElementById('binary-save-ch8').onclick = _ => {
 	var prog = compile()
-	if (prog == null) { return }
-	const name = binaryFilename.value
-	saveAs(new Blob([new Uint8Array(prog.rom)], {type: 'application/octet-stream'}), name+'.ch8')
+	if(prog)saveBin(binaryFilename.value+'.ch8',prog.rom)
 }
 document.getElementById('binary-save-8o').onclick = _ => {
-	const name = binaryFilename.value
-	saveAs(new Blob([editor.getValue()], {type: 'text/plain;charset=utf-8'}), name+'.8o')
+	saveText(binaryFilename.value+'.8o', editor.getValue())
 }
 document.getElementById('binary-save-cart').onclick = _ => {
 	const name = binaryFilename.value
@@ -159,7 +156,7 @@ document.getElementById('cartridge-cancel').onclick = _ => {
 }
 document.getElementById('cartridge-save').onclick = _ => {
 	const cart = buildCartridge(getCartridgeLabel(), preparePayload(), cartImageBytes)
-	saveAs(new Blob([new Uint8Array(cart)], {type: 'image/gif'}), binaryFilename.value+'.gif')
+	saveGif(binaryFilename.value+'.gif',cart)
 	setVisible(cartModal, false)
 }
 
@@ -182,13 +179,10 @@ document.getElementById('html-cancel').onclick = _ => {
 }
 document.getElementById('html-save').onclick = _ => {
 	setVisible(htmlModal, false)
-	const name = binaryFilename.value
 	const options = {
 		staticKeymap: keyConfigStandalone.getValue(),
 		scale:        htmlScale.getValue(),
 		inputMode:    htmlInput.getValue(),
 	}
-	buildStandalone(x => {
-		saveAs(new Blob([x], {type: 'text/html;charset=utf-8'}, name+'.html'))
-	}, options)
+	buildStandalone(x => saveText(binaryFilename.value+'.html',x), options)
 }

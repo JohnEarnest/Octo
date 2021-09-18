@@ -51,7 +51,7 @@ runRecord.onclick = _ => {
 	}
 	else {
 		if (heldFrame != null) currentRecording.frame(heldFrame, heldTicks * 2)
-		saveAs(new Blob([new Uint8Array(currentRecording.finish())], {type: 'image/gif'}), 'recording.gif')
+		saveGif('recording.gif',currentRecording.finish())
 		runRecord.src = 'images/record.png'
 		currentRecording = null
 	}
