@@ -444,8 +444,13 @@ function injectAdaptiveControls(type, screen, keyup, keydown) {
 
   if (type == 'none') return
   if (type == 'seg16fill') { type='seg16'; options.mode='fill' }
-  // defer installing adaptive input until we actually see
-  // an input event from the user:
-  ael(screen, 'touchstart', install)
-  ael(screen, 'mousedown',  install)
+  if (type in {seg16:1,seg16fill:1}){
+    install()
+  }
+  else {
+    // defer installing adaptive input until we actually see
+    // an input event from the user:
+    ael(screen, 'touchstart', install)
+    ael(screen, 'mousedown',  install)
+  }
 }
