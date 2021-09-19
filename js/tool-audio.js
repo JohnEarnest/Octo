@@ -203,15 +203,14 @@ function updatePiano() {
 }
 
 function updateNoteInfo(pitch,multiply) {
-	let freq = multiply*4000*2**((pitch-64)/48)/128
-	let note = Math.round(Math.log2(freq/440)*12);
-	let nfrq = 2**(note/12)*440;
-	let nkey =
-		"AABCCDDEFFGG"[(12+note%12)%12]+
-		"-$--$-$--$-$"[(12+note%12)%12]+
-		Math.floor((note-3)/12+5);
-	toneInfo.innerHTML = freq.toFixed(2)+" hz ≈ "+
-		nfrq.toFixed(2)+" hz ("+nkey+")";
+	let freq = multiply*4000*2**((pitch-64)/48)/128;
+	let note = Math.round(Math.log2(freq/440)*48);
+	let dist = note-Math.round(Math.log2(freq/440/multiply)*48);
+	let intv = (dist<0?"":"+")+Math.round(dist/4)+" ("+dist+")";
+	let nfrq = 2**(Math.round(note/4)/12)*440;
+	let ikey = (12+Math.round(note/4)%12)%12;
+	let nkey = "AABCCDDEFFGG"[ikey]+"-$--$-$--$-$"[ikey]+Math.floor((Math.round(note/4)-3)/12+5);
+	toneInfo.innerHTML = freq.toFixed(2)+" hz ≈ "+nfrq.toFixed(2)+" hz ["+nkey+"]; "+intv;
 }
 
 audioPatternEditor.on('change', updateAudio)

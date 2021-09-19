@@ -2,15 +2,14 @@
 * Sprite editor:
 **/
 
-const SPRITE_SCALE  = 20
+const SPRITE_SCALE  = 16
 const spriteDraw    = document.getElementById('sprite-draw')
 const sprite16      = toggleButton(document.getElementById('sprite-16'), 0, changeSpriteSize)
 const spriteColor   = toggleButton(document.getElementById('sprite-color'), 0, updateSpriteEditor)
-const spriteClear   = document.getElementById('sprite-clear')
 const spritePalette = radioBar(document.getElementById('sprite-palette'), 1, x => {})
 const spriteEditor  = textBox(document.getElementById('sprite-editor'), false, '')
+const spriteBlend   = textBox(document.getElementById('sprite-blend'), false, '')
 
-spriteClear.onclick = _ => { spritePixels = []; updateSpriteEditor() }
 function spriteLength() { return (sprite16.getValue() ? 32 : 15) * (spriteColor.getValue() ? 2 : 1) }
 function spriteDim(big) { return big ? { rows:16, cols:16 } : { rows:15, cols:8 } }
 
@@ -74,6 +73,62 @@ function scrollSprite(dx, dy) {
   setSpritePixels(dim, getSpritePixels(dim, dx, dy))
   updateSpriteEditor()
 }
+function spriteFlipH(){ // Flip Horizontally
+  const c = spriteColor.getValue()
+  const dim = spriteDim(sprite16.getValue())
+  setSpritePixels(dim, range(dim.rows).map(row => {
+    return range(dim.cols).map(col => {
+      return getSpritePixel(dim.cols-col-1, row,dim.cols == 16, c)
+    })
+  }));
+}
+function spriteFlipV(){ // Flip Vertically
+  const c = spriteColor.getValue()
+  const dim = spriteDim(sprite16.getValue())
+  setSpritePixels(dim, range(dim.rows).map(row => {
+    return range(dim.cols).map(col => {
+      return getSpritePixel(col,dim.rows-row-1,dim.cols == 16, c)
+    })
+  }));
+}
+function spriteFlipD(){ // Flip Diagonally
+  const c = spriteColor.getValue()
+  const dim = spriteDim(sprite16.getValue())
+  setSpritePixels(dim, range(dim.rows).map(row => {
+    return range(dim.cols).map(col => {
+      return getSpritePixel(row,col,dim.cols == 16, c)
+    })
+  }));
+}
+
+/**
+*  Blending:
+**/
+
+function spriteBlendSwap(){
+  let temp = readBytes(spriteBlend, spriteLength());
+  showHex(spriteBlend,spritePixels);
+  showHex(spriteEditor,temp);
+  spritePixels = temp; updateSpriteEditor();
+}
+
+function spriteBlendOR(){
+  let temp = readBytes(spriteBlend, spriteLength());
+  for(var i=0;i<temp.length;i++) spritePixels[i] |= temp[i];
+  showHex(spriteEditor,spritePixels); updateSpriteEditor();
+}
+
+function spriteBlendAND(){
+  let temp = readBytes(spriteBlend, spriteLength());
+  for(var i=0;i<temp.length;i++) spritePixels[i] &= temp[i];
+  showHex(spriteEditor,spritePixels); updateSpriteEditor();
+}
+
+function spriteBlendXOR(){
+  let temp = readBytes(spriteBlend, spriteLength());
+  for(var i=0;i<temp.length;i++) spritePixels[i] ^= temp[i];
+  showHex(spriteEditor,spritePixels); updateSpriteEditor();
+}
 
 /**
 * Data binding:
@@ -84,9 +139,9 @@ function scrollSprite(dx, dy) {
 // and does not ignore writes that are identical to the current data.
 var spriteHandlingRefresh = false
 
-function showHex() {
+function showHex(target, data) {
   if (spriteHandlingRefresh) return
-  writeBytes(spriteEditor, spriteLength(), spritePixels)
+  writeBytes(target, spriteLength(), data)
 }
 
 spriteEditor.on('change', _ => {
@@ -118,11 +173,26 @@ function showSprite() {
 /**
 * Main:
 **/
+document.getElementById('sprite-clear' ).onclick = _ => {
+  spritePixels = []; updateSpriteEditor() }
+document.getElementById('sprite-invert').onclick = _ => {
+  spritePixels = spritePixels.map(_=>_^255); updateSpriteEditor()  }
 
 document.getElementById('sprite-left' ).onclick = _ => scrollSprite(-1, 0)
 document.getElementById('sprite-right').onclick = _ => scrollSprite( 1, 0)
 document.getElementById('sprite-up'   ).onclick = _ => scrollSprite( 0,-1)
 document.getElementById('sprite-down' ).onclick = _ => scrollSprite( 0, 1)
+document.getElementById('sprite-swap' ).onclick = _ => spriteBlendSwap()
+document.getElementById('sprite-or'   ).onclick = _ => spriteBlendOR()
+document.getElementById('sprite-and'  ).onclick = _ => spriteBlendAND()
+document.getElementById('sprite-xor'  ).onclick = _ => spriteBlendXOR()
+document.getElementById('sprite-hflip').onclick = _ => (spriteFlipH(),updateSpriteEditor())
+document.getElementById('sprite-vflip').onclick = _ => (spriteFlipV(),updateSpriteEditor())
+document.getElementById('sprite-rotCW').onclick = _ => (spriteFlipD(),spriteFlipH(),updateSpriteEditor())
+document.getElementById('sprite-rotCC').onclick = _ => (spriteFlipD(),spriteFlipV(),updateSpriteEditor())
+
+const spriteRotCW = document.getElementById('sprite-rotCW')
+const spriteRotCC = document.getElementById('sprite-rotCC')
 
 drawOnCanvas(spriteDraw, (x, y, draw) => {
   setSpritePixel(
@@ -139,21 +209,30 @@ function updateSpriteEditor() {
   document.querySelectorAll('#sprite-palette>span').forEach((x,i) => {
     x.style.backgroundColor = getColor(i)
   })
+  
   if (sprite16.getValue()) {
     spriteDraw.width  = SPRITE_SCALE * 16
     spriteDraw.height = SPRITE_SCALE * 16
+    spriteRotCC.style.display = "block"
+    spriteRotCW.style.display = "block"
   }
   else {
     spriteDraw.width  = SPRITE_SCALE * 8
     spriteDraw.height = SPRITE_SCALE * 15
+    spriteRotCC.style.display = "none"
+    spriteRotCW.style.display = "none"
   }
   if (!spriteColor.getValue()) {
     spritePalette.setValue(1)
   }
   spritePalette.setVisible(spriteColor.getValue())
   spriteEditor.refresh()
+  spriteBlend.refresh()
 
   clampSpriteData()
-  showHex()
+  showHex(spriteEditor,spritePixels)
   showSprite()
 }
+
+clampSpriteData()
+showHex(spriteBlend,spritePixels)
