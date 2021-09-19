@@ -11,8 +11,10 @@ const audioBlendMode = radioBar(document.getElementById('audio-blend-mode'), 'no
 const PATTERN_SIZE = 16
 const PATTERN_SCALE = 2
 const emptySound = range(PATTERN_SIZE).map(_ => 0)
+
 function readPattern(source)         { return readBytes(source, PATTERN_SIZE) }
 function writePattern(target, bytes) { return writeBytes(target, PATTERN_SIZE, bytes) }
+
 writePattern(audioPatternEditor, emptySound)
 
 function drawBytes(target, bytes) {
@@ -42,7 +44,7 @@ function flipBytes(bytes, n){
 function reverseBits(bytes, n){
 	return bytes.reverse().map(x =>
 		x>>7& 1|x>>5& 2|x>>3& 4|x>>1&  8|
-		x<<1&16|x<<3&32|x<<5&64|x<<7&128);
+		x<<1&16|x<<3&32|x<<5&64|x<<7&128)
 }
 
 function playBytes(pattern, pitch){
@@ -59,7 +61,7 @@ function playBytes(pattern, pitch){
 **/
 
 function drawPiano(pressed=-1){
-	const g = audioPianoKeys.getContext('2d')
+	const g = audioPianoKeys.getContext('2d');
 	const octaves = 5, keywidth = 8;
 	
 	g.fillStyle = emulator.backgroundColor;
@@ -69,7 +71,7 @@ function drawPiano(pressed=-1){
 	for (let key=0,keypos=0;key<octaves*7;key++,keypos+=keywidth){
 		g.fillStyle = Math.ceil(12*(Math.floor(key)-3)/7)+5 == pressed ?
 			emulator.blendColor : emulator.fillColor;
-		g.fillRect(keypos,0,keywidth-1,31)
+		g.fillRect(keypos,0,keywidth-1,31);
 	}
 	// render black keys
 	for ( var m = 0; m < 2; m++ ){
@@ -166,14 +168,15 @@ function audioTone(){
 	return {pattern,pitch}
 }
 
-toneDuty.onchange=toneDuty.onkeyup=updateAudio
-toneCycles.onchange =toneCycles.onkeyup =updateAudio
-audioPitch.onchange = audioPitch.onkeyup = updatePiano;
+toneDuty.onchange = toneDuty.onkeyup = updateAudio
+toneCycles.onchange = toneCycles.onkeyup = updateAudio
+audioPitch.onchange = audioPitch.onkeyup = updatePiano
 
 document.getElementById('audio-tone-preview').onclick = _ => {
 	const tone=audioTone()
 	playBytes(tone.pattern,tone.pitch)
 }
+
 document.getElementById('audio-generate').onclick = _ => {
 	const tone=audioTone()
 	writePattern(audioPatternEditor, tone.pattern)
@@ -196,7 +199,7 @@ function updateAudio() {
 
 function updatePiano() {
 	drawPiano(Math.floor((+audioPitch.value-19)/4),Math.floor((+audioPitch.value-19)/4));
-	updateNoteInfo(+audioPitch.value,+toneCycles.value);
+	updateNoteInfo(+audioPitch.value,Math.max(0,Math.min(+toneCycles.value,64)));
 }
 
 function updateNoteInfo(pitch,multiply) {

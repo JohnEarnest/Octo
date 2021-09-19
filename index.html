@@ -87,8 +87,11 @@
       <div data-panel='audio' class='tool-header'>Audio Editor</div>
       <div data-panel='audio' class='tool-body'>
         <h1>Audio Pattern</h1>
-        <div class='preview-container'>
-          <canvas id='audio-pattern-view' width='256' height='32'></canvas>
+        <div id='audio-preview-group'>
+          <span class='preview-container'>
+            <canvas id='audio-pattern-view' width='256' height='32'></canvas>
+          </span>
+          <span id='audio-play'   class='button'>Play</span>
         </div>
         <div id='audio-pattern-editor'></div>
         <div id='audio-tone-group'>
@@ -98,18 +101,20 @@
           <div id='audio-invert'   class='button'>Invert</div>
           <div id='audio-random' class='button'>Noise</div>
         </div>
-        <h1>Audio Preview</h1>
+        <h1>Pitch selector</h1>
+        <div id='audio-preview-group'>
+          <span class='preview-container'>
+            <canvas id='audio-piano-keys' width='280' height='32'></canvas>
+          </span>
+          <span class='pair'>Pitch: <input id='audio-pitch' value='64'></span>
+        </div>
         <div id='audio-error'></div>
-        <div class='preview-container'>
-          <canvas id='audio-piano-keys' width='280' height='32'></canvas>
-        </div>
-        <div id='audio-tone-group'>
-          <div class='pair'>Pitch: <input id='audio-pitch' value='64'></div>
-          <div id='audio-play'   class='button'>Play</div>
-        </div>
         <h1>Tone Generator</h1>
-        <div class='preview-container'>
-          <canvas id='audio-tone-view' width='256' height='32'></canvas>
+        <div id='audio-preview-group'>
+          <span class='preview-container'>
+            <canvas id='audio-tone-view' width='256' height='32'></canvas>
+          </span>
+          <pain id='audio-tone-preview' class='button'>Play</span>
         </div>
         <div>Blend Mode</div>
         <div id='audio-blend-mode'>
@@ -120,8 +125,7 @@
         </div>
         <div id='audio-tone-group'>
           <div class='pair'>Duty: <input id='tone-duty' value='50'> %</div>
-          <div class='pair'>Cycles: <input id='tone-cycles' value='2'></div>
-          <div id='audio-tone-preview' class='button'>Play</div>
+          <div class='pair'>Oscillations: <input id='tone-cycles' value='2'></div>
           <div id='audio-generate'     class='button'>Generate</div>
         </div>
         <div id='audio-tone-group'></div>
@@ -565,15 +569,17 @@ input:focus { outline: none; }
 #toolbox h1 { font-size: 13px; padding-top:10px; padding-bottom:5px; margin:0; }
 #toolbox canvas { border:1px solid black; }
 #toolbox .CodeMirror { margin-top: 10px; border: 1px solid black; }
-.preview-container { display:flex; flex-direction:row; justify-content:center; margin-top:10px; }
+.preview-container { display:flex; flex-direction:row; justify-content:center; margin:5px; }
 
 #sprite-palette { margin-top: 10px; display: none; }
 #sprite-editor .CodeMirror { height: 115px; }
 #audio-pattern-editor .CodeMirror { height: 40px; }
-#audio-tone-group { display: flex; flex-direction: row; margin-top: 10px; align-items: center; }
+#audio-tone-group, #audio-preview-group { display: flex; flex-direction: row; align-items: center; }
+#audio-preview-group { margin-bottom: 8px; }
+#audio-tone-group { margin: 10px; }
 #audio-tone-group .pair { margin-right: 15px; }
 #audio-tone-group .button { margin-left: 10px; }
-#audio-tone-group input { width:60px; height:30px; margin-left:5px; }
+#audio-tone-group input, #audio-preview-group input { width:60px; height:30px; margin-left:5px; }
 #binary-editor        .CodeMirror { height: 100px; }
 #binary-filename { width: 100%; }
 
