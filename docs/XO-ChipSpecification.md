@@ -52,12 +52,11 @@ The design of Chip8 instructions with immediate addresses such as `jump` limit C
 
 Compiles into a header instruction `0xF000` followed by a pair of bytes `0xNNNN` which specify the value to store in `i`. The semantics of `i` remain identical to their normal behavior.
 
-The conditional skip instructions `0xEN9E` (`if -key then`), `0xENA1` (`if key then`), `0x3XNN` (`if vx == NN then`), `0x4XNN` (`if vx != NN then`), `0x5XY0` (`if vx == vy then`) and `0x9XY0` (`if vx != NN`) will skip over this double-wide instruction, rather than skipping halfway through it.
+The conditional skip instructions `0xEN9E` (`if -key then`), `0xENA1` (`if key then`), `0x3XNN` (`if vx == NN then`), `0x4XNN` (`if vx != NN then`), `0x5XY0` (`if vx == vy then`) and `0x9XY0` (`if vx != vy`) will skip over this double-wide instruction, rather than skipping halfway through it.
 
 This change in the behavior of conditional skip instructions should not harm any existing well-formed Chip8 or SCHIP programs, but also provides a way for programs to cleanly detect whether they are running in an interpreter which supports XO-Chip instructions:
 
-	vf := 0
-	if vf != 0 then 0xF0 0x00 jump NO_SUPPORT
+	if vf != vf then 0xF0 0x00 jump NO_SUPPORT
 	jump XO_SUPPORT
 
 Here we have created what appears to be a never-taken "dead" branch. On a Chip8 or SCHIP interpreter, the (to them, invalid) instruction 0xF000 will be skipped, and the jump to NO_SUPPORT will be executed. On an XO-Chip interpreter, the entire double-wide instruction will be skipped, and execution will proceed to XO_SUPPORT.
