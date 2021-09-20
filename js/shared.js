@@ -206,7 +206,9 @@ function audioSetup(emulator) {
 	}
 	audioEnable()
 	if (audio && !audioNode) {
-		audioNode = audio.createScriptProcessor(2048, 1, 1);
+		var bufferSize = 2**Math.max(Math.min(Math.floor(
+			Math.log2(audio.sampleRate/8000)),5),0)*512
+		audioNode = audio.createScriptProcessor(bufferSize, 1, 1);
 		audioNode.gain = audio.createGain();
 		audioNode.gain.gain.value = VOLUME ;
 		audioNode.onaudioprocess = function(audioProcessingEvent) {
@@ -279,7 +281,8 @@ function playPattern(soundLength,buffer,pitch=PITCH_BIAS,
 	var val = sampleState.val;
 
 	// lowpass settings
-	var qty = 16, rnd = 64, dec = 8;
+	var qty = Math.ceil(16*48000/audio.sampleRate)
+	var rnd = 64, dec = 8;
 	
 	for(var i = 0, il = samples; i < il; i++) {
 		for(var j = 0; j < qty; j++){

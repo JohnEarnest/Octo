@@ -112,24 +112,12 @@ function spriteBlendSwap(){
   spritePixels = temp; updateSpriteEditor();
 }
 
-function spriteBlendOR(){
+function spriteBlendFunc(func){
   let temp = readBytes(spriteBlend, spriteLength());
-  for(var i=0;i<temp.length;i++) spritePixels[i] |= temp[i];
+  for(var i=0;i<temp.length;i++)
+    spritePixels[i] = func(spritePixels[i],temp[i]);
   showHex(spriteEditor,spritePixels); updateSpriteEditor();
 }
-
-function spriteBlendAND(){
-  let temp = readBytes(spriteBlend, spriteLength());
-  for(var i=0;i<temp.length;i++) spritePixels[i] &= temp[i];
-  showHex(spriteEditor,spritePixels); updateSpriteEditor();
-}
-
-function spriteBlendXOR(){
-  let temp = readBytes(spriteBlend, spriteLength());
-  for(var i=0;i<temp.length;i++) spritePixels[i] ^= temp[i];
-  showHex(spriteEditor,spritePixels); updateSpriteEditor();
-}
-
 /**
 * Data binding:
 **/
@@ -183,13 +171,13 @@ document.getElementById('sprite-right').onclick = _ => scrollSprite( 1, 0)
 document.getElementById('sprite-up'   ).onclick = _ => scrollSprite( 0,-1)
 document.getElementById('sprite-down' ).onclick = _ => scrollSprite( 0, 1)
 document.getElementById('sprite-swap' ).onclick = _ => spriteBlendSwap()
-document.getElementById('sprite-or'   ).onclick = _ => spriteBlendOR()
-document.getElementById('sprite-and'  ).onclick = _ => spriteBlendAND()
-document.getElementById('sprite-xor'  ).onclick = _ => spriteBlendXOR()
+document.getElementById('sprite-or'   ).onclick = _ => spriteBlendFunc((a,b)=>(a|b))
+document.getElementById('sprite-and'  ).onclick = _ => spriteBlendFunc((a,b)=>(a&b))
+document.getElementById('sprite-xor'  ).onclick = _ => spriteBlendFunc((a,b)=>(a^b))
 document.getElementById('sprite-hflip').onclick = _ => (spriteFlipH(),updateSpriteEditor())
 document.getElementById('sprite-vflip').onclick = _ => (spriteFlipV(),updateSpriteEditor())
-document.getElementById('sprite-rotCW').onclick = _ => (spriteFlipD(),spriteFlipH(),updateSpriteEditor())
-document.getElementById('sprite-rotCC').onclick = _ => (spriteFlipD(),spriteFlipV(),updateSpriteEditor())
+document.getElementById('sprite-rotCC').onclick = _ => (spriteFlipH(),spriteFlipD(),updateSpriteEditor())
+document.getElementById('sprite-rotCW').onclick = _ => (spriteFlipV(),spriteFlipD(),updateSpriteEditor())
 
 const spriteRotCW = document.getElementById('sprite-rotCW')
 const spriteRotCC = document.getElementById('sprite-rotCC')
@@ -200,12 +188,14 @@ drawOnCanvas(spriteDraw, (x, y, draw) => {
     Math.floor(y / SPRITE_SCALE),
     sprite16.getValue(),
     spriteColor.getValue(),
-    draw ? spritePalette.getValue() : 0
+    draw == 1 ? spritePalette.getValue() : 0
   )
+  showSprite()
+}, (x, y, draw) => {
   updateSpriteEditor()
 })
 
-function updateSpriteEditor() {
+function updateSpriteEditor(updateTextBox=true) {
   document.querySelectorAll('#sprite-palette>span').forEach((x,i) => {
     x.style.backgroundColor = getColor(i)
   })
@@ -226,11 +216,12 @@ function updateSpriteEditor() {
     spritePalette.setValue(1)
   }
   spritePalette.setVisible(spriteColor.getValue())
+
   spriteEditor.refresh()
   spriteBlend.refresh()
+  showHex(spriteEditor,spritePixels)
 
   clampSpriteData()
-  showHex(spriteEditor,spritePixels)
   showSprite()
 }
 

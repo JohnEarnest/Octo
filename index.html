@@ -67,8 +67,8 @@
         <div class='buttonbar'>
           <div id='sprite-16'>16x16 Sprite</div>
           <div id='sprite-color'>Color Sprite</div>
-          <div id='sprite-clear'>Clear</div>
           <div id='sprite-invert'>Invert</div>
+          <div id='sprite-clear'>Clear</div>
         </div>
         <div id='sprite-palette'>
           <span data-value='0'>Background</span>
@@ -84,10 +84,10 @@
           <div id='sprite-down'>&darr;</div>
           <div id='sprite-left'>&larr;</div>
           <div id='sprite-right'>&rarr;</div> 
-          <div id='sprite-hflip'>&hArr;</div>
           <div id='sprite-vflip'>&vArr;</div>
-          <div id='sprite-rotCW' style='display:none'>&#x21BB;</div>
+          <div id='sprite-hflip'>&hArr;</div>
           <div id='sprite-rotCC' style='display:none'>&#x21BA;</div>
+          <div id='sprite-rotCW' style='display:none'>&#x21BB;</div>
         </div>
         <div id='sprite-editor'></div>
         <h1>Sprite Pattern Blender</h1>
@@ -116,6 +116,7 @@
           <div id='audio-reverse' class='button'>Reverse</div>
           <div id='audio-invert'  class='button'>Invert</div>
           <div id='audio-random'  class='button'>Noise</div>
+          <div id='audio-clear'   class='button'>Clear</div>
         </div>
         <h1>Pitch Selector</h1>
         <div id='audio-preview-group'>
@@ -124,7 +125,7 @@
           </span>
           <span class='pair'>Pitch: <input id='audio-pitch' value='64'></span>
         </div>
-        <div id='audio-error'></div>
+        <center><i><div id='audio-error'>left / right click to play audio / tone pattern</div></i></center>
         <h1>Tone Generator</h1>
         <div id='audio-preview-group'>
           <span class='preview-container'>
@@ -141,7 +142,7 @@
         </div>
         <div id='audio-tone-group'>
           <div class='pair'>Duty: <input id='tone-duty' value='50'> %</div>
-          <div class='pair'>Oscillations: <input id='tone-cycles' value='2'></div>
+          <div class='pair'>Oscillations: <input id='tone-cycles' value='4'></div>
           <div id='audio-generate'     class='button'>Generate</div>
         </div>
         <center><i><div id='tone-info'></div></i></center>

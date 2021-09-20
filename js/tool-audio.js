@@ -10,12 +10,12 @@ const audioBlendMode = radioBar(document.getElementById('audio-blend-mode'), 'no
 
 const PATTERN_SIZE = 16
 const PATTERN_SCALE = 2
-const emptySound = range(PATTERN_SIZE).map(_ => 0)
 
 function readPattern(source)         { return readBytes(source, PATTERN_SIZE) }
 function writePattern(target, bytes) { return writeBytes(target, PATTERN_SIZE, bytes) }
 
-writePattern(audioPatternEditor, emptySound)
+var audioPatternData = range(PATTERN_SIZE).map(_ => 0)
+writePattern(audioPatternEditor, audioPatternData)
 
 function drawBytes(target, bytes) {
 	const w = target.width
@@ -95,6 +95,11 @@ drawOnCanvas(audioPianoKeys, (x, y, draw) => {
 		Math.ceil( 12 * ( Math.floor(k) - 3 ) / 7 ) + 4;
 	audioPitch.value = press * 4 + 19;
 	updatePiano();
+}, (x, y, draw) => {
+	switch(draw){
+		case 1: audioPreview(); break;
+		case 2: tonePreview(); break;
+	}
 })
 
 /**
@@ -105,37 +110,42 @@ const audioPitch = document.getElementById('audio-pitch')
 
 drawOnCanvas(audioPatternCanvas, (x, y, draw) => {
 	const index   = Math.min(PATTERN_SIZE*8, Math.max(0, Math.floor(x / PATTERN_SCALE)))
-	const pattern = readPattern(audioPatternEditor)
-	setBit(pattern, index, draw)
-	writePattern(audioPatternEditor, pattern)
+	setBit(audioPatternData, index, draw == 1)
+	drawBytes(audioPatternCanvas, audioPatternData)
+},(x, y, draw) => {
+	writePattern(audioPatternEditor, audioPatternData)
 	updateAudio()
 })
-function audioPreview(){
-	playBytes(readPattern(audioPatternEditor), Math.max(0,Math.min(+audioPitch.value,255)))
-}
+
 document.getElementById('audio-reverse').onclick = _ => {
-	writePattern(audioPatternEditor, reverseBits(readPattern(audioPatternEditor)))
+	writePattern(audioPatternEditor, audioPatternData = reverseBits(audioPatternData))
 	updateAudio()
 }
 document.getElementById('audio-invert').onclick = _ => {
-	writePattern(audioPatternEditor, flipBytes(readPattern(audioPatternEditor)))
+	writePattern(audioPatternEditor, audioPatternData = flipBytes(audioPatternData))
 	updateAudio()
 }
 document.getElementById('audio-left').onclick = _ => {
-	writePattern(audioPatternEditor, shiftBytes(readPattern(audioPatternEditor), 1))
+	writePattern(audioPatternEditor, audioPatternData = shiftBytes(audioPatternData, 1))
 	updateAudio()
 }
 document.getElementById('audio-right').onclick = _ => {
-	writePattern(audioPatternEditor, shiftBytes(readPattern(audioPatternEditor), -1))
+	writePattern(audioPatternEditor, audioPatternData = shiftBytes(audioPatternData, -1))
 	updateAudio()
 }
-document.getElementById('audio-play').onclick = _ => audioPreview()
+
 document.getElementById('audio-random').onclick = _ => {
-	audioPitch.value=(Math.random() * 256) & 0xFF
-	writePattern(audioPatternEditor, emptySound.map(_ => (Math.random() * 256) & 0xFF))
-	updateAudio()
-	audioPreview()
+	writePattern(audioPatternEditor,
+		audioPatternData = audioPatternData.map(_ => (Math.random() * 256) & 0xFF))
+		updateAudio(); audioPreview()
 }
+
+document.getElementById('audio-clear').onclick = _ => {
+	writePattern(audioPatternEditor, audioPatternData = audioPatternData.map(_=>0));
+	updateAudio(); 
+}
+
+document.getElementById('audio-play').onclick = audioPreview
 
 /**
 * Tone Generator panel
@@ -158,28 +168,21 @@ function audioTone(){
 	const cycles=128/Math.max(0,Math.min(+toneCycles.value,64))
 	const duty=Math.ceil(toneDuty.value*cycles/100)
 	const blend=audioBlend()
-	const pattern=readPattern(audioPatternEditor).map((old,i) => {
+	return audioPatternData.map((old,i) => {
 		let r=0
 		for(let b=0;b<8;b++) r |= ((i*8+b)%cycles<duty?1:0)*(1<<(7-b))
 		return blend(old,r)
 	})
-	const pitch=+audioPitch.value;
-	updateNoteInfo(pitch,128/cycles);
-	return {pattern,pitch}
 }
 
 toneDuty.onchange = toneDuty.onkeyup = updateAudio
 toneCycles.onchange = toneCycles.onkeyup = updateAudio
 audioPitch.onchange = audioPitch.onkeyup = updatePiano
 
-document.getElementById('audio-tone-preview').onclick = _ => {
-	const tone=audioTone()
-	playBytes(tone.pattern,tone.pitch)
-}
+document.getElementById('audio-tone-preview').onclick = tonePreview
 
 document.getElementById('audio-generate').onclick = _ => {
-	const tone=audioTone()
-	writePattern(audioPatternEditor, tone.pattern)
+	writePattern(audioPatternEditor, audioTone())
 	audioPitch.value=tone.pitch
 	updateAudio()
 	audioPreview()
@@ -189,11 +192,14 @@ document.getElementById('audio-generate').onclick = _ => {
 * Main
 **/
 
+function audioPreview(){ playBytes(audioPatternData, +audioPitch.value) }
+
+function tonePreview(){ playBytes(audioTone(), +audioPitch.value) }
+
 function updateAudio() {
 	audioPatternEditor.refresh()
-	drawBytes(audioPatternCanvas, readPattern(audioPatternEditor))
-	const tone=audioTone()
-	drawBytes(audioToneCanvas, tone.pattern)
+	drawBytes(audioPatternCanvas, audioPatternData)
+	drawBytes(audioToneCanvas, audioTone())
 	updatePiano()
 }
 
@@ -209,8 +215,11 @@ function updateNoteInfo(pitch,multiply) {
 	let intv = (dist<0?"":"+")+Math.round(dist/4)+" ("+dist+")";
 	let nfrq = 2**(Math.round(note/4)/12)*440;
 	let ikey = (12+Math.round(note/4)%12)%12;
-	let nkey = "AABCCDDEFFGG"[ikey]+"-$--$-$--$-$"[ikey]+Math.floor((Math.round(note/4)-3)/12+5);
-	toneInfo.innerHTML = freq.toFixed(2)+" hz ≈ "+nfrq.toFixed(2)+" hz ["+nkey+"]; "+intv;
+	let nkey = "AABCCDDEFFGG"[ikey]+"-$--$-$--$-$"[ikey]+
+		Math.floor((Math.round(note/4)-3)/12+5);
+	toneInfo.innerHTML = freq.toFixed(2)+" hz ≈ "+
+		nfrq.toFixed(2)+" hz ["+nkey+"]; "+intv;
 }
 
-audioPatternEditor.on('change', updateAudio)
+audioPatternEditor.on('change', _=>(
+	audioPatternData=readPattern(audioPatternEditor),updateAudio()))
