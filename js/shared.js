@@ -281,7 +281,7 @@ function playPattern(soundLength,buffer,pitch=PITCH_BIAS,
 	var val = sampleState.val;
 
 	// lowpass settings
-	var qty = Math.ceil(16*48000/audio.sampleRate)
+	var qty = Math.max(Math.ceil(16*48000/audio.sampleRate))
 	var rnd = 64, dec = 8;
 	
 	for(var i = 0, il = samples; i < il; i++) {

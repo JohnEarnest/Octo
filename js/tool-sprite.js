@@ -195,7 +195,7 @@ drawOnCanvas(spriteDraw, (x, y, draw) => {
   updateSpriteEditor()
 })
 
-function updateSpriteEditor(updateTextBox=true) {
+function updateSpriteEditor() {
   document.querySelectorAll('#sprite-palette>span').forEach((x,i) => {
     x.style.backgroundColor = getColor(i)
   })
@@ -219,9 +219,9 @@ function updateSpriteEditor(updateTextBox=true) {
 
   spriteEditor.refresh()
   spriteBlend.refresh()
-  showHex(spriteEditor,spritePixels)
-
+  
   clampSpriteData()
+  showHex(spriteEditor,spritePixels)
   showSprite()
 }
 

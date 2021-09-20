@@ -182,10 +182,8 @@ audioPitch.onchange = audioPitch.onkeyup = updatePiano
 document.getElementById('audio-tone-preview').onclick = tonePreview
 
 document.getElementById('audio-generate').onclick = _ => {
-	writePattern(audioPatternEditor, audioTone())
-	audioPitch.value=tone.pitch
-	updateAudio()
-	audioPreview()
+	writePattern(audioPatternEditor, audioPatternData = audioTone())
+	updateAudio(); audioPreview()
 }
 
 /**
