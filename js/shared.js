@@ -273,12 +273,16 @@ function playPattern(soundLength,buffer,pitch=PITCH_BIAS,
 	var step = freq / audio.sampleRate;
 	var pos = sampleState.pos;
 
-	var lowPassAlpha = getLowPassAlpha(audio.sampleRate);
+	var quality = 8;
+	var lowPassAlpha = getLowPassAlpha(audio.sampleRate * quality);
 	
 	for(var i = 0, il = samples; i < il; i++) {
-		var cell = pos >> 3, shift = pos & 7 ^ 7;
-		audioBuffer[i] = getLowPassFilteredValue(lowPassAlpha, buffer[cell] >> shift & 1);
-		pos = ( pos + step ) % bufflen;
+		for (var j = 0; j < quality; ++j) {
+			var cell = pos >> 3, shift = pos & 7 ^ 7;
+			var value = getLowPassFilteredValue(lowPassAlpha, buffer[cell] >> shift & 1);
+			pos = ( pos + step/quality ) % bufflen;
+		}
+		audioBuffer[i] = value;
 	}
 
 	audioData.push(new AudioBuffer(audioBuffer, samples));
