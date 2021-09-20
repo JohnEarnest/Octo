@@ -260,8 +260,7 @@ function stopAudio() {
 var VOLUME = 0.25;
 
 function playPattern(soundLength,buffer,pitch=PITCH_BIAS,
-	sampleState={"pos":0,"val":0,"vel":0}) {
-
+	sampleState={ pos: 0 }) {
 	if (!audio) { return; }
 	audioEnable()
 
@@ -271,34 +270,22 @@ function playPattern(soundLength,buffer,pitch=PITCH_BIAS,
 	var bufflen = buffer.length * 8;
 	var audioBuffer = new Float32Array(samples);
 
-	var step = freq / audio.sampleRate;
-	
-	// get sample states
+	var step = freq / audio.sampleRate;	
 	var pos = sampleState.pos;
-	var vel = sampleState.vel;
-	var val = sampleState.val;
-
-	// lowpass settings
-	var qty = 16, rnd = 64, dec = 8;
 	
 	for(var i = 0, il = samples; i < il; i++) {
-		for(var j = 0; j < qty; j++){
-			var cell = pos >> 3, shift = pos & 7 ^ 7;
-			var sample = buffer[cell] >> shift & 1;
-			pos = ( pos + step / qty ) % bufflen;
-			vel += sample - val - vel / dec;
-			val += vel / rnd;
-		}
-		audioBuffer[i] = val;
+		var cell = pos >> 3, shift = pos & 7 ^ 7;
+		audioBuffer[i] = getBandLimitedValue(buffer[cell] >> shift & 1);
+		pos = ( pos + step ) % bufflen;
 	}
 
 	audioData.push(new AudioBuffer(audioBuffer, samples));
 	
-	return {"pos":pos,"val":val,"vel":vel}
+	return { pos };
 }
 
 function AudioControl(){
-	this.state = {"pos":0,"val":0,"vel":0};
+	this.state = { pos: 0 };
 	this.reset = true;
 	this.buffer = [];
 
@@ -324,4 +311,76 @@ function escapeHtml(str) {
     var div = document.createElement('div');
     div.appendChild(document.createTextNode(str));
     return div.innerHTML;
+}
+
+// Generate samples for a band-limited step (BLEP), which goes from
+// 0 to 1 without containing any frequencies beyond the Nyquist limit.
+// This allows us to eliminate sampling artifacts from the generated audio.
+//
+// This is similar to the technique described in
+// https://www.experimentalscene.com/articles/minbleps.php
+// (also check the references), except that we use the linear-phase BLEP
+// directly instead of doing Fourier transforms to get a MinBLEP.
+const blepSamples = (() => {
+	// Quality factor, has to be an integer.
+	// Works best if filterWidth*cutoff is an integer, because
+	// then the zeroes of the sinc filter and the window function align.
+	const filterWidth = 7;
+
+	// Cutoff frequency as a fraction of sampling frequency.
+	// We have to go a bit below the Nyquist limit of 1/2
+	// to compensate for our non-infinite filter.
+	const cutoff = 3 / 7;
+
+	const sinc = (x) => Math.sin(x * Math.PI) / (x * Math.PI);
+	const blackmanWindow = (r) => {
+		const f = 2 * Math.PI * r;
+		return 0.42 - 0.5 * Math.cos(f) + 0.08 * Math.cos(2 * f);
+	};
+
+	// Generate integral of windowed sinc function.
+	const blepSamples = [];
+	let a = 0;
+	for (let i = 0; i < 2 * filterWidth; ++i) {
+		const r = (i + 0.5) / (2 * filterWidth);
+		a += blackmanWindow(r) * sinc((r * 2 - 1) * filterWidth * cutoff);
+		blepSamples.push(a);
+	}
+
+	// Normalize integral, remove last value.
+	const scale = 1 / blepSamples.pop();
+	for (let i = 0; i < blepSamples.length; ++i) {
+		blepSamples[i] *= scale;
+	}
+
+	return blepSamples;
+})();
+
+// This works as a circular buffer of corrections that need to
+// be made to the blepTargetValue.
+const blepBuffer = new Array(blepSamples.length - 1).fill(0);
+let blepBufferIndex = 0;
+
+let blepTargetValue = 0;
+
+function getBandLimitedValue(targetValue) {
+	let output = blepTargetValue + blepBuffer[blepBufferIndex];
+	blepBuffer[blepBufferIndex] = 0;
+
+	if (targetValue !== blepTargetValue) {
+		const d = targetValue - blepTargetValue;
+		blepTargetValue = targetValue;
+
+		// Output first blep sample and fill the circular buffer with
+		// inverted blep samples to execute the band-limited step towards
+		// blepTargetValue.
+		output += blepSamples[0] * d;
+		for (let i = 1; i < blepSamples.length; ++i) {
+			blepBuffer[(blepBufferIndex + i) % blepBuffer.length] +=
+				(1 - blepSamples[i]) * -d;
+		}
+	}
+
+	blepBufferIndex = (blepBufferIndex + 1) % blepBuffer.length;
+	return output;
 }
