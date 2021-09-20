@@ -260,8 +260,7 @@ function stopAudio() {
 var VOLUME = 0.25;
 
 function playPattern(soundLength,buffer,pitch=PITCH_BIAS,
-	sampleState={"pos":0,"val":0,"vel":0}) {
-
+	sampleState={ pos: 0 }) {
 	if (!audio) { return; }
 	audioEnable()
 
@@ -272,33 +271,25 @@ function playPattern(soundLength,buffer,pitch=PITCH_BIAS,
 	var audioBuffer = new Float32Array(samples);
 
 	var step = freq / audio.sampleRate;
-	
-	// get sample states
 	var pos = sampleState.pos;
-	var vel = sampleState.vel;
-	var val = sampleState.val;
 
-	// lowpass settings
-	var qty = 16, rnd = 64, dec = 8;
+	var lowPassAlpha = getLowPassAlpha(audio.sampleRate);
 	
 	for(var i = 0, il = samples; i < il; i++) {
-		for(var j = 0; j < qty; j++){
-			var cell = pos >> 3, shift = pos & 7 ^ 7;
-			var sample = buffer[cell] >> shift & 1;
-			pos = ( pos + step / qty ) % bufflen;
-			vel += sample - val - vel / dec;
-			val += vel / rnd;
-		}
-		audioBuffer[i] = val;
+		var cell = pos >> 3, shift = pos & 7 ^ 7;
+		audioBuffer[i] = getLowPassFilteredValue(lowPassAlpha, buffer[cell] >> shift & 1);
+		pos = ( pos + step ) % bufflen;
 	}
 
 	audioData.push(new AudioBuffer(audioBuffer, samples));
 	
-	return {"pos":pos,"val":val,"vel":vel}
+	return { pos };
 }
 
+const silentPattern = new Array(64).fill(0);
+
 function AudioControl(){
-	this.state = {"pos":0,"val":0,"vel":0};
+	this.state = { pos: 0 };
 	this.reset = true;
 	this.buffer = [];
 
@@ -307,7 +298,7 @@ function AudioControl(){
 
 	this.refresh = _ => {
 		if (this.reset) this.state.pos = 0; this.reset = false;
-		if (this.timer == 0) playPattern(_,[0]); // play silence
+		if (this.timer == 0) playPattern(_,silentPattern);
 		else this.state = playPattern(_,this.buffer,this.pitch,this.state);
 		if((this.timer -= this.timer>0) == 0) this.reset = true;
 		while(audioData.length > 8) audioData.shift();
@@ -324,4 +315,28 @@ function escapeHtml(str) {
     var div = document.createElement('div');
     div.appendChild(document.createTextNode(str));
     return div.innerHTML;
+}
+
+// Should be a good way below the Nyquist limit of 22.05 kHz.
+const cutoffFrequency = 18000;
+
+// How many filters to put in sequence.
+const lowPassFilterSteps = 4;
+
+// Each filter is an exponential filter, which mimics a simple analog RC filter.
+// We need multiple of them in series to get decent attenuation near the stop band.
+
+const lowPassBuffer = new Array(lowPassFilterSteps + 1).fill(0);
+
+function getLowPassAlpha(samplingFrequency) {
+	const c = Math.cos(2 * Math.PI * cutoffFrequency / samplingFrequency);
+	return c - 1 + Math.sqrt(c * c - 4 * c + 3);
+}
+
+function getLowPassFilteredValue(alpha, targetValue) {
+	lowPassBuffer[0] = targetValue;
+	for (let i = 1; i < lowPassBuffer.length; ++i) {
+		lowPassBuffer[i] += (lowPassBuffer[i - 1] - lowPassBuffer[i]) * alpha;
+	}
+	return lowPassBuffer[lowPassBuffer.length - 1];
 }
