@@ -151,7 +151,7 @@ document.getElementById('audio-play').onclick = audioPreview
 * Tone Generator panel
 **/
 
-const toneCycles = document.getElementById('tone-cycles')
+const tonePulse  = document.getElementById('tone-pulse')
 const toneDuty   = document.getElementById('tone-duty')
 const toneInfo   = document.getElementById('tone-info')
 
@@ -165,18 +165,18 @@ function audioBlend(){
 }
 
 function audioTone(){
-	const cycles=128/Math.max(0,Math.min(+toneCycles.value,64))
-	const duty=Math.ceil(toneDuty.value*cycles/100)
+	const pulse=128/Math.max(0,Math.min(+tonePulse.value,64))
+	const duty=Math.ceil(toneDuty.value*pulse/100)
 	const blend=audioBlend()
 	return audioPatternData.map((old,i) => {
 		let r=0
-		for(let b=0;b<8;b++) r |= ((i*8+b)%cycles<duty?1:0)*(1<<(7-b))
+		for(let b=0;b<8;b++) r |= ((i*8+b)%pulse<duty?1:0)*(1<<(7-b))
 		return blend(old,r)
 	})
 }
 
 toneDuty.onchange = toneDuty.onkeyup = updateAudio
-toneCycles.onchange = toneCycles.onkeyup = updateAudio
+tonePulse.onchange = tonePulse.onkeyup = updateAudio
 audioPitch.onchange = audioPitch.onkeyup = updatePiano
 
 document.getElementById('audio-tone-preview').onclick = tonePreview
@@ -203,7 +203,7 @@ function updateAudio() {
 
 function updatePiano() {
 	drawPiano(Math.floor((+audioPitch.value-19)/4),Math.floor((+audioPitch.value-19)/4));
-	updateNoteInfo(+audioPitch.value,Math.max(0,Math.min(+toneCycles.value,64)));
+	updateNoteInfo(+audioPitch.value,Math.max(0,Math.min(+tonePulse.value,64)));
 }
 
 function updateNoteInfo(pitch,multiply) {

@@ -206,8 +206,9 @@ function audioSetup(emulator) {
 	}
 	audioEnable()
 	if (audio && !audioNode) {
-		var bufferSize = 2**Math.max(Math.min(Math.floor(
-			Math.log2(audio.sampleRate/8000)),5),0)*512
+		var bufferSize = // set bufferSize according to environment's samplerate
+			audio.sampleRate <  64000 ? 2048 : // for 48000hz or 44100hz or less
+			audio.sampleRate < 128000 ? 4096 : 8192; // for 96000hz or more
 		audioNode = audio.createScriptProcessor(bufferSize, 1, 1);
 		audioNode.gain = audio.createGain();
 		audioNode.gain.gain.value = VOLUME ;
