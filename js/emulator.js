@@ -253,9 +253,9 @@ function Emulator() {
 	this.linted = false;
 
 	// external interface stubs
-	this.exitVector  = function() {}                                   // fired by 'exit'
-	this.importFlags = function() { return [0, 0, 0, 0, 0, 0, 0, 0]; } // load persistent flags
-	this.exportFlags = function(flags) {}                              // save persistent flags
+	this.exitVector  = function() {}                                                           // fired by 'exit'
+	this.importFlags = function() { return [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]; } // load persistent flags
+	this.exportFlags = function(flags) {}                                                      // save persistent flags
 	this.buzzTimer   = function(timer) {}
 	this.buzzBuffer  = function(buffer) {}
 	this.buzzPitch   = function(pitch) {}
@@ -378,9 +378,9 @@ function Emulator() {
 			case 0x85:
 				this.flags = this.importFlags();
 				if (typeof this.flags == "undefined" || this.flags == null) {
-					this.flags = [0, 0, 0, 0, 0, 0, 0, 0];
+					this.flags = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 				}
-				for(var z = 0; z <= x; z++) { this.v[z] = this.flags[z]; }
+				for(var z = 0; z <= x; z++) { this.v[z] = 0xFF & this.flags[z]; }
 				break;
 			default:
 				haltBreakpoint("unknown misc opcode "+rest.toString(16).toUpperCase());

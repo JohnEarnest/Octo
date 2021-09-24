@@ -245,8 +245,8 @@ SuperChip or SCHIP is a set of extended Chip-8 instructions. Octo can emulate th
 - `scroll-right` Scroll the contents of the display right by 4 pixels.
 - `i := bighex vx` Set I to a large 8x10 hex char corresponding to register value.
 - `exit` Halt the program and quit the emulator.
-- `saveflags vx` Save v0-vn (n < 8) to flag registers. (Originally, HP-48 flag registers.)
-- `loadflags vx` Restore v0-vn (n < 8) from flag registers.
+- `saveflags vx` Save v0-vn to flag registers. (Originally, HP-48 flag registers.)
+- `loadflags vx` Restore v0-vn from flag registers.
 
 Flag registers are persisted using browser local storage, so provided no applications blow them away intentionally they can be used to store information between play sessions such as high score information or progress.
 

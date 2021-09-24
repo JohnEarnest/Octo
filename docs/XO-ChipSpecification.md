@@ -10,6 +10,8 @@ The XO-Chip instructions are summarized as follows:
 
 - `save vx - vy` (`0x5XY2`) save an inclusive range of registers to memory starting at `i`.
 - `load vx - vy` (`0x5XY3`) load an inclusive range of registers from memory starting at `i`.
+- `saveflags vx` (`0xFN75`) save v0-vn to flag registers. (generalizing SCHIP).
+- `loadflags vx` (`0xFN85`) restore v0-vn from flag registers. (generalizing SCHIP).
 - `i := long NNNN` (`0xF000, 0xNNNN`) load `i` with a 16-bit address.
 - `plane n` (`0xFN01`) select zero or more drawing planes by bitmask (0 <= n <= 3).
 - `audio` (`0xF002`) store 16 bytes starting at `i` in the audio pattern buffer.
@@ -43,6 +45,13 @@ Reads or writes proceed in the order the register arguments are provided. Thus, 
 	save v3 - v0   # write them back in reversed order
 
 These instructions also provide another useful function. Unlike normal `load` and `save`, they do not postincrement `i`. The `i` postincrement is useful in some situations but inconvenient in others. When a postincrement is desired the standard `load` and `save` instructions may be used, and when it is not desired a programmer may substitute the ranged version specifying `v0` as the minimum range.
+
+SCHIP provides a pair of instructions for reading and writing "flag registers", which were originally OS-level variables on the HP-48 calculator. Some modern CHIP-8 implementations will persist the data stored in these register between runs. The HP-48 only offered 8 bytes worth of flag registers. As a natural generalization of this functionality, using the same nybble-wise instruction encoding, XO-Chip allows for 16 bytes instead:
+
+    loadflags v3  # valid in SCHIP
+    loadflags vF  # only valid in XO-Chip
+
+This generalization both expands persistent storage slightly and gives programmers a fast and convenient way to back up or restore the full v-register file without manipulating the `i` register or consuming any extra ROM space.
 
 Extended Memory
 ---------------
@@ -113,4 +122,4 @@ SuperChip8 provided a set of screen scrolling instructions. These are very handy
 Changelog
 ---------
 - 1.0 : initial release.
-- 1.1 : added the `pitch := vx` instruction.
+- 1.1 : added the `pitch := vx` instruction, generalized `loadflags`/`saveflags` to a full nybble range.

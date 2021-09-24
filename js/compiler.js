@@ -944,16 +944,14 @@ Compiler.prototype.instruction = function(token) {
 	else if (token == "exit")         { this.schip = true; this.inst(0x00, 0xFD); }
 	else if (token == "lores")        { this.schip = true; this.inst(0x00, 0xFE); }
 	else if (token == "hires")        { this.schip = true; this.inst(0x00, 0xFF); }
-	else if (token == "saveflags") {
+	else if (token == "saveflags")    {
 		var flags = this.register();
-		if (flags > 7) { throw "Argument to saveflags must be v[0,7]."; }
-		this.schip = true;
+		this.schip = true; this.xo = flags > 7;
 		this.inst(0xF0 | flags, 0x75);
 	}
 	else if (token == "loadflags") {
 		var flags = this.register();
-		if (flags > 7) { throw "Argument to loadflags must be v[0,7]."; }
-		this.schip = true;
+		this.schip = true; this.xo = flags > 7;
 		this.inst(0xF0 | flags, 0x85);
 	}
 	else if (token == "i") {
