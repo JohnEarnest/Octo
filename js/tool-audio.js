@@ -97,8 +97,8 @@ drawOnCanvas(audioPianoKeys, (x, y, draw) => {
 	updatePiano();
 }, (x, y, draw) => {
 	switch(draw){
-		case 1: audioPreview(); break;
-		case 2: tonePreview(); break;
+		case 1: tonePreview(); break;
+		case 2: audioPreview(); break;
 	}
 })
 
@@ -191,7 +191,6 @@ document.getElementById('audio-generate').onclick = _ => {
 **/
 
 function audioPreview(){ playBytes(audioPatternData, +audioPitch.value) }
-
 function tonePreview(){ playBytes(audioTone(), +audioPitch.value) }
 
 function updateAudio() {
@@ -202,7 +201,7 @@ function updateAudio() {
 }
 
 function updatePiano() {
-	drawPiano(Math.floor((+audioPitch.value-19)/4),Math.floor((+audioPitch.value-19)/4));
+	drawPiano(Math.floor((+audioPitch.value-19)/4));
 	updateNoteInfo(+audioPitch.value,Math.max(0,Math.min(+tonePulse.value,64)));
 }
 
