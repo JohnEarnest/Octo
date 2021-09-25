@@ -115,6 +115,8 @@ We divide this playback rate by 128 (the wavelength of our pattern in samples) t
 ```
 Giving a tone of 1756.25Hz, close to the 1760hz of A6. Thus, by altering the pattern, we have shifted the note played by two octaves. Altering the pattern and pitch separately or in concert can produce a wide range of effects.
 
+The playback offset of the pattern buffer should only be reset when the buzzer timer reaches or is directly set to 0; not as a result of simply executing `buzzer := vx`. If the buzzer timer is kept above zero on every frame, the generated waveform should thus form a continuous loop of the pattern.
+
 Scrolling
 ---------
 SuperChip8 provided a set of screen scrolling instructions. These are very handy for some kinds of games, but having scrolling in only 3 directions seriously limits their utility. XO-Chip provides a `scroll-up` which is a functional complement to SuperChip8 `scroll-down`, capable of scrolling 0 to 15 pixels at a time. The encoding of `scroll-up` is chosen to fit the existing pattern of `scroll-down`.
