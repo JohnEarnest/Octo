@@ -249,6 +249,12 @@ function lint() {
 		}
 		lintIUndefined = true
 	}
+	if ((op & 0xF0FF) == 0xF075 && (x > 7)){
+		haltLinter(`Attempted <tt>loadflags vx</tt> where x is > 7.<br>This is an XO-Chip extension.`)
+	}
+	if ((op & 0xF0FF) == 0xF085 && (x > 7)){
+		haltLinter(`Attempted <tt>saveflags vx</tt> where x is > 7.<br>This is an XO-Chip extension.`)
+	}
 
 	// drawing
 	if ((op & 0xF00F) == 0xD000 && !emulator.hires) {

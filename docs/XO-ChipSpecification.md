@@ -10,6 +10,8 @@ The XO-Chip instructions are summarized as follows:
 
 - `save vx - vy` (`0x5XY2`) save an inclusive range of registers to memory starting at `i`.
 - `load vx - vy` (`0x5XY3`) load an inclusive range of registers from memory starting at `i`.
+- `saveflags vx` (`0xFN75`) save v0-vn to flag registers. (generalizing SCHIP).
+- `loadflags vx` (`0xFN85`) restore v0-vn from flag registers. (generalizing SCHIP).
 - `i := long NNNN` (`0xF000, 0xNNNN`) load `i` with a 16-bit address.
 - `plane n` (`0xFN01`) select zero or more drawing planes by bitmask (0 <= n <= 3).
 - `audio` (`0xF002`) store 16 bytes starting at `i` in the audio pattern buffer.
@@ -43,6 +45,13 @@ Reads or writes proceed in the order the register arguments are provided. Thus, 
 	save v3 - v0   # write them back in reversed order
 
 These instructions also provide another useful function. Unlike normal `load` and `save`, they do not postincrement `i`. The `i` postincrement is useful in some situations but inconvenient in others. When a postincrement is desired the standard `load` and `save` instructions may be used, and when it is not desired a programmer may substitute the ranged version specifying `v0` as the minimum range.
+
+SCHIP provides a pair of instructions for reading and writing "flag registers", which were originally OS-level variables on the HP-48 calculator. Some modern CHIP-8 implementations will persist the data stored in these register between runs. The HP-48 only offered 8 bytes worth of flag registers. As a natural generalization of this functionality, using the same nybble-wise instruction encoding, XO-Chip allows for 16 bytes instead:
+
+    loadflags v3  # valid in SCHIP
+    loadflags vF  # only valid in XO-Chip
+
+This generalization both expands persistent storage slightly and gives programmers a fast and convenient way to back up or restore the full v-register file without manipulating the `i` register or consuming any extra ROM space.
 
 Extended Memory
 ---------------
@@ -106,6 +115,8 @@ We divide this playback rate by 128 (the wavelength of our pattern in samples) t
 ```
 Giving a tone of 1756.25Hz, close to the 1760hz of A6. Thus, by altering the pattern, we have shifted the note played by two octaves. Altering the pattern and pitch separately or in concert can produce a wide range of effects.
 
+The playback offset of the pattern buffer should only be reset when the buzzer timer reaches or is directly set to 0; not as a result of simply executing `buzzer := vx`. If the buzzer timer is kept above zero on every frame, the generated waveform should thus form a continuous loop of the pattern.
+
 Scrolling
 ---------
 SuperChip8 provided a set of screen scrolling instructions. These are very handy for some kinds of games, but having scrolling in only 3 directions seriously limits their utility. XO-Chip provides a `scroll-up` which is a functional complement to SuperChip8 `scroll-down`, capable of scrolling 0 to 15 pixels at a time. The encoding of `scroll-up` is chosen to fit the existing pattern of `scroll-down`.
@@ -113,4 +124,4 @@ SuperChip8 provided a set of screen scrolling instructions. These are very handy
 Changelog
 ---------
 - 1.0 : initial release.
-- 1.1 : added the `pitch := vx` instruction.
+- 1.1 : added the `pitch := vx` instruction, generalized `loadflags`/`saveflags` to a full nybble range.
