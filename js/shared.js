@@ -276,7 +276,7 @@ function playPattern(soundLength,buffer,pitch=PITCH_BIAS,
 	var step = freq / audio.sampleRate;
 	var pos = sampleState.pos;
 
-	var quality = 8;
+	var quality = Math.ceil( 192000 / audio.sampleRate ) * 2;
 	var lowPassAlpha = getLowPassAlpha(audio.sampleRate * quality);
 	
 	for(var i = 0, il = samples; i < il; i++) {
