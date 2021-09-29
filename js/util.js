@@ -54,7 +54,7 @@ function setBit(bytes, n, v) {
   const mask = 128 >> Math.floor(n % 8)
   bytes[Math.floor(n / 8)] = (bytes[Math.floor(n / 8)] & ~mask) | (mask * v)
 }
-function drawOnCanvas(target, eventPress, eventRelease=(a,b,c)=>c) {
+function drawOnCanvas(target, eventPress, eventRelease=(a,b,c)=>0) {
   var mode = 0
   function drag(event) {
     if (mode == 0) { return }
@@ -79,15 +79,21 @@ function drawOnCanvas(target, eventPress, eventRelease=(a,b,c)=>c) {
   }
   function press  (event) { mode = event.button == 2 ? 2 : 1; drag(event) }
   function context(event) { drag(event); return false }
+  function touch(event) {
+    var touches = event.changedTouches
+    event.clientX = touches[0].pageX
+    event.clientY = touches[0].pageY
+    return event
+  }
   target.onmousemove   = drag
   target.onmouseup     = release
   target.onmouseout    = release
   target.onmousedown   = press
   target.oncontextmenu = context
-  target.addEventListener("touchmove",  drag   )
-  target.addEventListener("touchstart", press  )
-  target.addEventListener("touchend",   release)
-  target.addEventListener("touchcancel",release)
+  target.addEventListener("touchmove",  e=>drag(touch(e)))
+  target.addEventListener("touchstart", e=>press(touch(e)))
+  target.addEventListener("touchend",   e=>release(touch(e)))
+  target.addEventListener("touchcancel",e=>release(touch(e)))
 }
 
 function setVisible(element, value, disp) {
