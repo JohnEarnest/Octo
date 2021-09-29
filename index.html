@@ -66,10 +66,7 @@
         <div class='buttonbar'>
           <div id='sprite-16'>16x16 Sprite</div>
           <div id='sprite-color'>Color Sprite</div>
-          <div id='sprite-left'>&lt;&lt;1</div>
-          <div id='sprite-right'>&gt;&gt;1</div>
-          <div id='sprite-up'>&and;</div>
-          <div id='sprite-down'>&or;</div>
+          <div id='sprite-invert'>Invert</div>
           <div id='sprite-clear'>Clear</div>
         </div>
         <div id='sprite-palette'>
@@ -81,28 +78,59 @@
         <div class='preview-container'>
           <canvas id='sprite-draw'></canvas>
         </div>
+        <div class='buttonbar' style='font-family:Cambria, serif'>
+          <div id='sprite-up'   >&uarr;</div>
+          <div id='sprite-down' >&darr;</div>
+          <div id='sprite-left' >&larr;</div>
+          <div id='sprite-right'>&rarr;</div> 
+          <div id='sprite-vflip'>&vArr;</div>
+          <div id='sprite-hflip'>&hArr;</div>
+          <div id='sprite-rotCC' style='display:none'>&#x21BA;</div>
+          <div id='sprite-rotCW' style='display:none'>&#x21BB;</div>
+        </div>
         <div id='sprite-editor'></div>
+        <div>Blend Sprite With</div>
+        <div id='sprite-blend'></div>
+        <div class='buttonbar'>
+          <div id='sprite-swap'>Swap</div>
+          <div id='sprite-or'  >OR</div>
+          <div id='sprite-and' >AND</div>
+          <div id='sprite-xor' >XOR</div>
+        </div>
       </div>
 
       <div data-panel='audio' class='tool-header'>Audio Editor</div>
       <div data-panel='audio' class='tool-body'>
         <h1>Audio Pattern</h1>
-        <div id='audio-error'></div>
-        <div class='preview-container'>
-          <canvas id='audio-pattern-view' width='256' height='32'></canvas>
+        <div id='audio-preview-group'>
+          <span class='preview-container'>
+            <canvas id='audio-pattern-view' width='256' height='32'></canvas>
+          </span>
+          <span id='audio-play'   class='button'>Play</span>
         </div>
         <div id='audio-pattern-editor'></div>
         <div id='audio-tone-group'>
-          <div class='pair'>Pitch: <input id='audio-pitch' value='64'></div>
-          <div id='audio-left'   class='button'>&lt;&lt;</div>
-          <div id='audio-right'  class='button'>&gt;&gt;</div>
-          <div id='audio-random' class='button'>Randomize</div>
-          <div id='audio-play'   class='button'>Play</div>
+          <div id='audio-left'    class='button'>&lt;&lt;</div>
+          <div id='audio-right'   class='button'>&gt;&gt;</div>
+          <div id='audio-reverse' class='button'>Reverse</div>
+          <div id='audio-invert'  class='button'>Invert</div>
+          <div id='audio-random'  class='button'>Noise</div>
+          <div id='audio-clear'   class='button'>Clear</div>
         </div>
-
+        <h1>Pitch Selector</h1>
+        <div id='audio-preview-group'>
+          <span class='preview-container'>
+            <canvas id='audio-piano-keys' width='280' height='32'></canvas>
+          </span>
+          <span class='pair'>Pitch: <input id='audio-pitch' value='64'></span>
+        </div>
+        <center><i><div id='audio-error'>Left / right click to play tone / audio pattern</div></i></center>
         <h1>Tone Generator</h1>
-        <div class='preview-container'>
-          <canvas id='audio-tone-view' width='256' height='32'></canvas>
+        <div id='audio-preview-group'>
+          <span class='preview-container'>
+            <canvas id='audio-tone-view' width='256' height='32'></canvas>
+          </span>
+          <span id='audio-tone-preview' class='button'>Play</span>
         </div>
         <div>Blend Mode</div>
         <div id='audio-blend-mode'>
@@ -112,14 +140,11 @@
           <span data-value='xor' >XOR </span>
         </div>
         <div id='audio-tone-group'>
-          <div class='pair'>Width: <input id='audio-width' value='16'></div>
-          <div class='pair'>Pulse: <input id='audio-pulse' value='0.5'></div>
-          <div class='pair'>Frequency: <input id='audio-freq' value='440'> Hz</div>
+          <div class='pair'>Duty: <input id='tone-duty' value='50'> %</div>
+          <div class='pair'>Pulse: <input id='tone-pulse' value='4'></div>
+          <div id='audio-generate' class='button'>Generate</div>
         </div>
-        <div id='audio-tone-group'>
-          <div id='audio-tone-preview' class='button'>Play</div>
-          <div id='audio-generate'     class='button'>Generate</div>
-        </div>
+        <center><i><div id='tone-info'></div></i></center>
       </div>
 
       <div data-panel='binary' class='tool-header'>Binary Tools</div>
@@ -442,7 +467,7 @@
 .radiobar>span:active, .radiobar .selected { background: #444; color: white; }
 
 /* reusable horizontal bar of buttons */
-.buttonbar { display: flex; flex-direction: row; margin-top: 10px; }
+.buttonbar { display: flex; flex-direction: row; margin: 6px; }
 .buttonbar>div, .button {
   flex-grow: 1;
   text-align: center;
@@ -559,15 +584,18 @@ input:focus { outline: none; }
 #toolbox h1 { font-size: 13px; padding-top:10px; padding-bottom:5px; margin:0; }
 #toolbox canvas { border:1px solid black; }
 #toolbox .CodeMirror { margin-top: 10px; border: 1px solid black; }
-.preview-container { display:flex; flex-direction:row; justify-content:center; margin-top:10px; }
+.preview-container { display:flex; flex-direction:row; justify-content:center; margin:5px; }
 
-#sprite-palette { margin-top: 10px; display: none; }
-#sprite-editor .CodeMirror { height: 115px; }
+#sprite-palette { margin-top: 10px; display: none; text-shadow: 1px 1px #808080; color: black; }
+#sprite-editor .CodeMirror { height:40px; margin:6px }
+#sprite-blend .CodeMirror { height:40px; margin:2px 6px; }
 #audio-pattern-editor .CodeMirror { height: 40px; }
-#audio-tone-group { display: flex; flex-direction: row; margin-top: 10px; align-items: center; }
+#audio-tone-group, #audio-preview-group { display: flex; flex-direction: row; align-items: center; }
+#audio-preview-group { margin-bottom: 8px; }
+#audio-tone-group { margin: 10px; }
 #audio-tone-group .pair { margin-right: 15px; }
 #audio-tone-group .button { margin-left: 10px; }
-#audio-tone-group input { width:60px; height:30px; margin-left:5px; }
+#audio-tone-group input, #audio-preview-group input { width:60px; height:30px; margin-left:5px; }
 #binary-editor        .CodeMirror { height: 100px; }
 #binary-filename { width: 100%; }
 
@@ -990,10 +1018,9 @@ function runRom(rom) {
   setRenderTarget(5, 'target')
 
   var frameTime = 1000/60;
-  var last = Date.now(), diff, origin = last+frameTime/2;
+  var timeCount = Date.now() + frameTime / 2;
   var stepFrame = _ => {
-    diff = (Date.now() - last); last += diff;
-    for(var k = 0; origin < last - frameTime && k < 2; origin += frameTime, k++){
+    for(var k = 0; timeCount < Date.now() && k < 2; timeCount += frameTime, k++){
       for(var z = 0; (z < emulator.tickrate) && (!emulator.waiting); z++) {
         if (!emulator.breakpoint) {
           if (emulator.vBlankQuirks && ((emulator.m[emulator.pc] & 0xF0) == 0xD0)) { z = emulator.tickrate }
