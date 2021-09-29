@@ -81,8 +81,8 @@ function drawOnCanvas(target, eventPress, eventRelease=(a,b,c)=>0) {
   function context(event) { drag(event); return false }
   function touch(event) {
     var touches = event.changedTouches
-    event.clientX = touches[0].pageX
-    event.clientY = touches[0].pageY
+    event.clientX = touches[0].clientX
+    event.clientY = touches[0].clientY
     return event
   }
   target.onmousemove   = drag
