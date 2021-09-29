@@ -58,6 +58,7 @@ function drawOnCanvas(target, eventPress, eventRelease=(a,b,c)=>c) {
   var mode = 0
   function drag(event) {
     if (mode == 0) { return }
+    event.preventDefault()
     const r = target.getBoundingClientRect()
     eventPress(
       event.clientX - r.left,
@@ -66,13 +67,15 @@ function drawOnCanvas(target, eventPress, eventRelease=(a,b,c)=>c) {
     )
   }
   function release(event) {
+    if (mode == 0) { return }
+    event.preventDefault()
     const r = target.getBoundingClientRect()
     eventRelease(
       event.clientX - r.left,
       event.clientY - r.top,
       mode
     )
-    mode = 0;
+    mode = 0
   }
   function press  (event) { mode = event.button == 2 ? 2 : 1; drag(event) }
   function context(event) { drag(event); return false }
@@ -81,6 +84,10 @@ function drawOnCanvas(target, eventPress, eventRelease=(a,b,c)=>c) {
   target.onmouseout    = release
   target.onmousedown   = press
   target.oncontextmenu = context
+  target.addEventListener("touchmove",  drag   )
+  target.addEventListener("touchstart", press  )
+  target.addEventListener("touchend",   release)
+  target.addEventListener("touchcancel",release)
 }
 
 function setVisible(element, value, disp) {

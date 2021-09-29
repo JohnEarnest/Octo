@@ -65,6 +65,11 @@ function setSpritePixels(dim, pix) {
   })
 }
 function changeSpriteSize(toBig) {
+  let temp = spritePixels;
+  spritePixels = readBytes(spriteBlend, 64)
+  setSpritePixels(spriteDim(toBig), getSpritePixels(spriteDim(!toBig), 0, 0))
+  showHex(spriteBlend,spritePixels);
+  spritePixels = temp;
   setSpritePixels(spriteDim(toBig), getSpritePixels(spriteDim(!toBig), 0, 0))
   updateSpriteEditor()
 }
@@ -220,10 +225,15 @@ function updateSpriteEditor() {
   spriteEditor.refresh()
   spriteBlend.refresh()
   
+  let temp = spritePixels;
+  
+  spritePixels = readBytes(spriteBlend, 64)
+  clampSpriteData()
+  showHex(spriteBlend,spritePixels)
+
+  spritePixels = temp
   clampSpriteData()
   showHex(spriteEditor,spritePixels)
+
   showSprite()
 }
-
-clampSpriteData()
-showHex(spriteBlend,spritePixels)
