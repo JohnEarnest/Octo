@@ -136,8 +136,8 @@ document.getElementById('audio-right').onclick = _ => {
 
 document.getElementById('audio-random').onclick = _ => {
 	writePattern(audioPatternEditor,
-		audioPatternData = audioPatternData.map(_ => (Math.random() * 256) & 0xFF))
-		updateAudio(); audioPreview()
+	audioPatternData = audioPatternData.map(_ => (Math.random() * 256) & 0xFF))
+	updateAudio(); audioPreview()
 }
 
 document.getElementById('audio-clear').onclick = _ => {

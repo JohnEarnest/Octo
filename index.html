@@ -63,7 +63,6 @@
     <div id='toolbox'>
       <div data-panel='sprite' class='tool-header'>Sprite Editor</div>
       <div data-panel='sprite' class='tool-body'>
-        <h1>Sprite Pattern Editor</h1>
         <div class='buttonbar'>
           <div id='sprite-16'>16x16 Sprite</div>
           <div id='sprite-color'>Color Sprite</div>
@@ -79,7 +78,7 @@
         <div class='preview-container'>
           <canvas id='sprite-draw'></canvas>
         </div>
-        <div class='buttonbar' style='font-size:medium'>
+        <div class='buttonbar' style='font-family:Cambria, serif'>
           <div id='sprite-up'   >&uarr;</div>
           <div id='sprite-down' >&darr;</div>
           <div id='sprite-left' >&larr;</div>
@@ -90,7 +89,7 @@
           <div id='sprite-rotCW' style='display:none'>&#x21BB;</div>
         </div>
         <div id='sprite-editor'></div>
-        <h1>Sprite Pattern Blender</h1>
+        <div>Blend Sprite With</div>
         <div id='sprite-blend'></div>
         <div class='buttonbar'>
           <div id='sprite-swap'>Swap</div>
@@ -588,7 +587,8 @@ input:focus { outline: none; }
 .preview-container { display:flex; flex-direction:row; justify-content:center; margin:5px; }
 
 #sprite-palette { margin-top: 10px; display: none; text-shadow: 1px 1px #808080; color: black; }
-#sprite-editor .CodeMirror, #sprite-blend .CodeMirror { height:40px;}
+#sprite-editor .CodeMirror { height:40px; margin:6px }
+#sprite-blend .CodeMirror { height:40px; margin:2px 6px; }
 #audio-pattern-editor .CodeMirror { height: 40px; }
 #audio-tone-group, #audio-preview-group { display: flex; flex-direction: row; align-items: center; }
 #audio-preview-group { margin-bottom: 8px; }
