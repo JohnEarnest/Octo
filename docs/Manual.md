@@ -264,7 +264,7 @@ Beyond SuperChip, Octo provides a set of unique extended instructions called XO-
 - `pitch := vx` set the audio pattern playback rate to `4000*2^((vx-64)/48)`Hz. Initialized at 4000Hz.
 - `scroll-up n` scroll the contents of the display up by 0-15 pixels.
 
-For more details, consult the XO-Chip specification in Octo's documentation directory. Octo is the main Chip-8 interpreter which supports these instructions, but a small but growing collection of third-party interpreters support them as well. Why not add them to yours?
+For more details, consult the [XO-Chip specification](XO-ChipSpecification.html) in Octo's documentation directory. Octo is the main Chip-8 interpreter which supports these instructions, but a small but growing collection of third-party interpreters support them as well. Why not add them to yours?
 
 Debugging
 ---------
