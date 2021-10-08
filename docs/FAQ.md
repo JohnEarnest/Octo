@@ -78,6 +78,40 @@ Like `if...begin...else...end` and most other features of Octo, loops exist _pur
 
 If you want something fancier than what Octo provides natively, the metaprogramming guide has some ideas for using macros to implement [custom control structures](https://github.com/JohnEarnest/Octo/blob/gh-pages/docs/MetaProgramming.md#custom-control-structures).
 
+How do I choose random numbers?
+-------------------------------
+CHIP-8 has a built in random number generator. In Octo, you'd use it something like this:
+```
+v0 := random 3
+```
+
+Each time this instruction is executed, the RNG produces a random byte (0 to 255, inclusive) and bitwise-ANDs the bits of that byte with the provided constant NN. (Some users may be surprised that the instruction does _not_ instead generate random number from 0 to NN!) It may help clarify your code to write the constant in binary, rather than decimal or hex. Here are a few examples:
+
+| Constant     | Possible values |
+| :----------- | :-------------- |
+| `0b00000001` | 0, 1            |
+| `0b00000011` | 0, 1, 2, 3      |
+| `0b00000110` | 0, 2, 4, 6      |
+| `0b00001010` | 0, 2, 8, 10     |
+| `0b00001000` | 0, 8            |
+| `0b10000001` | 0, 1, 128, 129  |
+| `0b00001111` | 0-15            |
+| `0b01111111` | 0-127           |
+
+Generating random numbers in some ranges can be difficult, especially if they have no relationship to powers of two. The simplest approach might be to generate a number in a larger range, and retry several times if you get an invalid result:
+
+```
+: random-upto-9
+	v1 := 9
+	loop
+		v0 := random 0xF   # 0-15 is the closest option to 0-9
+		if v0 > v1 then
+	again
+;
+```
+
+For a non-uniform distribution, consider using the `vx := random NN` instruction to produce indices into a lookup table.
+
 
 How do I decide what registers to use?
 --------------------------------------
