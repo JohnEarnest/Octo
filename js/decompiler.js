@@ -95,6 +95,7 @@ function formatInstruction(a, nn) {
 	if (o == 0xF && nn == 0x29) { return "i := hex " + vx; }
 	if (o == 0xF && nn == 0x30) { return "i := bighex " + vx; } // schip
 	if (o == 0xF && nn == 0x33) { return "bcd " + vx; }
+	if (o == 0xF && nn == 0x3A) { return "pitch := " + vx; } // xo-chip
 	if (o == 0xF && nn == 0x55) { return "save " + vx; }
 	if (o == 0xF && nn == 0x65) { return "load " + vx; }
 	if (o == 0xF && nn == 0x75) { return "saveflags " + vx; } // schip
