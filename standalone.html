@@ -7,6 +7,12 @@ setRenderTarget(data.options.displayScale || 4, 'target')
 emulator.init({rom:data.rom})
 emulator.importFlags = _ => getPref('octoFlagRegisters')
 emulator.exportFlags = f => setPref('octoFlagRegisters',f)
+try { localStorage.getItem('octoFlagRegisters') }
+catch(e) {
+	console.warn("Persistent flag register storage is unavailable! Flag registers will not be saved across sessions.")
+	emulator.importFlags = _ => emulator.flags
+	emulator.exportFlags = f => emulator.flags = f
+}
 emulator.buzzTrigger = (ticks,rest)=> playPattern(ticks, emulator.pattern, rest)
 const kd = e=>{
 	if (!audio) audioSetup(emulator)
