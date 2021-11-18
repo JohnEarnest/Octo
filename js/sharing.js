@@ -397,7 +397,7 @@ function gifDecode(bytes) {
 		if (here == 0x3B) break
 		else if (here == 0x2C) {
 			const left = s(), top = s(), iw = s(), ih = s(), ip = b()
-			const lct = (ip & 0x80) ? cl(1 << ((ip & 0x70)+1)) : null
+			const lct = (ip & 0x80) ? cl(1 << ((ip & 0x7)+1)) : null
 			if (ip & 0x40) throw 'interlaced GIFs are not supported.'
 			let pix = unLZW(b(), dl())
 			if (iw != width || ih != height || left!=0 || top!= 0) {
