@@ -198,7 +198,7 @@ const INPUT_MODULES = {
       }
     },
     remove: (screen) => {
-      screen.uninstallSwipe()
+      if(screen.uninstallSwipe)screen.uninstallSwipe()
       delete screen.uninstallSwipe
     }
   },
@@ -363,7 +363,7 @@ const INPUT_MODULES = {
       screen.uninstallSeg16=addPointer(screen,start,move,end)
     },
     remove:  (screen) => {
-      screen.uninstallSeg16()
+      if(screen.uninstallSeg16)screen.uninstallSeg16()
       delete screen.uninstallSeg16
     },
   },

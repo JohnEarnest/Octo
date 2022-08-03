@@ -103,7 +103,7 @@ const touchInputMode = radioBar(document.getElementById('touch-input-mode'), 'no
 
 document.getElementById('touch-config-show').onclick = _ => {
   touchInputMode.setValue(emulator.touchInputMode)
-  setTouchInputMode('none')
+  setTouchInputMode(emulator.touchInputMode)
   setVisible(touchConfigModal, true)
 }
 document.getElementById('touch-config-done').onclick = _ => {
