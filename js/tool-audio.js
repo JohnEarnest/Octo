@@ -124,10 +124,16 @@ document.getElementById('audio-generate').onclick = _ => {
 * Main
 **/
 
+const audioVolume = document.getElementById('audio-gain')
+audioVolume.onchange = _ => {
+	emulator.audioVolume=Math.max(0,Math.min(+audioVolume.value))
+	saveLocalOptions()
+}
 function updateAudio() {
 	audioPatternEditor.refresh()
 	drawBytes(audioPatternCanvas, readPattern(audioPatternEditor))
 	const tone=audioTone()
 	drawBytes(audioToneCanvas, tone.pattern)
+	audioVolume.value=emulator.audioVolume
 }
 audioPatternEditor.on('change', updateAudio)

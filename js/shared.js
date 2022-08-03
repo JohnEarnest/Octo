@@ -30,6 +30,7 @@ const optionFlags = [
 	"touchInputMode",
 	"logicQuirks",
 	"fontStyle",
+	"audioVolume",
 ]
 function unpackOptions(emulator, options) {
 	optionFlags.forEach(x => { if (x in options) emulator[x] = options[x] })
@@ -211,7 +212,7 @@ function audioSetup(emulator) {
 		audio.sampleRate < 128000 ? 4096 : 8192; // for 96000hz or more
 		audioNode = audio.createScriptProcessor(bufferSize, 1, 1);
 		audioNode.gain = audio.createGain();
-		audioNode.gain.gain.value = VOLUME ;
+		audioNode.gain.gain.value = emulator.audioVolume
 		audioNode.onaudioprocess = function(audioProcessingEvent) {
 			var outputBuffer = audioProcessingEvent.outputBuffer;
 			var outputData = outputBuffer.getChannelData(0);
@@ -259,8 +260,6 @@ function stopAudio() {
 	}
 	audioData = [];
 }
-
-var VOLUME = 0.25;
 
 function playPattern(soundLength,buffer,pitch=PITCH_BIAS,
 	sampleState={ pos: 0 }) {

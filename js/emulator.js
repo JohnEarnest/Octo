@@ -225,6 +225,7 @@ function Emulator() {
 	this.maskFormatOverride = true;
 	this.numericFormatStr   = "default";
 	this.fontStyle          = 'octo';
+	this.audioVolume        = 0.25;
 
 	// interpreter state
 	this.p  = [[],[]];  // pixels
