@@ -1,6 +1,6 @@
 A Beginner's Guide to Programming with Chip8
 ============================================
-This document is meant to allow someone with little to no experience programming to ease into working with Octo and Chip8. It introduces basic programming concepts as well as the features of the Octo programming language.
+This document is meant to allow someone with little to no experience programming to ease into working with Octo and Chip8. It introduces basic programming concepts as well as the features of the Octo programming language. If you'd like to, follow along with examples using [Octo's Web IDE](http://octo-ide.com).
 
 First Steps
 -----------
@@ -346,3 +346,36 @@ Remember: every subroutine starts with a label and ends with a semicolon. The st
 		v0 += 9
 		v1 += 2
 		return
+
+Using the name of a subroutine "calls" it. If you wish, you can also be more explicit by using the `:call` instruction, followed by the name of the subroutine. Both approaches are equivalent:
+
+	:call my-subroutine
+	my-subroutine
+
+Summing Up
+----------
+We have learned about bits, bytes, registers, sprites, loops, conditionals, and subroutines. If `N` is a 4-bit number (0-15), `NN` is an 8-bit number (0-255), `NNN` is a 12-bit number (0-4095), and `vx` and `vy` are any v-register, the following is a summary of all the Chip8 instructions we have learned so far:
+
+- `vx := NN`
+- `vx += NN`
+- `vx := vy`
+- `vx += vy`
+- `i := NNN`
+- `sprite vx vy N`
+- `clear`
+- `loop ... again`
+- `if vx == NN then`
+- `if vx != NN then`
+- `if vx == vy then`
+- `if vx != vy then`
+- `if vx  key  then`
+- `if vx -key  then`
+- `vx := key`
+- `:call NNN`
+- `return`
+
+Chip8 has a few more instructions that we haven't covered yet, but you now know everything essential for making games with Octo. The next steps are up to you:
+
+- Proceed to the [Intermediate Guide](IntermediateGuide.md), and make a complete action game from scratch.
+- Browse some of Octo's [example programs](../examples/).
+- Read the [Octo reference manual](Manual.md).
