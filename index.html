@@ -847,7 +847,7 @@ function openFile(file, runCart) {
     }
     reader.readAsText(file)
   }
-  else if (file.name.split(".").slice(-1)[0].toLowerCase() == 'ch8') {
+  else if (file.name.split(".").slice(-1)[0].toLowerCase() in {ch8:1,sc8:1,xo8:1}) {
     reader.onload = _ => {
       const bytes = new Uint8Array(reader.result)
       let dump = ''
