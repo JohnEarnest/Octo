@@ -507,10 +507,11 @@ function Emulator() {
 		if ((op & 0xFFF0) == 0x00D0) {
 			// scroll up n pixels
 			var rowSize = this.hires ? 128 : 64;
+			var bufSize = this.hires ? (128 * 64) : (64 * 32);
 			for(var layer = 0; layer < 2; layer++) {
 				if ((this.plane & (layer+1)) == 0) { continue; }
-				for(var z = 0; z < this.p[layer].length; z++) {
-					this.p[layer][z] = (z < (this.p[layer].length - rowSize * n)) ? this.p[layer][z + (rowSize * n)] : 0;
+				for(var z = 0; z < bufSize; z++) {
+					this.p[layer][z] = (z < (bufSize - rowSize * n)) ? this.p[layer][z + (rowSize * n)] : 0;
 				}
 			}
 			return;
