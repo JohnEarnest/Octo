@@ -39,7 +39,7 @@ Calculated expressions are strictly evaluated right to left, except where overri
 :calc b { ( 2 * 3 ) + 5 }  # 11
 ```
 
-This may seem unfamiliar at first, but removes any ambiguity with respect to order of operations. With pratice, you may find yourself using far fewer "just in case" parentheses when using bitwise operators than in other languages. See the Octo manual for a complete listing of the unary and binary operators which are available.
+This may seem unfamiliar at first, but removes any ambiguity with respect to order of operations. With practice, you may find yourself using far fewer "just in case" parentheses when using bitwise operators than in other languages. See the Octo manual for a complete listing of the unary and binary operators which are available.
 
 Finally, while it is an error to declare a `:const` constant twice, `:calc` constants may be redefined any number of times over the course of compiling a program, and can even redefine themselves. The following fragment:
 
