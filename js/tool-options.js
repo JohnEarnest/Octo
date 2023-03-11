@@ -6,7 +6,7 @@ const compatProfile  = radioBar(document.getElementById('compatibility-profile')
 const screenRotation = radioBar(document.getElementById('screen-rotation'), 0, x => emulator.screenRotation = +x)
 
 const compatibilityProfiles = {
-  chip8: { shiftQuirks:0, loadStoreQuirks:0, clipQuirks:1, jumpQuirks:0, logicQuirks:1, vBlankQuirks:1, maxSize:3215  },
+  chip8: { shiftQuirks:0, loadStoreQuirks:0, clipQuirks:1, jumpQuirks:0, logicQuirks:1, vBlankQuirks:1, maxSize:3232  },
   schip: { shiftQuirks:1, loadStoreQuirks:1, clipQuirks:1, jumpQuirks:1, logicQuirks:0, vBlankQuirks:0, maxSize:3583  },
   octo:  { shiftQuirks:0, loadStoreQuirks:0, clipQuirks:0, jumpQuirks:0, logicQuirks:0, vBlankQuirks:0, maxSize:3584  },
   xo:    { shiftQuirks:0, loadStoreQuirks:0, clipQuirks:0, jumpQuirks:0, logicQuirks:0, vBlankQuirks:0, maxSize:65024 },
