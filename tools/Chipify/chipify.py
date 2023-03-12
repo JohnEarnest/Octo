@@ -10,18 +10,18 @@ sass_lines = [
 ]
 
 # Check for mandatory components that the user may not have
-import imp
 try:
-    imp.find_module("numpy")
+    import numpy
 except ImportError:
     print("Chipify requires NumPy: http://www.scipy.org/scipylib/download.html/")
     exit()
 
-import numpy
+
 import sys
 import wave
 import random
 import math
+
 
 if len(sys.argv) is not 2:
     print("USAGE: python chipify.py FILENAME")
