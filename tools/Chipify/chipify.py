@@ -10,33 +10,33 @@ sass_lines = [
 ]
 
 # Check for mandatory components that the user may not have
-import imp
 try:
-    imp.find_module("numpy")
+    import numpy
 except ImportError:
-    print "Chipify requires NumPy: http://www.scipy.org/scipylib/download.html/"
+    print("Chipify requires NumPy: http://www.scipy.org/scipylib/download.html/")
     exit()
 
-import numpy
+
 import sys
 import wave
 import random
 import math
 
+
 if len(sys.argv) is not 2:
-    print "USAGE: python chipify.py FILENAME"
+    print("USAGE: python chipify.py FILENAME")
     exit()
 
 filename = sys.argv[1]
 try:
     input_file = wave.open(filename, "r")
 except IOError:
-    print "Unable to open file %s." % filename
+    print("Unable to open file %s." % filename)
     exit()
 
 # Ensure this is a valid format
 if input_file.getnchannels() != 1:
-    print "Unsupported number of channels (%i). Must be a mono file." % input_file.getnchannels()
+    print("Unsupported number of channels (%i). Must be a mono file." % input_file.getnchannels())
     exit()
 
 # Determine the number of input and output samples
@@ -49,22 +49,22 @@ input_max_value = int("ff" * input_frame_width, 16)
 output_framerate = 4000
 output_frame_count = int(input_frame_count * (output_framerate / float(input_framerate)))
 
-print "Loading from file " + filename
-print "%i input samples at %i KHz, %i output samples at %i KHz" % (input_frame_count, input_framerate / 1000,
-                                                                   output_frame_count, output_framerate / 1000)
-print "Target output size: %i bytes." % (math.ceil(output_frame_count / 8.0))
+print("Loading from file " + filename)
+print("%i input samples at %i KHz, %i output samples at %i KHz" % (input_frame_count, input_framerate / 1000,
+                                                                   output_frame_count, output_framerate / 1000))
+print("Target output size: %i bytes." % (math.ceil(output_frame_count / 8.0)))
 
-print "-----"
-print random.choice(sass_lines)
-print "-----"
+print("-----")
+print(random.choice(sass_lines))
+print("-----")
 
 
-print "Reading input file into memory..."
+print("Reading input file into memory...")
 target_data_type = "int%i" % (input_frame_width * 8)
 raw_input_data = input_file.readframes(-1)
 input_frames = numpy.fromstring(raw_input_data, target_data_type)
 
-print "Building low-pass filter..."
+print("Building low-pass filter...")
 relative_cutoff_frequency = output_framerate / float(input_framerate)
 transition_band = 0.05
 
@@ -82,10 +82,10 @@ w = 0.42 - 0.5 * numpy.cos(2 * numpy.pi * n / (N - 1)) + 0.08 * numpy.cos(4 * nu
 # Multiply sinC filter with the window, then normalize to get unity gain
 lowpass_filter = (h * w) / numpy.sum(h)
 
-print "Applying low-pass filter..."
+print("Applying low-pass filter...")
 filtered_input_frames = numpy.convolve(input_frames, lowpass_filter).astype(input_frames.dtype)
 
-print "Crushing signal, mercilessly..."
+print("Crushing signal, mercilessly...")
 input_frames_per_output_frame = input_frame_count / float(output_frame_count)
 input_frames_consumed = 0
 
@@ -122,19 +122,19 @@ while input_frames_consumed < input_frame_count:
 if len(output_bits) % 8 != 0:
     output_bits += [0] * (8 - len(output_bits) % 8)
 
-print "Writing crushed wave to disk..."
+print("Writing crushed wave to disk...")
 output_wave = wave.open(filename + ".out.wav", "w")
 output_wave.setnchannels(1)
 output_wave.setsampwidth(1)
 output_wave.setframerate(output_framerate)
-output_wave.writeframes("".join(chr(255) if i else chr(0) for i in output_bits))
+output_wave.writeframes(bytes(255 if i else 0 for i in output_bits))
 output_wave.close()
 
-print "Writing Octo-compatible text to disk..."
+print("Writing Octo-compatible text to disk...")
 
 # Write bytes
 output_bytes = []
-for i in range(len(output_bits) / 8):
+for i in range(len(output_bits) // 8):
     byte = output_bits[i * 8]
     for j in range(7):
         byte = byte << 1
