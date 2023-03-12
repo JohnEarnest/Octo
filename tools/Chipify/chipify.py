@@ -127,14 +127,14 @@ output_wave = wave.open(filename + ".out.wav", "w")
 output_wave.setnchannels(1)
 output_wave.setsampwidth(1)
 output_wave.setframerate(output_framerate)
-output_wave.writeframes("".join(chr(255) if i else chr(0) for i in output_bits))
+output_wave.writeframes(bytes(255 if i else 0 for i in output_bits))
 output_wave.close()
 
 print("Writing Octo-compatible text to disk...")
 
 # Write bytes
 output_bytes = []
-for i in range(len(output_bits) / 8):
+for i in range(len(output_bits) // 8):
     byte = output_bits[i * 8]
     for j in range(7):
         byte = byte << 1
