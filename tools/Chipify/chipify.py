@@ -14,7 +14,7 @@ try:
     import numpy
 except ImportError:
     print("Chipify requires NumPy: http://www.scipy.org/scipylib/download.html/")
-    exit()
+    exit(1)
 
 
 import sys
@@ -25,19 +25,19 @@ import math
 
 if len(sys.argv) is not 2:
     print("USAGE: python chipify.py FILENAME")
-    exit()
+    exit(1)
 
 filename = sys.argv[1]
 try:
     input_file = wave.open(filename, "r")
 except IOError:
     print("Unable to open file %s." % filename)
-    exit()
+    exit(1)
 
 # Ensure this is a valid format
 if input_file.getnchannels() != 1:
     print("Unsupported number of channels (%i). Must be a mono file." % input_file.getnchannels())
-    exit()
+    exit(1)
 
 # Determine the number of input and output samples
 input_framerate = input_file.getframerate()
