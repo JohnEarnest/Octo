@@ -898,7 +898,7 @@ window.onkeyup = event => {
     delete emulator.keys[event.key]
   }
   const kindex = keymapInverse[event.key]
-  const resume = function(){if(emulator.waiting){emulator.waiting=false; emulator.v[emulator.waitReg]=kindex||0; console.log('resumed',emulator.waitReg)}}
+  const resume = function(){if(emulator.waiting){emulator.waiting=false; emulator.v[emulator.waitReg]=kindex||0;}}
   if (kindex != undefined) { resume() }
   if (event.key == '`') { stopRom() }
   if (event.key == 'i') {
