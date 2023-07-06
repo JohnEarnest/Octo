@@ -898,10 +898,8 @@ window.onkeyup = event => {
     delete emulator.keys[event.key]
   }
   const kindex = keymapInverse[event.key]
-  if (emulator.waiting && kindex != undefined) {
-    emulator.waiting = false
-    emulator.v[emulator.waitReg] = kindex
-  }
+  const resume = function(){if(emulator.waiting){emulator.waiting=false; emulator.v[emulator.waitReg]=kindex||0; console.log('resumed',emulator.waitReg)}}
+  if (kindex != undefined) { resume() }
   if (event.key == '`') { stopRom() }
   if (event.key == 'i') {
     emulator.breakpoint ? clearBreakpoint() : haltBreakpoint('user interrupt');
@@ -910,9 +908,10 @@ window.onkeyup = event => {
   if (event.key == 'p') { haltProfiler('profiler') }
   if (event.key == 'm') { monitoring = !monitoring; setVisible(document.getElementById('monitor'),monitoring) }
   if (emulator.breakpoint) {
-    if (event.key == 'o') { emulator.dt = emulator.st = 0; emulator.tick(); renderDisplay(emulator); haltBreakpoint('single step') }
-    if (event.key == 'u') { const l = emulator.r.length; if (l>0) { emulator.stack_breakpoint = l-1; clearBreakpoint() } } // step out
+    if (event.key == 'o') { resume(); emulator.dt = emulator.st = 0; emulator.tick(); renderDisplay(emulator); haltBreakpoint('single step')}
+    if (event.key == 'u') { resume(); const l = emulator.r.length; if (l>0) { emulator.stack_breakpoint = l-1; clearBreakpoint() } } // step out
     if (event.key == 'l') {
+      resume()
       if ((emulator.m[emulator.pc] & 0xF0) == 0x20) { const l = emulator.r.length; if (l >= 0) { emulator.stack_breakpoint = l; clearBreakpoint(); } }
       else { emulator.tick(); renderDisplay(emulator); haltBreakpoint('stepping over') }
     }
