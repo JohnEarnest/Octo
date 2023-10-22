@@ -104,19 +104,18 @@ def load_and_validate_mono_wav(path: PathLike) -> GeneratorExit:
         with wave.open(path_as_str, "rb") as input_file:
             n_channels = input_file.getnchannels()
             if n_channels != 1:
-                raise ValueError(
+                parser.exit(1,
                     f"Unsupported number of channels ({n_channels})."
                     f"Must be a mono file")
-
             yield input_file
 
     except IOError:
-        print(f"Unable to open file {path_as_str!r}")
-        exit(1)
+        parser.exit(1, f"Unable to open file {path_as_str!r}")
 
 
 # if input_file.getnchannels() != 1:
 input_file_name = expand_and_resolve(args.infile)
+
 
 # Determine the number of input and output samples
 with load_and_validate_mono_wav(input_file_name) as input_file:
@@ -144,7 +143,7 @@ with load_and_validate_mono_wav(input_file_name) as input_file:
     target_data_type = f"int{input_frame_width * 8}"
     raw_input_data = input_file.readframes(-1)
 
-input_frames = numpy.fromstring(raw_input_data, target_data_type)
+input_frames = numpy.frombuffer(raw_input_data, target_data_type)
 
 
 print("Building low-pass filter...")
