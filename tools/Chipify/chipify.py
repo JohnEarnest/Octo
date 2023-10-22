@@ -127,7 +127,7 @@ with load_and_validate_mono_wav(input_file_name) as input_file:
     input_max_value = int("ff" * input_frame_width, 16)
 
     output_framerate = 4000
-    output_frame_count = int(input_frame_count * (output_framerate / float(input_framerate)))
+    output_frame_count = int(input_frame_count * (output_framerate / input_framerate))
 
     print(f"Loading from file {str(input_file_name)!r}")
     print(f"{input_frame_count} input samples at {input_framerate / 1000} KHz, "
@@ -147,7 +147,7 @@ input_frames = numpy.frombuffer(raw_input_data, target_data_type)
 
 
 print("Building low-pass filter...")
-relative_cutoff_frequency = output_framerate / float(input_framerate)
+relative_cutoff_frequency = output_framerate / input_framerate
 transition_band = 0.05
 
 # Determine number of samples in our filter.
@@ -168,7 +168,7 @@ print("Applying low-pass filter...")
 filtered_input_frames = numpy.convolve(input_frames, lowpass_filter).astype(input_frames.dtype)
 
 print("Crushing signal, mercilessly...")
-input_frames_per_output_frame = input_frame_count / float(output_frame_count)
+input_frames_per_output_frame = input_frame_count / output_frame_count
 input_frames_consumed = 0
 
 current_frame = 0
@@ -197,7 +197,7 @@ while input_frames_consumed < input_frame_count:
         input_frames_consumed += 1
         input_frames_to_consume -= 1
 
-    averaged_input = total_input / float(input_frames_per_output_frame)
+    averaged_input = total_input / input_frames_per_output_frame
     output_bits.append(1 if averaged_input < 0.5 else 0)
 
 # Pad the output with zeroes if we don't have an even number of bits
