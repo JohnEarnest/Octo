@@ -80,7 +80,7 @@ The `plane` instruction takes a 2-bit bitmask which selects one, both or neither
 
 When a `sprite` is drawn with both planes selected the operation will consume twice as many bytes of graphics data as it normally would, first drawing the specified sprite height to the first plane and then drawing the same number of bytes to the second plane. If the sprite was 4 pixels high, the first plane would be drawn to using bytes at the addresses `i` to `i`+3 and the second plane would be drawn using bytes at the addresses `i`+4 to `i`+7. This means that drawing sprites with both planes selected will naturally and conveniently draw or erase 4-color sprites. With both planes selected the `vf` collision flag will be set after a sprite drawing operation if pixels from _either_ plane are toggled from on to off.
 
-Encoding is chosen such that it would be possible to provide 4 bitplanes (and thus 16 colors!) in the future should it prove necessary. The `plane` instruction is placed in unpopulated space in the `0xF`-prefix instructions.
+Encoding is chosen such that it would be _possible_ to provide 4 bitplanes (and thus 16 colors!) in the future should it prove necessary, but programs which attempt to use more than two bitplanes are not well-formed XO-Chip programs. The `plane` instruction is placed in unpopulated space in the `0xF`-prefix instructions.
 
 Audio
 -----
@@ -120,6 +120,12 @@ The playback offset of the pattern buffer should only be reset when the buzzer t
 Scrolling
 ---------
 SuperChip8 provided a set of screen scrolling instructions. These are very handy for some kinds of games, but having scrolling in only 3 directions seriously limits their utility. XO-Chip provides a `scroll-up` which is a functional complement to SuperChip8 `scroll-down`, capable of scrolling 0 to 15 pixels at a time. The encoding of `scroll-up` is chosen to fit the existing pattern of `scroll-down`.
+
+Notes
+-----
+- Like XO-Chip, the COSMAC VIP had a 16-bit address space, though most of it was unpopulated or ROM. Both the Chip8 program counter (`pc`) and index register (`i`) are 16 bits wide. Compliant XO-Chip implementations _must not_ constrain either register to a 12-bit range.
+- VIP Chip8 offered a 12-level callstack for the `:call` and `return` instructions, and SCHIP provides a 16-level callstack. Compliant XO-Chip implementations should provide a 16-level callstack, as a superset of SCHIP functionality, but should not permit deeper calls or returns on an empty stack; implementations are recommended to treat either case as an error and halt, possibly with debugging information.
+
 
 Changelog
 ---------
