@@ -609,7 +609,7 @@ input:focus { outline: none; }
 #decompile-cover img { width: 64px; height: 64px; align-self: center; }
 
 #run-cover { flex-direction: column; }
-#run-overlay { position: absolute; top: 0px; left: 0px; width: 100%; height: 100%; }
+#run-overlay { position: absolute; top: 0px; left: 0px; width: 100%; height: 100%; z-index: 1001; }
 #run-controls { margin: 20px; }
 #run-controls img { margin-right: 10px; cursor: pointer; }
 #run-controls img:active { opacity: 0.5; }
@@ -903,7 +903,6 @@ window.onkeyup = event => {
   if (event.key == '`') { stopRom() }
   if (event.key == 'i') {
     emulator.breakpoint ? clearBreakpoint() : haltBreakpoint('user interrupt');
-    var k = document.getElementById("run-overlay").style.zIndex = "1001";
   }
   if (event.key == 'p') { haltProfiler('profiler') }
   if (event.key == 'm') { monitoring = !monitoring; setVisible(document.getElementById('monitor'),monitoring) }
