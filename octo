@@ -84,9 +84,7 @@ function compile(sourceCode) {
 	try {
 		comp = new compiler.Compiler(sourceCode)
 		comp.go()
-		let len=comp.rom.length
-		while(comp.rom[len-1]===0) len-=1
-		return comp.rom.slice(0,len)
+		return comp.rom.slice(0)
 	}
 	catch(err) {
 		let line=1, pos=1
